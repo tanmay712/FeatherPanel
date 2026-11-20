@@ -1,0 +1,112 @@
+[
+  {
+    "vmid": 9000,
+    "name": "ubuntu-24.04-kvm",
+    "type": "qemu",
+    "image": "ubuntu/24.04/cloud",
+    "description": "Ubuntu 24.04 LTS (KVM)",
+    "default_user": "ubuntu",
+    "disk_gb": 10
+  },
+  {
+    "vmid": 9001,
+    "name": "ubuntu-22.04-kvm",
+    "type": "qemu",
+    "image": "ubuntu/22.04/cloud",
+    "description": "Ubuntu 22.04 LTS (KVM)",
+    "default_user": "ubuntu",
+    "disk_gb": 10
+  },
+  {
+    "vmid": 9002,
+    "name": "debian-12-kvm",
+    "type": "qemu",
+    "image": "debian/12/cloud",
+    "description": "Debian 12 (KVM)",
+    "default_user": "debian",
+    "disk_gb": 10
+  },
+  {
+    "vmid": 9003,
+    "name": "debian-13-kvm",
+    "type": "qemu",
+    "image": "debian/13/cloud",
+    "description": "Debian 13 (KVM)",
+    "default_user": "debian",
+    "disk_gb": 10
+  },
+  {
+    "vmid": 9004,
+    "name": "rockylinux-9-kvm",
+    "type": "qemu",
+    "image": "rockylinux/9/cloud",
+    "description": "Rocky Linux 9 (KVM)",
+    "default_user": "rocky",
+    "disk_gb": 10
+  },
+  {
+    "vmid": 9005,
+    "name": "almalinux-9-kvm",
+    "type": "qemu",
+    "image": "almalinux/9/cloud",
+    "description": "AlmaLinux 9 (KVM)",
+    "default_user": "almalinux",
+    "disk_gb": 10
+  },
+  {
+    "vmid": 9100,
+    "name": "ubuntu-24.04-lxc",
+    "type": "lxc",
+    "image": "ubuntu/24.04/cloud",
+    "description": "Ubuntu 24.04 LTS (LXC)",
+    "disk_gb": 8
+  },
+  {
+    "vmid": 9101,
+    "name": "ubuntu-22.04-lxc",
+    "type": "lxc",
+    "image": "ubuntu/22.04/cloud",
+    "description": "Ubuntu 22.04 LTS (LXC)",
+    "disk_gb": 8
+  },
+  {
+    "vmid": 9102,
+    "name": "debian-12-lxc",
+    "type": "lxc",
+    "image": "debian/12/cloud",
+    "description": "Debian 12 (LXC)",
+    "disk_gb": 8
+  },
+  {
+    "vmid": 9103,
+    "name": "debian-13-lxc",
+    "type": "lxc",
+    "image": "debian/13/cloud",
+    "description": "Debian 13 (LXC)",
+    "disk_gb": 8
+  },
+  {
+    "vmid": 9104,
+    "name": "rockylinux-9-lxc",
+    "type": "lxc",
+    "image": "rockylinux/9/cloud",
+    "description": "Rocky Linux 9 (LXC)",
+    "disk_gb": 8
+  },
+  {
+    "vmid": 9105,
+    "name": "almalinux-9-lxc",
+    "type": "lxc",
+    "image": "almalinux/9/cloud",
+    "description": "AlmaLinux 9 (LXC)",
+    "disk_gb": 8
+  },
+  {
+    "vmid": 9106,
+    "name": "alpine-3.20-lxc",
+    "type": "lxc",
+    "image": "alpine/3.20/cloud",
+    "description": "Alpine Linux 3.20 (LXC)",
+    "disk_gb": 4
+  }
+]

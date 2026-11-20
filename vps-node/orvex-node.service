@@ -1,0 +1,17 @@
+[Unit]
+Description=OrveX VPS Node (Proxmox-compatible API for OrveX Panel, powered by Incus)
+Documentation=https://github.com/tanmay712/FeatherPanel/tree/develop/vps-node
+After=network-online.target incus.service incus.socket
+Wants=network-online.target incus.service
+
+[Service]
+Type=simple
+Environment=PYTHONPATH=/opt/orvex-node/src/vps-node
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/python3 -m orvexnode serve
+Restart=always
+RestartSec=3
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

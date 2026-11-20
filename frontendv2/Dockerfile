@@ -18,8 +18,11 @@ RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
 # Copy source code
 COPY . .
 
-# Build the application in standalone mode
-RUN pnpm build
+# Build the application in standalone mode.
+# Node sizes its default heap from physical RAM (about half), which is too small for
+# this build on 2-4 GB servers even with swap. 4096 matches what CI runners get.
+ARG NODE_BUILD_HEAP_MB=4096
+RUN NODE_OPTIONS="--max-old-space-size=${NODE_BUILD_HEAP_MB}" pnpm build
 
 # Production stage with Caddy + Node.js
 FROM node:22-alpine AS production

@@ -208,6 +208,9 @@ class VmUserInstanceController
         $vmInstance['access_password'] = $vmInstance['is_owner']
             ? self::resolveAccessPassword($vmInstance)
             : null;
+        $vmInstance['access_username'] = self::resolveAccessUsername($vmInstance);
+        $accessNode = VmNode::getVmNodeById((int) ($vmInstance['vm_node_id'] ?? 0));
+        $vmInstance['node_type'] = $accessNode && VmInstanceUtil::isOrvexNode($accessNode) ? 'orvex' : 'proxmox';
 
         // `notes` carries the cloud-init credentials ({notes, ci_user, ci_password}).
         // Subusers must only see the free-text note, never the guest password.
@@ -2140,6 +2143,132 @@ class VmUserInstanceController
         }
 
         return ApiResponse::success(['templates' => $filtered], 'Templates retrieved', 200);
+    }
+
+    /**
+     * Login user for SSH: the cloud-init user of KVM guests, root for containers.
+     */
+    private static function resolveAccessUsername(array $vmInstance): string
+    {
+        if (($vmInstance['vm_type'] ?? 'qemu') === 'lxc') {
+            return 'root';
+        }
+        $notes = json_decode((string) ($vmInstance['notes'] ?? ''), true);
+        $ciUser = is_array($notes) && isset($notes['ci_user']) && is_string($notes['ci_user']) ? trim($notes['ci_user']) : '';
+
+        return $ciUser !== '' ? $ciUser : 'root';
+    }
+
+    #[OA\Post(
+        path: '/api/user/vm-instances/{id}/password',
+        summary: 'Change the login password of a VDS',
+        description: 'Sets the password of the login user (cloud-init user for KVM guests, root for containers). OrveX nodes apply it right away while the guest runs; Proxmox KVM guests get it through cloud-init on the next start (immediately when the QEMU guest agent runs). Containers on Proxmox nodes are not supported.',
+        tags: ['User - VM Instances'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['password'],
+                properties: [new OA\Property(property: 'password', type: 'string', minLength: 8, maxLength: 128)]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Password changed (applied: immediate) or scheduled (applied: next_boot)'),
+            new OA\Response(response: 400, description: 'Invalid password'),
+            new OA\Response(response: 403, description: 'Permission denied or confirmation required'),
+            new OA\Response(response: 501, description: 'Not supported for this guest on this node'),
+            new OA\Response(response: 502, description: 'The node rejected the change'),
+        ]
+    )]
+    public function changePassword(Request $request, int $id): Response
+    {
+        if (($reauth = \App\Services\Vm\VdsReauth::check($request, 'password')) !== null) {
+            return $reauth;
+        }
+        $user = $request->attributes->get('user');
+        $instance = $request->attributes->get('vmInstance');
+        if (!$instance) {
+            return ApiResponse::error('VM instance not found', 'VM_INSTANCE_NOT_FOUND', 404);
+        }
+        if (!VmGateway::hasVmPermission($user['uuid'], $id, 'settings')) {
+            return ApiResponse::error('You do not have permission to change the password of this VM', 'PERMISSION_DENIED', 403);
+        }
+        $data = json_decode($request->getContent(), true);
+        $password = is_array($data) && isset($data['password']) && is_string($data['password']) ? $data['password'] : '';
+        $length = mb_strlen($password);
+        if ($length < 8 || $length > 128 || preg_match('/[\r\n\x00]/', $password)) {
+            return ApiResponse::error('The password must be 8 to 128 characters long and must not contain line breaks', 'INVALID_PASSWORD', 400);
+        }
+        $vmNode = VmNode::getVmNodeById((int) $instance['vm_node_id']);
+        if (!$vmNode) {
+            return ApiResponse::error('VM node not found', 'VM_NODE_NOT_FOUND', 404);
+        }
+        $vmType = ($instance['vm_type'] ?? 'qemu') === 'lxc' ? 'lxc' : 'qemu';
+        $isOrvex = VmInstanceUtil::isOrvexNode($vmNode);
+        if ($vmType === 'lxc' && !$isOrvex) {
+            return ApiResponse::error('Containers on Proxmox nodes do not support password changes from the panel. Use passwd over SSH.', 'NOT_SUPPORTED', 501);
+        }
+        try {
+            $client = VmInstanceUtil::buildProxmoxClientForNode($vmNode);
+        } catch (\Throwable $e) {
+            return ApiResponse::error('Failed to connect to the VM node', 'PROXMOX_ERROR', 500);
+        }
+        $node = (string) ($instance['pve_node'] ?? '');
+        if ($node === '') {
+            $find = $client->findNodeByVmid((int) $instance['vmid']);
+            $node = $find['ok'] ? (string) $find['node'] : '';
+        }
+        if ($node === '') {
+            return ApiResponse::error('Could not determine the node of this VM', 'NODE_UNKNOWN', 500);
+        }
+
+        $notes = json_decode((string) ($instance['notes'] ?? ''), true);
+        if (!is_array($notes)) {
+            $notes = ['notes' => (string) ($instance['notes'] ?? '')];
+        }
+        $username = self::resolveAccessUsername($instance);
+        $agentPath = sprintf('/api2/json/nodes/%s/%s/%d/agent/set-user-password', rawurlencode($node), $vmType, (int) $instance['vmid']);
+        $applied = 'next_boot';
+        $message = 'The new password is applied when the server starts next time.';
+        if ($isOrvex) {
+            $result = $client->apiPost($agentPath, ['username' => $username, 'password' => $password]);
+            if (!$result['ok']) {
+                return ApiResponse::error('The node rejected the password change: ' . ($result['error'] ?? 'unknown error'), 'PASSWORD_CHANGE_FAILED', 502);
+            }
+            $reply = is_array($result['data']) ? $result['data'] : [];
+            $applied = ($reply['applied'] ?? 'immediate') === 'immediate' ? 'immediate' : 'next_boot';
+            $message = is_string($reply['message'] ?? null) && $reply['message'] !== '' ? $reply['message'] : 'Password changed.';
+        } else {
+            $set = $client->setVmConfig($node, (int) $instance['vmid'], 'qemu', ['ciuser' => $username, 'cipassword' => $password]);
+            if (!$set['ok']) {
+                return ApiResponse::error('Proxmox rejected the password change: ' . ($set['error'] ?? 'unknown error'), 'PASSWORD_CHANGE_FAILED', 502);
+            }
+            $agent = $client->apiPost($agentPath, ['username' => $username, 'password' => $password]);
+            if ($agent['ok']) {
+                $applied = 'immediate';
+                $message = 'Password changed.';
+            }
+        }
+
+        $notes['ci_user'] = $username;
+        $notes['ci_password'] = $password;
+        VmInstance::update($id, ['notes' => json_encode($notes, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)]);
+        VmInstanceActivity::createActivity([
+            'vm_instance_id' => $id,
+            'vm_node_id' => (int) $instance['vm_node_id'],
+            'user_id' => isset($user['id']) && (int) $user['id'] > 0 ? (int) $user['id'] : null,
+            'event' => 'vm:password.change',
+            'metadata' => ['applied' => $applied, 'username' => $username],
+            'ip' => CloudFlareRealIP::getRealIP(),
+        ]);
+
+        return ApiResponse::success([
+            'applied' => $applied,
+            'username' => $username,
+            'message' => $message,
+        ], $message, 200);
     }
 
     /**

@@ -48,6 +48,10 @@ export interface VmInstance {
     is_subuser?: boolean;
     permissions?: string[];
     access_password?: string | null;
+    /** SSH login user: cloud-init user for KVM guests, root for containers. */
+    access_username?: string | null;
+    /** `orvex` for OrveX VPS Nodes (Incus), `proxmox` for Proxmox VE nodes. */
+    node_type?: 'orvex' | 'proxmox';
     suspended?: number;
     expires_at?: string | null;
     /** Only set on the synthetic record built from a VM_INSTANCE_SUSPENDED response. */

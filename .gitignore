@@ -83,3 +83,9 @@ FeatherTail/
 !backend/storage/addons/*/Frontend/App/package.json
 !backend/storage/addons/*/Frontend/App/pnpm-lock.yaml
 !backend/storage/addons/*/Frontend/App/components.json
+
+# OrveX VPS node agent: keep its test suite (the global "tests" rule above
+# targets generated test output) and never commit Python bytecode.
+!vps-node/tests/
+!vps-node/tests/**
+vps-node/**/__pycache__/

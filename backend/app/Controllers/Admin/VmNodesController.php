@@ -1119,6 +1119,20 @@ class VmNodesController
 
         $data['vm_node_id'] = $id;
 
+        // Ranges ("10.77.0.2-10.77.0.254" or "10.77.0.2-254") add every address,
+        // e.g. a whole shared-IPv4 (NAT) pool of an OrveX node in one go.
+        $range = self::expandIpv4Range((string) $data['ip']);
+        if ($range === null) {
+            return ApiResponse::error(
+                'Invalid IP range. Use a.b.c.d-a.b.c.e or a.b.c.d-e (IPv4, at most ' . self::MAX_IP_RANGE . ' addresses).',
+                'INVALID_IP_RANGE',
+                400
+            );
+        }
+        if ($range !== []) {
+            return $this->createIpRange($admin, $vmNode, $id, $data, $range);
+        }
+
         $ipId = VmIp::create($data);
         if (!$ipId) {
             return ApiResponse::error('Failed to create VM node IP', 'VM_NODE_IP_CREATE_FAILED', 400);
@@ -1142,6 +1156,91 @@ class VmNodesController
         ]);
 
         return ApiResponse::success(['ip' => $ip], 'VM node IP created successfully', 201);
+    }
+
+    private const MAX_IP_RANGE = 1024;
+
+    /**
+     * Expand an IPv4 range. Returns [] when the value is not a range (a single IP),
+     * null when it is a malformed or too large range, or the list of addresses.
+     *
+     * @return array<int, string>|null
+     */
+    private static function expandIpv4Range(string $value): ?array
+    {
+        $value = trim($value);
+        if (!preg_match('/^(\d{1,3}(?:\.\d{1,3}){3})\s*-\s*(\d{1,3}(?:\.\d{1,3}){3}|\d{1,3})$/', $value, $m)) {
+            return [];
+        }
+        if (!filter_var($m[1], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            return null;
+        }
+        $end = str_contains($m[2], '.') ? $m[2] : preg_replace('/\d+$/', $m[2], $m[1]);
+        if (!is_string($end) || !filter_var($end, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            return null;
+        }
+        $first = ip2long($m[1]);
+        $last = ip2long($end);
+        if ($first === false || $last === false || $last < $first || ($last - $first + 1) > self::MAX_IP_RANGE) {
+            return null;
+        }
+        $ips = [];
+        for ($n = $first; $n <= $last; ++$n) {
+            $ips[] = (string) long2ip($n);
+        }
+
+        return $ips;
+    }
+
+    /**
+     * Create every address of a range; addresses that already exist are skipped
+     * (VmIp::create rejects duplicates).
+     *
+     * @param array<string, mixed>|null $admin
+     * @param array<string, mixed> $vmNode
+     * @param array<string, mixed> $data
+     * @param array<int, string> $ips
+     */
+    private function createIpRange(?array $admin, array $vmNode, int $id, array $data, array $ips): Response
+    {
+        $created = [];
+        $skipped = 0;
+        foreach ($ips as $address) {
+            $row = $data;
+            $row['ip'] = $address;
+            $row['is_primary'] = 'false';
+            $ipId = VmIp::create($row);
+            if (!$ipId) {
+                ++$skipped;
+                continue;
+            }
+            $created[] = (int) $ipId;
+        }
+        if ($created === []) {
+            return ApiResponse::error('No IPs were added (all addresses already exist or are invalid)', 'VM_NODE_IP_CREATE_FAILED', 400);
+        }
+
+        Activity::createActivity([
+            'user_uuid' => $admin['uuid'] ?? null,
+            'name' => 'create_vm_node_ip',
+            'context' => 'Created ' . count($created) . ' IPs (' . $ips[0] . ' - ' . $ips[count($ips) - 1] . ') for VM node: ' . ($vmNode['name'] ?? $id),
+            'ip_address' => CloudFlareRealIP::getRealIP(),
+        ]);
+        foreach ($created as $ipId) {
+            self::emitVdsEvent(VdsNodeEvent::onVdsNodeIpCreated(), [
+                'user_uuid' => $admin['uuid'] ?? null,
+                'vm_node_id' => $id,
+                'ip_id' => $ipId,
+                'ip' => VmIp::getById($ipId),
+                'context' => ['source' => 'admin', 'range' => true],
+            ]);
+        }
+
+        return ApiResponse::success([
+            'ip' => VmIp::getById($created[0]),
+            'created' => count($created),
+            'skipped' => $skipped,
+        ], count($created) . ' IPs added' . ($skipped > 0 ? ' (' . $skipped . ' skipped)' : ''), 201);
     }
 
     #[OA\Patch(

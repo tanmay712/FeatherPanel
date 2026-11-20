@@ -33,6 +33,7 @@ import { WidgetRenderer } from '@/components/server/WidgetRenderer';
 import { getApiErrorMessage } from '@/lib/api-errors';
 import { Sensitive } from '@/components/common/Sensitive';
 import { VdsBandwidthCard } from '@/components/vds/VdsBandwidthCard';
+import { VdsNatForwardsCard } from '@/components/vds/VdsAccess';
 
 interface AssignedIp {
     id: number;
@@ -161,6 +162,8 @@ export default function VdsNetworkingPage() {
             />
 
             {instance && <VdsBandwidthCard id={instance.id} />}
+
+            {instance && <VdsNatForwardsCard vmId={instance.id} />}
 
             <div className='grid grid-cols-1 gap-6 xl:grid-cols-3'>
                 <Card className='xl:col-span-2'>

@@ -39,6 +39,7 @@ import { cn, copyToClipboard } from '@/lib/utils';
 import { ServiceExpiryChip } from '@/components/common/ServiceExpiryChip';
 import { useDateFormatOptions } from '@/contexts/PreferencesContext';
 import { formatExpiryAbsolute } from '@/lib/service-expiry';
+import { VdsChangePasswordDialog, VdsSshAccessCard, type VdsOrvexStatus } from '@/components/vds/VdsAccess';
 
 interface VmStatus {
     status?: string;
@@ -56,6 +57,8 @@ interface VmStatus {
     diskwrite?: number;
     vmid?: number;
     name?: string;
+    /** Connection details from OrveX VPS Nodes (SSH host/port, NAT forwards). */
+    orvex?: VdsOrvexStatus;
 }
 
 function formatUptime(seconds: number): string {
@@ -107,6 +110,7 @@ export default function VdsConsolePage() {
     const [vncPassword, setVncPassword] = useState<string | null>(null);
     const [showAccessPassword, setShowAccessPassword] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
     const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const statusInFlightRef = useRef(false);
     /** User had (or wants) an embedded console - reconnect after reboot/start. */
@@ -407,6 +411,16 @@ export default function VdsConsolePage() {
         : (instance.plan_disk ?? instance.disk_gb ?? 0) * 1024;
     const uptime = vmStatus?.uptime ? formatUptime(vmStatus.uptime) : undefined;
     const canViewAccessPassword = Boolean(instance.is_owner && instance.access_password);
+    const canChangePassword = Boolean(features?.access?.password_change) && hasPermission('settings');
+    const accessUsername = instance.access_username ?? (instance.vm_type === 'lxc' ? 'root' : null);
+    // Containers on OrveX nodes have no graphical console: the screen area shows SSH access instead.
+    const sshOnly = instance.node_type === 'orvex' && instance.vm_type === 'lxc';
+    const changePasswordButton = canChangePassword ? (
+        <Button variant='outline' size='sm' onClick={() => setPasswordDialogOpen(true)}>
+            <Lock className='mr-1.5 h-3.5 w-3.5' />
+            {t('vds.access.change_password')}
+        </Button>
+    ) : undefined;
     const networkRxRate = networkRxData.length ? networkRxData[networkRxData.length - 1].value : 0;
     const networkTxRate = networkTxData.length ? networkTxData[networkTxData.length - 1].value : 0;
     const networkRxTotal = vmStatus?.netin ?? 0;
@@ -507,32 +521,42 @@ export default function VdsConsolePage() {
 
             <div className='grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_18rem] 2xl:grid-cols-[minmax(0,1fr)_20rem]'>
                 <div className='flex min-w-0 flex-col'>
-                    <VdsScreen
-                        status={displayStatus}
-                        canConsole={canConsole}
-                        vncUrl={vncUrl}
-                        vncPassword={vncPassword}
-                        vncLoading={vncLoading}
-                        onConnect={() => {
-                            void openVnc();
-                        }}
-                        onDisconnect={handleVncDisconnect}
-                        vmId={instance.id}
-                        hostname={instance.hostname ?? undefined}
-                        features={features}
-                        canPower={canPower}
-                        canSettings={hasPermission('settings')}
-                        onClose={() => {
-                            wantVncRef.current = false;
-                            vncReconnectAttemptsRef.current = 0;
-                            if (vncReconnectTimerRef.current) {
-                                clearTimeout(vncReconnectTimerRef.current);
-                                vncReconnectTimerRef.current = null;
-                            }
-                            clearVncSession();
-                        }}
-                        className='h-[calc(75vw+6.5rem)] max-h-[70dvh] min-h-[18rem] sm:h-[min(70dvh,40rem)] sm:max-h-none sm:min-h-[22rem] xl:h-auto xl:min-h-[max(32rem,calc(100dvh-22rem))] xl:flex-1'
-                    />
+                    {sshOnly ? (
+                        <VdsSshAccessCard
+                            ip={ip}
+                            username={accessUsername}
+                            orvex={vmStatus?.orvex ?? null}
+                            action={changePasswordButton}
+                            className='xl:flex-1'
+                        />
+                    ) : (
+                        <VdsScreen
+                            status={displayStatus}
+                            canConsole={canConsole}
+                            vncUrl={vncUrl}
+                            vncPassword={vncPassword}
+                            vncLoading={vncLoading}
+                            onConnect={() => {
+                                void openVnc();
+                            }}
+                            onDisconnect={handleVncDisconnect}
+                            vmId={instance.id}
+                            hostname={instance.hostname ?? undefined}
+                            features={features}
+                            canPower={canPower}
+                            canSettings={hasPermission('settings')}
+                            onClose={() => {
+                                wantVncRef.current = false;
+                                vncReconnectAttemptsRef.current = 0;
+                                if (vncReconnectTimerRef.current) {
+                                    clearTimeout(vncReconnectTimerRef.current);
+                                    vncReconnectTimerRef.current = null;
+                                }
+                                clearVncSession();
+                            }}
+                            className='h-[calc(75vw+6.5rem)] max-h-[70dvh] min-h-[18rem] sm:h-[min(70dvh,40rem)] sm:max-h-none sm:min-h-[22rem] xl:h-auto xl:min-h-[max(32rem,calc(100dvh-22rem))] xl:flex-1'
+                        />
+                    )}
                 </div>
                 <div className='flex min-w-0 flex-col'>
                     <ServerConsoleStats
@@ -656,6 +680,24 @@ export default function VdsConsolePage() {
                     </PageCard>
                 )}
             </div>
+
+            {!sshOnly ? (
+                <VdsSshAccessCard
+                    ip={ip}
+                    username={accessUsername}
+                    orvex={vmStatus?.orvex ?? null}
+                    action={changePasswordButton}
+                />
+            ) : null}
+            {canChangePassword ? (
+                <VdsChangePasswordDialog
+                    vmId={instance.id}
+                    username={accessUsername ?? 'root'}
+                    open={passwordDialogOpen}
+                    onOpenChange={setPasswordDialogOpen}
+                    onChanged={() => refreshInstance()}
+                />
+            ) : null}
 
             {canConsole && features?.graphs.enabled && features.graphs.timeframes.length > 0 ? (
                 <VdsResourceGraphs vmId={instance.id} timeframes={features.graphs.timeframes} />

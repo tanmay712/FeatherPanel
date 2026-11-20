@@ -542,6 +542,16 @@ class VmInstancesController
             $vmid,
             $targetNode
         );
+        // OrveX nodes: hand over the login password before the runner clones the
+        // guest, so containers get it as well (no-op for Proxmox nodes).
+        VmInstanceUtil::registerOrvexCredentials(
+            $vmNode,
+            $client,
+            (string) $targetNode,
+            (int) $vmid,
+            $vmType === 'lxc' ? 'root' : $ciUserInput,
+            $ciPasswordInput,
+        );
 
         self::emitVdsEvent(VdsEvent::onVdsCreated(), [
             'user_uuid' => $userUuid,

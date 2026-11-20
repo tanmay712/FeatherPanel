@@ -1,34 +1,211 @@
 <div align="center">
 
-<img src="../frontendv2/public/branding/orvex-logo.png" alt="OrveX Panel" width="96" />
+<img src="assets/orvex-banner.svg" alt="OrveX Panel: game servers, billing and VPS hosting in one open-source panel" width="100%" />
 
-# OrveX Panel
+<br />
 
-**Open-source game server management with built-in billing, fast, secure, and built for operators.**
+[![License](https://img.shields.io/badge/license-AGPL--3.0-7c3aed?style=for-the-badge)](../LICENSE)
+[![Install](https://img.shields.io/badge/install-one%20command-a855f7?style=for-the-badge&logo=gnubash&logoColor=white)](#-install-in-one-command)
+[![VPS](https://img.shields.io/badge/VPS-KVM%20%2B%20LXC-4f46e5?style=for-the-badge&logo=linuxcontainers&logoColor=white)](#%EF%B8%8F-vps-hosting-without-proxmox)
+[![Billing](https://img.shields.io/badge/billing-built%20in-db2777?style=for-the-badge&logo=stripe&logoColor=white)](#-built-in-addons)
+[![Languages](https://img.shields.io/badge/languages-19-06b6d4?style=for-the-badge&logo=googletranslate&logoColor=white)](#-everything-included)
 
-<sub>OrveX Panel is based on <a href="https://github.com/MythicalLTD/FeatherPanel">FeatherPanel</a> by Mythical Systems and bundles the official FeatherPanel addons out of the box.</sub>
+### Run your own hosting company from one panel.
 
-<br /><br />
+Game servers, a complete billing suite and **VPS hosting with KVM + LXC on your own servers, no Proxmox required.**<br />
+Dedicated and shared IPv4, live stats, password changes, SSH details, snapshots and backups for every customer.
 
-[![Frontend](https://img.shields.io/github/actions/workflow/status/tanmay712/FeatherPanel/frontend.yml?branch=develop&label=Frontend&style=for-the-badge&logo=react&logoColor=white)](https://github.com/tanmay712/FeatherPanel/actions/workflows/frontend.yml)
-[![Backend](https://img.shields.io/github/actions/workflow/status/tanmay712/FeatherPanel/backend.yml?branch=develop&label=Backend&style=for-the-badge&logo=php&logoColor=white)](https://github.com/tanmay712/FeatherPanel/actions/workflows/backend.yml)
-[![Async Runner](https://img.shields.io/github/actions/workflow/status/tanmay712/FeatherPanel/runner.yml?branch=develop&label=Async%20Runner&style=for-the-badge&logo=rust&logoColor=white)](https://github.com/tanmay712/FeatherPanel/actions/workflows/runner.yml)
-[![License](https://img.shields.io/github/license/tanmay712/FeatherPanel?style=for-the-badge&color=2563eb)](https://github.com/tanmay712/FeatherPanel/blob/develop/LICENSE)
+[**🚀 Install**](#-install-in-one-command) &nbsp;·&nbsp; [**🖥️ VPS hosting**](#%EF%B8%8F-vps-hosting-without-proxmox) &nbsp;·&nbsp; [**🧩 Features**](#-everything-included) &nbsp;·&nbsp; [**💳 Addons**](#-built-in-addons) &nbsp;·&nbsp; [**📖 Docs**](#-documentation)
 
 </div>
 
 ---
 
-## ⚠️ Development branch
+## 🚀 Install in one command
+
+<img src="assets/install-demo.svg" alt="The OrveX installer menu installing a VPS node" width="100%" />
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/tanmay712/FeatherPanel/develop/install.sh | sudo bash
+```
+
+The interactive menu installs the panel, turns servers into VPS nodes, updates everything and shows the status. You can also go straight to a command:
+
+| I want to… | Command |
+| --- | --- |
+| 🪐 Install the panel | `curl -fsSL https://raw.githubusercontent.com/tanmay712/FeatherPanel/develop/install.sh \| sudo bash -s -- panel` |
+| 🔒 …on my domain with HTTPS | `curl -fsSL https://raw.githubusercontent.com/tanmay712/FeatherPanel/develop/install.sh \| sudo bash -s -- panel --domain panel.example.com` |
+| ⚡ Turn a server into a VPS node | `curl -fsSL https://raw.githubusercontent.com/tanmay712/FeatherPanel/develop/install.sh \| sudo bash -s -- vps-node` |
+| 🔄 Update | `orvex update` (panel) · `orvex node-update` (VPS node) |
+| 📋 See what is running | `orvex status` |
+| ❓ All options | `curl -fsSL https://raw.githubusercontent.com/tanmay712/FeatherPanel/develop/install.sh \| bash -s -- help` |
+
+> [!TIP]
+> **Requirements:** Debian 11–13 or Ubuntu 20.04–24.04 (amd64 or arm64) with root access.
+> The **panel** wants 2 vCPU and 4 GB RAM. Building from source needs about 6 GB of RAM + swap, so the installer adds a swap file on smaller servers (or use `--images` once the GHCR images are published).
+> A **VPS node** needs a dedicated server or a VPS with nested virtualization for KVM; LXC containers work everywhere.
+
+After the panel install, open the printed URL and register: **the first account becomes the administrator.**
+
+---
+
+## 🖥️ VPS hosting without Proxmox
+
+**OrveX VPS Node** turns any Debian or Ubuntu server into a hypervisor for your panel. It runs
+[Incus](https://linuxcontainers.org/incus/) (KVM virtual machines **and** LXC containers) and speaks the same API
+the panel uses for Proxmox, so nodes, IP pools, templates and customer pages work exactly the same.
+Proxmox VE nodes keep working side by side.
+
+```mermaid
+flowchart LR
+    C["👤 Customers"] --> P["🪐 OrveX Panel"]
+    A["🛠️ Admins"] --> P
+    P -- "HTTPS · Proxmox-compatible API" --> N["⚡ OrveX VPS Node<br/>orvex-node + Incus"]
+    P -. "still supported" .-> X["Proxmox VE"]
+    N --> K["🖥️ KVM virtual machines"]
+    N --> L["📦 LXC containers"]
+    N --> D["🌐 Dedicated IPv4<br/>routed or bridged"]
+    N --> S["🔀 Shared IPv4<br/>NAT + SSH & port forwards"]
+```
+
+### What your customers get
 
 <table>
 <tr>
-<td width="56">🚨</td>
-<td>
+<td width="50%" valign="top">
 
-**Do not run `develop` in production.**
+📈 **Live stats**: CPU, memory, disk, network and disk I/O, with hour-to-year history graphs<br />
+🔑 **Change password**: set a new root or user password from the panel, applied instantly<br />
+🔐 **SSH details**: a ready-to-copy `ssh` command, also for shared-IPv4 servers<br />
+🌐 **IP information**: dedicated or shared IPv4 and every forwarded port
 
-This branch ships experimental features that may be unstable, incomplete, or unsafe. For live environments, deploy a tagged OrveX Panel release (see [Deploying OrveX Panel](#-deploying-orvex-panel)). The upstream [FeatherPanel docs](https://docs.mythical.systems/docs) still apply to everything that is not OrveX-specific.
+</td>
+<td width="50%" valign="top">
+
+⚡ **Power controls**: start, stop and reboot<br />
+🖼️ **Browser console**: VNC console for KVM servers<br />
+💾 **Snapshots and backups**: create, roll back and restore<br />
+♻️ **Reinstall**: a fresh operating system in a few clicks
+
+</td>
+</tr>
+</table>
+
+### OrveX node vs Proxmox node
+
+| | Proxmox VE node | ⚡ OrveX VPS Node |
+| --- | :---: | :---: |
+| Installation | ISO or Proxmox on Debian | **one command** on Debian/Ubuntu |
+| KVM virtual machines | ✅ | ✅ |
+| LXC containers | ✅ | ✅ |
+| Dedicated IPv4 | ✅ bridge | ✅ routed or bridge |
+| Shared IPv4 (NAT) | manual setup | ✅ automatic SSH + port ranges |
+| Password change from the panel | KVM only (next boot or guest agent) | ✅ KVM + LXC, instantly |
+| Browser console | ✅ | ✅ KVM |
+| Stats, snapshots, backups, reinstall | ✅ | ✅ |
+| Firewall rules, ISO library, live migration | ✅ | not yet |
+
+### Shared IPv4, explained
+
+Shared-IPv4 servers get a private address on the node (`10.77.0.N`). The node forwards an SSH port and a
+block of 20 ports (TCP and UDP) on its public IP, and the panel shows them to the customer:
+
+| Private IP | SSH | Your services (same port inside the server) |
+| --- | --- | --- |
+| `10.77.0.2` | `node-ip:22002` → port 22 | `node-ip:30040-30059` |
+| `10.77.0.10` | `node-ip:22010` → port 22 | `node-ip:30200-30219` |
+| `10.77.0.254` | `node-ip:22254` → port 22 | `node-ip:35080-35099` |
+
+### Add a VPS node in five minutes
+
+1. **On the server**, run `curl -fsSL https://raw.githubusercontent.com/tanmay712/FeatherPanel/develop/install.sh | sudo bash -s -- vps-node`.<br />
+   It installs Incus, creates the storage pool and the shared-IPv4 bridge, starts the agent and prints the connection details.
+2. **Admin → VDS Nodes → Create**: enter the printed FQDN, port `8006`, user `orvex@orvex`, token ID and secret, and enable *Skip TLS verification*.
+3. **Node → IPs**: add your dedicated IPv4 addresses and/or the shared pool as one range, `10.77.0.2-10.77.0.254` (CIDR `24`, gateway `10.77.0.1`).
+4. **Node → Templates**: add templates by VMID, for example `9000` Ubuntu 24.04 KVM, `9002` Debian 12 KVM, `9100` Ubuntu 24.04 LXC or `9102` Debian 12 LXC.
+5. **Admin → VDS Instances → Create** a server for a customer. Turn on **Admin → Settings → Proxy VNC via panel** for the browser console.
+
+<details>
+<summary><b>Node command line</b> (<code>orvex-node</code>)</summary>
+
+<br />
+
+| Command | Does |
+| --- | --- |
+| `orvex-node info` | Show the values to enter in the panel, the IP pools and templates |
+| `orvex-node status` | List guests with type, status, IP, network mode and SSH endpoint |
+| `orvex-node templates` | List templates and which ones are downloaded |
+| `orvex-node cache-templates [name...]` | Pre-download template images for fast deploys |
+| `orvex-node doctor` | Check Incus, KVM, forwarding, storage, bridge, TLS and token |
+| `orvex-node rotate-token` | Generate a new API secret |
+| `journalctl -u orvex-node -f` | Follow the agent log |
+
+Configuration lives in `/etc/orvex-node/config.json` (templates in `templates.json`). Full details are in [`vps-node/README.md`](../vps-node/README.md).
+
+</details>
+
+---
+
+## 🧩 Everything included
+
+<table>
+<tr>
+<td width="33%" valign="top">
+
+### 🎮 Game servers
+Wings nodes, file manager, console, schedules, databases, subusers and backups. **12 bundled spells**: Minecraft (Vanilla, Forge, BungeeCord, Pumpkin), Rust, CS:GO, TF2, Insurgency, Source games, discord.py, Mumble and TeamSpeak 3.
+
+</td>
+<td width="33%" valign="top">
+
+### 🖥️ VPS hosting
+KVM and LXC on **OrveX VPS Nodes** or Proxmox VE. Dedicated and shared IPv4, IP pools, templates, stats, password changes, console, snapshots, backups and reinstalls.
+
+</td>
+<td width="33%" valign="top">
+
+### 💳 Billing
+Credits, invoices, renewable plans, a resource store, AFK rewards, link rewards, redeem codes and referrals, all as **bundled addons**.
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+### 🌐 Web hosting
+WebSpaces with domains, mailboxes and DNS automation on FeatherQuilld nodes.
+
+</td>
+<td valign="top">
+
+### 🤖 AI assistant
+A chat assistant for the panel and for VPS servers: status, power, backups and help.
+
+</td>
+<td valign="top">
+
+### 🌍 19 languages
+English plus 18 community translations, chosen in **Admin → Translations**.
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+### 🔌 Pterodactyl API
+Pterodactyl-style application and client API for existing tooling and WHMCS modules.
+
+</td>
+<td valign="top">
+
+### 🛡️ Security
+2FA, passkeys, confirmation for sensitive actions, rate limits, activity and audit logs.
+
+</td>
+<td valign="top">
+
+### 📊 Observability
+Prometheus metrics, structured logs with Loki shipping, and ready-made Grafana dashboards.
 
 </td>
 </tr>
@@ -36,11 +213,9 @@ This branch ships experimental features that may be unstable, incomplete, or uns
 
 ---
 
-## ✨ What OrveX Panel adds
+## 💳 Built-in addons
 
-Everything below ships **in this repository** and is active as soon as the panel starts, with no marketplace installs needed.
-
-### Bundled addons (`backend/storage/addons/`)
+Every addon below ships in `backend/storage/addons/` and is active on the first start, with no marketplace installs needed.
 
 | Addon | What it does |
 | --- | --- |
@@ -62,114 +237,72 @@ Everything below ships **in this repository** and is active as soon as the panel
 | **Let It Snow** (`letitsnow`) | Snowfall effect across the panel. |
 | **Let's Celebrate** (`letscelebrate`) | New-year fireworks effect. |
 
-They are active as soon as the panel starts; configure them under **Admin → Plugins**. Their database tables are created by the normal `php cli migrate` run (Docker runs it on every start).
+Configure them under **Admin → Plugins**. Their database tables are created by the normal migrations (Docker runs them on every start).
 
-### Translations and spells
+<details>
+<summary><b>Rebuilding addon frontends</b></summary>
 
-- **19 languages** in `backend/public/translations/`: Amharic, Czech, German, Spanish (Latin America), French, Croatian, Hungarian, Italian, Japanese, Khmer, Dutch, Polish, Portuguese, Romanian, Russian, Slovak, Serbian, Turkish, plus English. Choose which ones are offered in **Admin → Translations**.
-- **12 spells (eggs)** in `backend/storage/eggs/`: Minecraft (Vanilla, Forge, BungeeCord, Pumpkin), Rust, CS:GO, Team Fortress 2, Insurgency, custom Source engine games, discord.py bots, Mumble and TeamSpeak 3. Import them with **Admin → Spells → Import Spell**.
+<br />
 
-### Rebuilding addon frontends
-
-The addon UIs are prebuilt into `Frontend/Components/<addon>/dist/`. After changing an addon's Vue source, rebuild with:
+The addon UIs are prebuilt into `Frontend/Components/<addon>/dist/`. After changing an addon's Vue source:
 
 ```bash
 make addons            # or: scripts/build-addon-frontends.sh [addon ...]
 ```
 
+</details>
+
 ---
 
-## 🐳 Deploying OrveX Panel
+## 🐳 Deployment options
 
-**Option A: build on your server (no registry needed)**
+<details>
+<summary><b>Docker by hand, prebuilt images, upgrades</b></summary>
+
+<br />
+
+**Build on your server** (what the installer does):
 
 ```bash
-git clone https://github.com/tanmay712/FeatherPanel.git orvexpanel && cd orvexpanel
+git clone https://github.com/tanmay712/FeatherPanel.git /opt/orvexpanel && cd /opt/orvexpanel
 docker compose -f docker-compose.v2.git.yml up -d --build
 ```
 
-**Option B: use prebuilt images from GHCR**
+**Prebuilt images from GHCR**: the Docker workflows publish `ghcr.io/tanmay712/orvexpanel-*`, and `docker-compose.yml` uses them.
 
-The Docker workflows publish OrveX images as `ghcr.io/tanmay712/orvexpanel-*`, and `docker-compose.yml` uses those images.
+1. Enable workflows once under the repository's **Actions** tab (GitHub turns them off on forks).
+2. Pushing to `develop` builds the `:dev` images; pushing a version tag such as `v1.0.0` builds `:latest`.
+3. Make the packages public under GitHub → **Packages**, then run `install.sh panel --images` or `docker compose up -d`.
 
-1. Enable workflows once under the repository's **Actions** tab (GitHub turns them off on forks by default).
-2. Pushing to `develop` builds the `:dev` images (*Docker Dev* workflow). Pushing a version tag such as `v1.0.0` (`git tag v1.0.0 && git push origin v1.0.0`) builds `:latest` (*Docker Release* workflow).
-3. Make the packages public under GitHub → **Packages** so servers can pull them without logging in, then run `docker compose up -d`.
+**Upgrading an existing install**: on startup the backend copies in bundled addons and translations that your volumes don't have yet. Each addon is seeded once, so uninstalled addons stay uninstalled and marketplace updates are kept. Volume, container and database names keep their `featherpanel_*` names, so existing installs upgrade in place.
 
-**Upgrading an existing install:** on startup the backend copies in any bundled addon or translation that your persistent volumes don't have yet. Each addon is seeded only once, so addons you uninstall stay uninstalled and marketplace updates are never overwritten. Volume, container and database names keep their `featherpanel_*` names on purpose, so existing installs upgrade in place without losing data.
-
----
-
-## 🧭 Quick navigation
-
-<table>
-<tr>
-<th align="left">📖 Documentation</th>
-<th align="left">🧩 Developer reference</th>
-<th align="left">💬 Community</th>
-</tr>
-<tr>
-<td valign="top">
-
-- [Installation guides](https://docs.mythical.systems/docs)
-- [Configuration](https://docs.mythical.systems/docs)
-- [Releases](https://github.com/mythicalltd/featherpanel/releases)
-- [Changelog](https://github.com/mythicalltd/featherpanel/blob/develop/CHANGELOG.md)
-
-</td>
-<td valign="top">
-
-- [icanhasfeatherpanel](https://mythicalltd.github.io/FeatherPanel/icanhasfeatherpanel/) widgets, permissions, events
-- [OpenAPI / Redoc](https://mythicalltd.github.io/FeatherPanel/icanhasfeatherpanel/api/) full API reference
-
-</td>
-<td valign="top">
-
-- [Discord](https://discord.mythical.systems)
-- [GitHub Issues](https://github.com/mythicalltd/featherpanel/issues)
-- [Contributors graph](https://github.com/mythicalltd/featherpanel/graphs/contributors)
-
-</td>
-</tr>
-</table>
+</details>
 
 ---
 
-## 🏗️ Stack
+## 📖 Documentation
 
-<table>
-<tr>
-<th>Layer</th>
-<th>Technology</th>
-<th>Path</th>
-</tr>
-<tr>
-<td>🐘 Panel API</td>
-<td>PHP 8.5</td>
-<td><code>backend/</code></td>
-</tr>
-<tr>
-<td>⚛️ Web UI</td>
-<td>Next.js · React · TypeScript</td>
-<td><code>frontendv2/</code></td>
-</tr>
-<tr>
-<td>🦀 Async jobs</td>
-<td>Rust (<code>async-runner</code>)</td>
-<td><code>runner/</code></td>
-</tr>
-<tr>
-<td>📦 Installer</td>
-<td>Bash</td>
-<td><code>installer/</code></td>
-</tr>
-</table>
+<details>
+<summary><b>Stack</b></summary>
 
-Docker images for the backend, frontend, and async runner are published through the release workflows listed below.
+<br />
 
----
+| Layer | Technology | Path |
+| --- | --- | --- |
+| 🐘 Panel API | PHP 8.5 | `backend/` |
+| ⚛️ Web UI | Next.js · React · TypeScript | `frontendv2/` |
+| 🦀 Async jobs | Rust (`async-runner`) | `runner/` |
+| ⚡ VPS node agent | Python 3 (stdlib only) on Incus | `vps-node/` |
+| 📦 Installers | Bash | `install.sh`, `installer/` |
 
-## 📚 icanhasfeatherpanel public developer docs
+</details>
+
+<details>
+<summary><b>Developer docs, OpenAPI and plugin SDK</b></summary>
+
+<br />
+
+### 📚 Developer docs (icanhasfeatherpanel)
 
 **icanhasfeatherpanel** is FeatherPanel’s static developer reference. No running panel is required to browse it.
 
@@ -257,7 +390,14 @@ Optional environment variables for `build:public-docs`:
 
 ---
 
-## 🔄 CI & workflows
+</details>
+
+<details>
+<summary><b>CI and workflows</b></summary>
+
+<br />
+
+### 🔄 CI & workflows
 
 <table>
 <tr>
@@ -306,9 +446,12 @@ Optional environment variables for `build:public-docs`:
 </tr>
 </table>
 
----
+</details>
 
-## 📊 Code statistics
+<details>
+<summary><b>Code statistics</b></summary>
+
+<br />
 
 <!-- COUNT-STATS:START -->
 
@@ -329,67 +472,14 @@ _Last updated: 2026-11-19T22:14:17.270Z_
 
 <!-- COUNT-STATS:END -->
 
----
-
-## 🚀 Try it (stable installer)
-
-These commands install the latest **stable upstream FeatherPanel** build. They do **not** install OrveX Panel; use the Docker steps in [Deploying OrveX Panel](#-deploying-orvex-panel) for that.
-
-<table>
-<tr>
-<th align="left">🐧 Linux</th>
-<th align="left">🪟 Windows</th>
-</tr>
-<tr>
-<td valign="top">
-
-```bash
-curl -sSL https://get.featherpanel.com/stable.sh | bash
-```
-
-</td>
-<td valign="top">
-
-**PowerShell**
-
-```powershell
-iwr https://get.featherpanel.com/stable.ps1 | iex
-```
-
-**CMD**
-
-```cmd
-powershell -ExecutionPolicy Bypass -Command "iwr https://get.featherpanel.com/stable.ps1 | iex"
-```
-
-</td>
-</tr>
-</table>
-
-<details>
-<summary><strong>After installation</strong></summary>
-
-<br />
-
-1. Register the first account it becomes the admin automatically.
-2. Follow the [configuration docs](https://docs.mythical.systems/docs).
-3. Report OrveX-specific bugs on [GitHub Issues](https://github.com/tanmay712/FeatherPanel/issues).
-
 </details>
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome. Please read the [contributing guide](CONTRIBUTING.md) and [code of conduct](CODE_OF_CONDUCT.md) before opening a pull request.
-
-<div align="center">
-
-[![Contributors](https://contrib.rocks/image?repo=mythicalltd/featherpanel)](https://github.com/mythicalltd/featherpanel/graphs/contributors)
-
-</div>
-
----
+Contributions are welcome. Please read the [contributing guide](CONTRIBUTING.md) and the [code of conduct](CODE_OF_CONDUCT.md) before opening a pull request.
+Report OrveX-specific bugs on [GitHub Issues](https://github.com/tanmay712/FeatherPanel/issues).
 
 ## 📄 License
 
@@ -399,18 +489,10 @@ OrveX Panel is a modified version of [FeatherPanel](https://github.com/MythicalL
 
 <div align="center">
 
-<sub>OrveX Panel, built on FeatherPanel, made with ❤️ by <a href="https://mythical.systems"><strong>Mythical Systems</strong></a> and contributors</sub>
+<img src="../frontendv2/public/branding/orvex-logo.png" alt="OrveX" width="48" />
 
-<br /><br />
+<sub>OrveX Panel, built on FeatherPanel by <a href="https://mythical.systems"><strong>Mythical Systems</strong></a> and contributors.</sub>
 
-<a href="https://docs.mythical.systems/docs">Documentation</a>
-&nbsp;·&nbsp;
-<a href="https://mythicalltd.github.io/FeatherPanel/icanhasfeatherpanel/">Developer docs</a>
-&nbsp;·&nbsp;
-<a href="https://discord.mythical.systems">Discord</a>
-&nbsp;·&nbsp;
-<a href="https://github.com/tanmay712/FeatherPanel/issues">Issues</a>
-&nbsp;·&nbsp;
-<a href="https://github.com/tanmay712/FeatherPanel/releases">Releases</a>
+<sub><a href="#-install-in-one-command">Install</a> · <a href="#%EF%B8%8F-vps-hosting-without-proxmox">VPS hosting</a> · <a href="https://github.com/tanmay712/FeatherPanel/issues">Issues</a> · <a href="https://github.com/tanmay712/FeatherPanel/releases">Releases</a> · <a href="https://docs.mythical.systems/docs">Upstream docs</a></sub>
 
 </div>

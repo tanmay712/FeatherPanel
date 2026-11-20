@@ -119,6 +119,50 @@ final class VmInstanceUtil
     }
 
     /**
+     * OrveX VPS Nodes (see vps-node/ in this repository) serve the Proxmox API on
+     * top of Incus, so they are added like any Proxmox node. They are recognised by
+     * the "@orvex" realm of the API token user printed by the node installer; Proxmox
+     * itself has no such realm.
+     *
+     * @param array<string, mixed> $vmNode
+     */
+    public static function isOrvexNode(array $vmNode): bool
+    {
+        return str_ends_with(strtolower(trim((string) ($vmNode['user'] ?? ''))), '@orvex');
+    }
+
+    /**
+     * Give an OrveX node the login password of a guest that is about to be cloned.
+     * Proxmox container configs have no password field, so this is how LXC guests
+     * on OrveX nodes get the password chosen in the panel. Best effort: on failure the
+     * guest is still created and the password can be set later from the panel.
+     *
+     * @param array<string, mixed> $vmNode
+     */
+    public static function registerOrvexCredentials(
+        array $vmNode,
+        Proxmox $client,
+        string $pveNode,
+        int $vmid,
+        ?string $username,
+        ?string $password,
+    ): void {
+        if (!self::isOrvexNode($vmNode) || $vmid <= 0 || $password === null || $password === '' || $pveNode === '') {
+            return;
+        }
+        $result = $client->apiPost('/api2/json/nodes/' . rawurlencode($pveNode) . '/orvex/credentials', [
+            'vmid' => $vmid,
+            'username' => ($username !== null && $username !== '') ? $username : 'root',
+            'password' => $password,
+        ]);
+        if (!$result['ok']) {
+            App::getInstance(true)->getLogger()->warning(
+                'OrveX node: could not register guest credentials for VMID ' . $vmid . ': ' . ($result['error'] ?? 'unknown error')
+            );
+        }
+    }
+
+    /**
      * @param array<string, mixed> $instance
      *
      * @return array<int, array<string, mixed>>
@@ -384,6 +428,13 @@ final class VmInstanceUtil
                     'http_status' => 400,
                 ];
             }
+        } elseif (self::isOrvexNode($vmNode)) {
+            // OrveX nodes also apply a root password to containers (optional).
+            $rawPassword = isset($requestData['ci_password']) && is_string($requestData['ci_password']) ? trim($requestData['ci_password']) : '';
+            if ($rawPassword !== '') {
+                $ciUser = 'root';
+                $ciPassword = $rawPassword;
+            }
         }
 
         try {
@@ -538,6 +589,8 @@ final class VmInstanceUtil
         if (!$saved) {
             return ['ok' => false, 'error' => 'Failed to create reinstall task in DB', 'code' => 'DB_ERROR', 'http_status' => 500];
         }
+
+        self::registerOrvexCredentials($vmNode, $client, (string) $node, (int) $newVmid, $ciUser, $ciPassword);
 
         return [
             'ok' => true,
