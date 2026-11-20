@@ -44,6 +44,8 @@ STORAGE_SOURCE=""
 NAT_SUBNET="10.77.0.0/24"
 TEMPLATES="ubuntu-24.04-kvm,debian-12-kvm,ubuntu-24.04-lxc,debian-12-lxc"
 SKIP_TEMPLATES=0
+PANEL_URL=""  # vps-node: connect to this panel...
+NODE_TOKEN="" # ...with the one-time token from Admin > VDS Nodes
 PURGE=0
 UNINSTALL_TARGET=""
 
@@ -296,15 +298,32 @@ make_swapfile() {
     return 1
 }
 
+set_env_var() { # set_env_var FILE KEY VALUE (replace or append)
+    local file=$1 key=$2 value=$3 escaped
+    if grep -q "^${key}=" "$file" 2>/dev/null; then
+        escaped=${value//\\/\\\\}
+        escaped=${escaped//&/\\&}
+        escaped=${escaped//|/\\|}
+        sed -i "s|^${key}=.*|${key}=${escaped}|" "$file"
+    else
+        echo "${key}=${value}" >>"$file"
+    fi
+}
+
+# The panel builds the OrveX node install command from these (same repo/branch as the panel).
+write_installer_source() {
+    local env_file="$PANEL_DIR/.env"
+    [ -f "$env_file" ] || return 0
+    set_env_var "$env_file" ORVEX_REPO "$ORVEX_REPO"
+    set_env_var "$env_file" ORVEX_BRANCH "$ORVEX_BRANCH"
+}
+
 write_panel_env() {
     local env_file="$PANEL_DIR/.env" bind_port=$1
     if [ -f "$env_file" ]; then
         ok "Keeping existing secrets in $env_file"
-        if grep -q '^FEATHERPANEL_PANEL_PORT=' "$env_file"; then
-            sed -i "s|^FEATHERPANEL_PANEL_PORT=.*|FEATHERPANEL_PANEL_PORT=${bind_port}|" "$env_file"
-        else
-            echo "FEATHERPANEL_PANEL_PORT=${bind_port}" >>"$env_file"
-        fi
+        set_env_var "$env_file" FEATHERPANEL_PANEL_PORT "$bind_port"
+        write_installer_source
         return
     fi
     umask 077
@@ -316,6 +335,8 @@ MARIADB_USER=featherpanel
 MARIADB_PASSWORD=$(gen_secret)
 REDIS_PASSWORD=$(gen_secret)
 FEATHERPANEL_PANEL_PORT=${bind_port}
+ORVEX_REPO=${ORVEX_REPO}
+ORVEX_BRANCH=${ORVEX_BRANCH}
 EOF
     umask 022
     ok "Generated database and Redis secrets ($env_file)"
@@ -450,8 +471,9 @@ EOF
     Files:     ${PANEL_DIR}   (secrets in ${PANEL_DIR}/.env)
     Manage:    orvex status | orvex update
 
-    Add VPS hosting: run this on each server that should host VPS (KVM + LXC):
-      ${C_CYAN}curl -fsSL ${INSTALLER_URL} | sudo bash -s -- vps-node${C_RESET}
+    Add VPS hosting (KVM + LXC, no Proxmox needed): in the panel open
+      Admin > VDS Nodes > Create > OrveX Node and run the command it shows on the
+      server that should host the VPS. The node connects itself.
 
 EOF
 }
@@ -462,6 +484,7 @@ update_panel() {
     load_panel_state
     step "Updating OrveX Panel"
     fetch_repo "$PANEL_DIR"
+    write_installer_source
     if [ "$COMPOSE_FILE" = "docker-compose.yml" ]; then
         compose pull
         compose up -d
@@ -686,6 +709,12 @@ configure_node_firewall() {
 
 install_vps_node() {
     need_root
+    if [ -n "$PANEL_URL$NODE_TOKEN" ]; then
+        [ -n "$PANEL_URL" ] && [ -n "$NODE_TOKEN" ] || die "--panel and --token belong together (copy the whole command from the panel)"
+        [[ $PANEL_URL =~ ^https?://[^[:space:]/]+ ]] || die "--panel must be the panel URL, e.g. https://panel.example.com"
+        [[ $NODE_TOKEN =~ ^orvx_[1-9][0-9]{0,9}_[A-Za-z0-9]{48}$ ]] || die "--token is not an OrveX install token (copy it from the panel again)"
+        PANEL_URL=${PANEL_URL%/}
+    fi
     detect_os
     check_virtualization
     check_conflicts
@@ -694,6 +723,19 @@ install_vps_node() {
     ask NODE_NAME "Node name" "$NODE_NAME"
     ask PUBLIC_IP "Public IPv4 of this server (used for shared-IPv4 port forwards)" "$PUBLIC_IP"
     [ -n "$PUBLIC_IP" ] || die "Could not detect the public IPv4; pass --public-ip"
+    if [ -z "$PANEL_URL" ] && [ "$ASSUME_YES" -eq 0 ] && [ "$HAVE_TTY" -eq 1 ]; then
+        info "To connect automatically, create the node in OrveX Panel first: Admin > VDS Nodes > Create > OrveX Node."
+        ask PANEL_URL "Panel URL (press Enter to connect later)" ""
+        if [ -n "$PANEL_URL" ]; then
+            ask NODE_TOKEN "Install token shown by the panel (orvx_...)" ""
+            PANEL_URL=${PANEL_URL%/}
+            if [[ ! $PANEL_URL =~ ^https?://[^[:space:]/]+ ]] || [[ ! $NODE_TOKEN =~ ^orvx_[1-9][0-9]{0,9}_[A-Za-z0-9]{48}$ ]]; then
+                warn "That panel URL or token does not look right; connect later with: orvex-node register --panel URL --token TOKEN"
+                PANEL_URL=""
+                NODE_TOKEN=""
+            fi
+        fi
+    fi
     if [ -z "$STORAGE_DRIVER" ]; then
         STORAGE_DRIVER=btrfs
         ask STORAGE_DRIVER "Storage driver (btrfs, dir, lvm, or zfs on Ubuntu)" "$STORAGE_DRIVER"
@@ -757,6 +799,18 @@ install_vps_node() {
     ok "Agent running on port ${NODE_PORT} (systemctl status orvex-node)"
     install_cli_helper "$NODE_DIR/src/install.sh"
 
+    local registered=0
+    if [ -n "$PANEL_URL" ]; then
+        step "Connecting to OrveX Panel"
+        if orvex-node register --panel "$PANEL_URL" --token "$NODE_TOKEN"; then
+            registered=1
+        else
+            warn "The node is installed but not connected to the panel yet."
+            warn "Fix the problem above, then in the panel open the node > Connect > New install command"
+            warn "and run: orvex-node register --panel ${PANEL_URL} --token <new token>"
+        fi
+    fi
+
     if [ "$SKIP_TEMPLATES" -eq 0 ]; then
         step "Downloading templates"
         local list="${TEMPLATES//,/ }"
@@ -771,14 +825,31 @@ install_vps_node() {
     step "Self check"
     orvex-node doctor || true
 
+    if [ "$registered" -eq 1 ]; then
+        printf '\n%s\n' "${C_GREEN}${C_BOLD}  OrveX VPS Node is installed and connected to ${PANEL_URL}${C_RESET}"
+        cat <<EOF
+
+    Templates and the shared-IPv4 pool were added to this node in the panel.
+    Next in OrveX Panel:
+      1. Node > IP Pool: add any extra public IPv4s of this server (dedicated IPs, bridge ${C_BOLD}orvexpub0${C_RESET}).
+      2. Admin > Settings: turn on "Proxy VNC via panel" for the in-browser console of KVM servers.
+      3. Admin > VDS Instances > Create: pick this node, a template, an IP and resources for a user.
+
+    Manage: orvex-node status | orvex-node doctor | orvex node-update
+
+EOF
+        return
+    fi
+
     orvex-node info
     cat <<EOF
-  ${C_BOLD}Next steps in OrveX Panel${C_RESET}
-    1. Admin > VDS Nodes > Create: enter the values above and enable "Skip TLS verification".
-    2. Node > IPs: add dedicated IPv4s (bridge ${C_BOLD}orvexpub0${C_RESET}) and/or the shared pool shown above.
-    3. Node > Templates: add templates using the VMIDs listed above.
-    4. Admin > Settings: turn on "Proxy VNC via panel" for the in-browser console.
-    5. Admin > VDS Instances > Create: pick this node, a template, an IP and resources for a user.
+  ${C_BOLD}Connect this node to OrveX Panel${C_RESET}
+    Easiest: in the panel open Admin > VDS Nodes > Create > OrveX Node and run the
+    "orvex-node register ..." part of the command it shows on this server.
+
+    By hand instead: Admin > VDS Nodes > Create > Proxmox VE with the values above
+    (enable "Skip TLS verification"), then add the shared pool, templates (VMIDs above)
+    and dedicated IPv4s (bridge ${C_BOLD}orvexpub0${C_RESET}) yourself.
 
 EOF
 }
@@ -872,7 +943,9 @@ Panel options:
   --images               Use prebuilt images from GHCR instead of building from source
 
 VPS node options:
-  --name NAME            Node name shown in the panel (default: hostname)
+  --panel URL --token T  Connect to OrveX Panel automatically. The panel shows this command
+                         with both values: Admin > VDS Nodes > Create > OrveX Node
+  --name NAME            Node name on the server (default: hostname)
   --public-ip IP         Public IPv4 for shared-IPv4 port forwards (auto-detected)
   --storage-driver D     btrfs (default), dir, lvm or zfs (Ubuntu)
   --storage-size SIZE    Size of the storage pool image, e.g. 200GiB
@@ -890,6 +963,7 @@ General:
 Examples:
   curl -fsSL ${INSTALLER_URL} | sudo bash
   curl -fsSL ${INSTALLER_URL} | sudo bash -s -- panel --domain panel.example.com
+  curl -fsSL ${INSTALLER_URL} | sudo bash -s -- vps-node --panel https://panel.example.com --token orvx_... -y
   curl -fsSL ${INSTALLER_URL} | sudo bash -s -- vps-node --storage-size 300GiB -y
 EOF
 }
@@ -942,6 +1016,8 @@ parse_args() {
             --api-port) NODE_PORT=${2:?--api-port needs a value}; shift ;;
             --templates) TEMPLATES=${2:?--templates needs a value}; shift ;;
             --no-templates) SKIP_TEMPLATES=1 ;;
+            --panel) PANEL_URL=${2:?--panel needs a value}; shift ;;
+            --token) NODE_TOKEN=${2:?--token needs a value}; shift ;;
             --branch)
                 ORVEX_BRANCH=${2:?--branch needs a value}
                 BRANCH_SET=1

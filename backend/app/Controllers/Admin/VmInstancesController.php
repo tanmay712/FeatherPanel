@@ -32,6 +32,7 @@ use App\Helpers\ApiResponse;
 use OpenApi\Attributes as OA;
 use App\Chat\VmInstanceBackup;
 use App\Config\ConfigInterface;
+use App\Services\Vm\OrvexNodes;
 use App\Chat\VmInstanceActivity;
 use App\Helpers\FeatherTailClient;
 use App\Mail\templates\VmSuspended;
@@ -220,6 +221,9 @@ class VmInstancesController
         $vmNode = VmNode::getVmNodeById($vmNodeId);
         if (!$vmNode) {
             return ApiResponse::error('VM node not found', 'VM_NODE_NOT_FOUND', 404);
+        }
+        if (OrvexNodes::isPending($vmNode)) {
+            return ApiResponse::error('This OrveX node has not connected yet. Run its install command on the server first.', 'ORVEX_NODE_PENDING', 409);
         }
 
         $templateId = isset($data['template_id']) ? (int) $data['template_id'] : 0;

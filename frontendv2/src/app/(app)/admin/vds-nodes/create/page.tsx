@@ -28,7 +28,19 @@ import { Select } from '@/components/ui/select-native';
 import { Label } from '@/components/ui/label';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { toast } from 'sonner';
-import { Server, ArrowLeft, Save, Search as SearchIcon, MapPin, Plus, Trash2 } from 'lucide-react';
+import {
+    Server,
+    ArrowLeft,
+    Save,
+    Search as SearchIcon,
+    MapPin,
+    Plus,
+    Trash2,
+    Zap,
+    Boxes,
+    Terminal,
+    CheckCircle2,
+} from 'lucide-react';
 import { usePluginWidgets } from '@/hooks/usePluginWidgets';
 import { WidgetRenderer } from '@/components/server/WidgetRenderer';
 import { cn } from '@/lib/utils';
@@ -45,10 +57,14 @@ interface Location {
     type: 'game' | 'vps' | 'web';
 }
 
+type NodeType = 'orvex' | 'proxmox';
+
 export default function CreateVdsNodePage() {
     const { t } = useTranslation();
     const router = useRouter();
 
+    const [nodeType, setNodeType] = useState<NodeType>('orvex');
+    const isOrvex = nodeType === 'orvex';
     const [loading, setLoading] = useState(false);
     const [locations, setLocations] = useState<Location[]>([]);
     const [locationModalOpen, setLocationModalOpen] = useState(false);
@@ -172,6 +188,12 @@ export default function CreateVdsNodePage() {
         const newErrors: Record<string, string> = {};
 
         if (!form.name.trim()) newErrors.name = t('admin.vdsNodes.form.name_required');
+        if (!form.location_id) newErrors.location_id = t('admin.vdsNodes.form.location_required');
+        if (isOrvex) {
+            // OrveX nodes report their address and API token themselves when they connect.
+            setErrors(newErrors);
+            return Object.keys(newErrors).length === 0;
+        }
         if (!form.fqdn.trim()) {
             newErrors.fqdn = t('admin.vdsNodes.form.fqdn_required');
         } else {
@@ -182,7 +204,6 @@ export default function CreateVdsNodePage() {
             }
         }
 
-        if (!form.location_id) newErrors.location_id = t('admin.vdsNodes.form.location_required');
         if (!form.user.trim()) newErrors.user = t('admin.vdsNodes.form.user_required');
         if (!form.token_id.trim()) newErrors.token_id = t('admin.vdsNodes.form.token_id_required');
         if (!form.secret.trim()) newErrors.secret = t('admin.vdsNodes.form.secret_required');
@@ -197,13 +218,31 @@ export default function CreateVdsNodePage() {
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
-    }, [form, t]);
+    }, [form, isOrvex, t]);
 
     const handleSubmit = async (e?: React.FormEvent) => {
         e?.preventDefault();
         if (!validate()) return;
 
         setLoading(true);
+        if (isOrvex) {
+            try {
+                const { data } = await axios.put('/api/admin/vm-nodes', {
+                    node_type: 'orvex',
+                    name: form.name.trim(),
+                    description: form.description,
+                    location_id: parseInt(form.location_id, 10),
+                });
+                toast.success(t('admin.vdsNodes.orvex.created'));
+                const nodeId = data?.data?.vm_node?.id;
+                router.push(nodeId ? `/admin/vds-nodes/${nodeId}/edit?tab=connect` : '/admin/vds-nodes');
+            } catch (error) {
+                toast.error(getApiErrorMessage(error, t, 'admin.vdsNodes.messages.create_failed'));
+            } finally {
+                setLoading(false);
+            }
+            return;
+        }
         try {
             const headerObject: Record<string, string> = {};
             extraHeaders.forEach(({ key, value }) => {
@@ -299,6 +338,62 @@ export default function CreateVdsNodePage() {
             <WidgetRenderer widgets={getWidgets('admin-vds-nodes-create', 'after-header')} />
 
             <form onSubmit={handleSubmit} className='mt-8 space-y-8' data-fp-save-shortcut>
+                <div className='grid grid-cols-1 gap-4 md:grid-cols-2' role='radiogroup'>
+                    {(
+                        [
+                            { type: 'orvex', icon: Zap, badge: true },
+                            { type: 'proxmox', icon: Boxes, badge: false },
+                        ] as const
+                    ).map((option) => {
+                        const Icon = option.icon;
+                        const active = nodeType === option.type;
+
+                        return (
+                            <button
+                                key={option.type}
+                                type='button'
+                                role='radio'
+                                aria-checked={active}
+                                onClick={() => setNodeType(option.type)}
+                                className={cn(
+                                    'rounded-2xl border-2 p-5 text-left transition-all',
+                                    active
+                                        ? 'border-primary bg-primary/5 shadow-sm'
+                                        : 'border-border/60 hover:border-border hover:bg-muted/30',
+                                )}
+                            >
+                                <div className='flex items-start gap-4'>
+                                    <div
+                                        className={cn(
+                                            'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl',
+                                            active
+                                                ? 'bg-primary text-primary-foreground'
+                                                : 'bg-muted text-muted-foreground',
+                                        )}
+                                    >
+                                        <Icon className='h-5 w-5' />
+                                    </div>
+                                    <div className='min-w-0 space-y-1'>
+                                        <div className='flex flex-wrap items-center gap-2'>
+                                            <span className='font-semibold'>
+                                                {t(`admin.vdsNodes.type.${option.type}_title`)}
+                                            </span>
+                                            {option.badge && (
+                                                <span className='bg-primary/15 text-primary rounded-full px-2 py-0.5 text-[11px] font-semibold'>
+                                                    {t('admin.vdsNodes.type.recommended')}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className='text-muted-foreground text-sm leading-relaxed'>
+                                            {t(`admin.vdsNodes.type.${option.type}_description`)}
+                                        </p>
+                                    </div>
+                                </div>
+                            </button>
+                        );
+                    })}
+                </div>
+
                 <div className='grid grid-cols-1 gap-8 lg:grid-cols-2'>
                     <div className='space-y-8'>
                         <PageCard title={t('admin.vdsNodes.form.basic_details')} icon={Server}>
@@ -306,8 +401,7 @@ export default function CreateVdsNodePage() {
                                 <div className='space-y-2'>
                                     <Label className='text-sm font-semibold'>{t('admin.vdsNodes.form.name')}</Label>
                                     <Input
-                                        // i18n-ignore: example node name
-                                        placeholder='Proxmox Node A'
+                                        placeholder={t('admin.vdsNodes.type.name_placeholder')}
                                         value={form.name}
                                         onChange={(e) => setForm({ ...form, name: e.target.value })}
                                         error={!!errors.name}
@@ -360,255 +454,311 @@ export default function CreateVdsNodePage() {
                             </div>
                         </PageCard>
 
-                        <PageCard title={t('admin.vdsNodes.form.proxmox')} icon={Server}>
-                            <div className='space-y-6'>
-                                <div className='fp-surface rounded-xl border p-4 text-sm'>
-                                    {t('ui.admin.vdsNodes.create.afterCreateOpenFeatherTail')}
-                                </div>
-                                <div className='space-y-2'>
-                                    <Label className='text-sm font-semibold'>{t('admin.vdsNodes.form.user')}</Label>
-                                    <Input
-                                        placeholder='root@pam'
-                                        value={form.user}
-                                        onChange={(e) => setForm({ ...form, user: e.target.value })}
-                                        error={!!errors.user}
-                                    />
-                                    {errors.user && (
-                                        <p className='mt-1 text-xs font-medium text-red-500'>{errors.user}</p>
-                                    )}
-                                </div>
-                                <div className='space-y-2'>
+                        {!isOrvex && (
+                            <PageCard title={t('admin.vdsNodes.form.proxmox')} icon={Server}>
+                                <div className='space-y-6'>
                                     <div className='fp-surface rounded-xl border p-4 text-sm'>
-                                        {t('ui.admin.vdsNodes.create.whenCreatingTheAPITokenMake')}{' '}
-                                        <span className='font-semibold'>root</span> with{' '}
-                                        <span className='font-semibold'>no privilege separation</span>.
+                                        {t('ui.admin.vdsNodes.create.afterCreateOpenFeatherTail')}
                                     </div>
-                                </div>
-                                <div className='space-y-2'>
-                                    <Label className='text-sm font-semibold'>{t('admin.vdsNodes.form.token_id')}</Label>
-                                    <Input
-                                        placeholder='mytokenid'
-                                        data-fp-sensitive=''
-                                        value={form.token_id}
-                                        onChange={(e) => setForm({ ...form, token_id: e.target.value })}
-                                        error={!!errors.token_id}
-                                    />
-                                    {errors.token_id && (
-                                        <p className='mt-1 text-xs font-medium text-red-500'>{errors.token_id}</p>
-                                    )}
-                                </div>
-                                <div className='space-y-2'>
-                                    <Label className='text-sm font-semibold'>{t('admin.vdsNodes.form.secret')}</Label>
-                                    <Input
-                                        type='password'
-                                        placeholder='********'
-                                        data-fp-sensitive=''
-                                        value={form.secret}
-                                        onChange={(e) => setForm({ ...form, secret: e.target.value })}
-                                        error={!!errors.secret}
-                                    />
-                                    {errors.secret && (
-                                        <p className='mt-1 text-xs font-medium text-red-500'>{errors.secret}</p>
-                                    )}
-                                </div>
-                            </div>
-                        </PageCard>
-                    </div>
-
-                    <div className='space-y-8'>
-                        <PageCard title={t('admin.vdsNodes.form.network')} icon={Server}>
-                            <div className='space-y-6'>
-                                <div className='space-y-2'>
-                                    <Label className='text-sm font-semibold'>{t('admin.vdsNodes.form.fqdn')}</Label>
-                                    <Input
-                                        placeholder='proxmox.example.com'
-                                        data-fp-sensitive=''
-                                        value={form.fqdn}
-                                        onChange={(e) => setForm({ ...form, fqdn: e.target.value })}
-                                        error={!!errors.fqdn}
-                                    />
-                                    {errors.fqdn && (
-                                        <p className='mt-1 text-xs font-medium text-red-500'>{errors.fqdn}</p>
-                                    )}
-                                </div>
-                                <div className='grid grid-cols-2 gap-4'>
+                                    <div className='space-y-2'>
+                                        <Label className='text-sm font-semibold'>{t('admin.vdsNodes.form.user')}</Label>
+                                        <Input
+                                            placeholder='root@pam'
+                                            value={form.user}
+                                            onChange={(e) => setForm({ ...form, user: e.target.value })}
+                                            error={!!errors.user}
+                                        />
+                                        {errors.user && (
+                                            <p className='mt-1 text-xs font-medium text-red-500'>{errors.user}</p>
+                                        )}
+                                    </div>
+                                    <div className='space-y-2'>
+                                        <div className='fp-surface rounded-xl border p-4 text-sm'>
+                                            {t('ui.admin.vdsNodes.create.whenCreatingTheAPITokenMake')}{' '}
+                                            <span className='font-semibold'>root</span> with{' '}
+                                            <span className='font-semibold'>no privilege separation</span>.
+                                        </div>
+                                    </div>
                                     <div className='space-y-2'>
                                         <Label className='text-sm font-semibold'>
-                                            {t('admin.vdsNodes.form.scheme')}
+                                            {t('admin.vdsNodes.form.token_id')}
                                         </Label>
-                                        <Select
-                                            value={form.scheme}
-                                            onChange={(e) =>
-                                                setForm({
-                                                    ...form,
-                                                    scheme: e.target.value as 'http' | 'https',
-                                                })
-                                            }
-                                        >
-                                            <option value='https'>HTTPS</option>
-                                            <option value='http'>HTTP</option>
-                                        </Select>
+                                        <Input
+                                            placeholder='mytokenid'
+                                            data-fp-sensitive=''
+                                            value={form.token_id}
+                                            onChange={(e) => setForm({ ...form, token_id: e.target.value })}
+                                            error={!!errors.token_id}
+                                        />
+                                        {errors.token_id && (
+                                            <p className='mt-1 text-xs font-medium text-red-500'>{errors.token_id}</p>
+                                        )}
                                     </div>
                                     <div className='space-y-2'>
-                                        <Label className='text-sm font-semibold'>{t('admin.vdsNodes.form.port')}</Label>
+                                        <Label className='text-sm font-semibold'>
+                                            {t('admin.vdsNodes.form.secret')}
+                                        </Label>
                                         <Input
-                                            type='number'
-                                            value={form.port}
-                                            onChange={(e) =>
-                                                setForm({
-                                                    ...form,
-                                                    port: parseInt(e.target.value, 10) || 0,
-                                                })
-                                            }
-                                            error={!!errors.port}
+                                            type='password'
+                                            placeholder='********'
+                                            data-fp-sensitive=''
+                                            value={form.secret}
+                                            onChange={(e) => setForm({ ...form, secret: e.target.value })}
+                                            error={!!errors.secret}
                                         />
-                                        {errors.port && (
-                                            <p className='mt-1 text-xs font-medium text-red-500'>{errors.port}</p>
+                                        {errors.secret && (
+                                            <p className='mt-1 text-xs font-medium text-red-500'>{errors.secret}</p>
                                         )}
                                     </div>
                                 </div>
-                                <div className='space-y-2'>
-                                    <Label className='text-sm font-semibold'>
-                                        {t('admin.vdsNodes.form.tls_no_verify')}
-                                    </Label>
-                                    <Select
-                                        value={form.tls_no_verify}
-                                        onChange={(e) =>
-                                            setForm({
-                                                ...form,
-                                                tls_no_verify: e.target.value as 'true' | 'false',
-                                            })
-                                        }
-                                    >
-                                        <option value='false'>{t('admin.vdsNodes.form.tls_no_verify_false')}</option>
-                                        <option value='true'>{t('admin.vdsNodes.form.tls_no_verify_true')}</option>
-                                    </Select>
-                                </div>
-                                <div className='space-y-2'>
-                                    <Label className='text-sm font-semibold'>{t('admin.vdsNodes.form.timeout')}</Label>
-                                    <Input
-                                        type='number'
-                                        value={form.timeout}
-                                        onChange={(e) =>
-                                            setForm({
-                                                ...form,
-                                                timeout: parseInt(e.target.value, 10) || 0,
-                                            })
-                                        }
-                                        error={!!errors.timeout}
-                                    />
-                                    {errors.timeout && (
-                                        <p className='mt-1 text-xs font-medium text-red-500'>{errors.timeout}</p>
-                                    )}
-                                </div>
-                            </div>
-                        </PageCard>
+                            </PageCard>
+                        )}
+                    </div>
 
-                        <PageCard title={t('admin.vdsNodes.form.http_advanced')} icon={Server}>
-                            <div className='space-y-6'>
-                                <div className='space-y-2'>
-                                    <Label className='text-sm font-semibold'>{t('admin.vdsNodes.form.headers')}</Label>
-                                    <p className='text-muted-foreground text-xs'>
-                                        {t('admin.vdsNodes.form.headers_help')}
-                                    </p>
+                    <div className='space-y-8'>
+                        {isOrvex && (
+                            <PageCard title={t('admin.vdsNodes.type.how_title')} icon={Terminal}>
+                                <ol className='space-y-4'>
+                                    {(['how_step1', 'how_step2', 'how_step3'] as const).map((step, index) => (
+                                        <li key={step} className='flex gap-3'>
+                                            <span className='bg-primary/10 text-primary flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-semibold'>
+                                                {index + 1}
+                                            </span>
+                                            <span className='text-sm leading-relaxed'>
+                                                {t(`admin.vdsNodes.type.${step}`)}
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ol>
+                                <div className='border-border/50 mt-5 space-y-2 border-t pt-4'>
+                                    {(['feature_kvm_lxc', 'feature_ipv4', 'feature_auto'] as const).map((feature) => (
+                                        <div key={feature} className='flex items-start gap-2 text-sm'>
+                                            <CheckCircle2 className='mt-0.5 h-4 w-4 shrink-0 text-green-500' />
+                                            <span className='text-muted-foreground'>
+                                                {t(`admin.vdsNodes.type.${feature}`)}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <p className='text-muted-foreground mt-4 text-xs'>
+                                    {t('admin.vdsNodes.type.requirements')}
+                                </p>
+                            </PageCard>
+                        )}
+
+                        {!isOrvex && (
+                            <PageCard title={t('admin.vdsNodes.form.network')} icon={Server}>
+                                <div className='space-y-6'>
                                     <div className='space-y-2'>
-                                        {extraHeaders.map((row, index) => (
-                                            <div key={index} className='flex gap-2'>
-                                                <Input
-                                                    placeholder={t('admin.vdsNodes.form.headers_key_placeholder')}
-                                                    value={row.key}
-                                                    onChange={(e) => {
-                                                        const next = [...extraHeaders];
-                                                        next[index] = { ...next[index], key: e.target.value };
-                                                        setExtraHeaders(next);
-                                                    }}
-                                                />
-                                                <Input
-                                                    placeholder={t('admin.vdsNodes.form.headers_value_placeholder')}
-                                                    value={row.value}
-                                                    onChange={(e) => {
-                                                        const next = [...extraHeaders];
-                                                        next[index] = { ...next[index], value: e.target.value };
-                                                        setExtraHeaders(next);
-                                                    }}
-                                                />
-                                                <Button
-                                                    type='button'
-                                                    size='icon'
-                                                    variant='ghost'
-                                                    onClick={() =>
-                                                        setExtraHeaders((rows) => rows.filter((_, i) => i !== index))
-                                                    }
-                                                >
-                                                    <Trash2 className='h-4 w-4' />
-                                                </Button>
-                                            </div>
-                                        ))}
-                                        <Button
-                                            type='button'
-                                            variant='outline'
-                                            size='sm'
-                                            onClick={() => setExtraHeaders((rows) => [...rows, { key: '', value: '' }])}
-                                            className='mt-1'
+                                        <Label className='text-sm font-semibold'>{t('admin.vdsNodes.form.fqdn')}</Label>
+                                        <Input
+                                            placeholder='proxmox.example.com'
+                                            data-fp-sensitive=''
+                                            value={form.fqdn}
+                                            onChange={(e) => setForm({ ...form, fqdn: e.target.value })}
+                                            error={!!errors.fqdn}
+                                        />
+                                        {errors.fqdn && (
+                                            <p className='mt-1 text-xs font-medium text-red-500'>{errors.fqdn}</p>
+                                        )}
+                                    </div>
+                                    <div className='grid grid-cols-2 gap-4'>
+                                        <div className='space-y-2'>
+                                            <Label className='text-sm font-semibold'>
+                                                {t('admin.vdsNodes.form.scheme')}
+                                            </Label>
+                                            <Select
+                                                value={form.scheme}
+                                                onChange={(e) =>
+                                                    setForm({
+                                                        ...form,
+                                                        scheme: e.target.value as 'http' | 'https',
+                                                    })
+                                                }
+                                            >
+                                                <option value='https'>HTTPS</option>
+                                                <option value='http'>HTTP</option>
+                                            </Select>
+                                        </div>
+                                        <div className='space-y-2'>
+                                            <Label className='text-sm font-semibold'>
+                                                {t('admin.vdsNodes.form.port')}
+                                            </Label>
+                                            <Input
+                                                type='number'
+                                                value={form.port}
+                                                onChange={(e) =>
+                                                    setForm({
+                                                        ...form,
+                                                        port: parseInt(e.target.value, 10) || 0,
+                                                    })
+                                                }
+                                                error={!!errors.port}
+                                            />
+                                            {errors.port && (
+                                                <p className='mt-1 text-xs font-medium text-red-500'>{errors.port}</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className='space-y-2'>
+                                        <Label className='text-sm font-semibold'>
+                                            {t('admin.vdsNodes.form.tls_no_verify')}
+                                        </Label>
+                                        <Select
+                                            value={form.tls_no_verify}
+                                            onChange={(e) =>
+                                                setForm({
+                                                    ...form,
+                                                    tls_no_verify: e.target.value as 'true' | 'false',
+                                                })
+                                            }
                                         >
-                                            <Plus className='mr-2 h-4 w-4' />
-                                            {t('admin.vdsNodes.form.headers_add')}
-                                        </Button>
+                                            <option value='false'>
+                                                {t('admin.vdsNodes.form.tls_no_verify_false')}
+                                            </option>
+                                            <option value='true'>{t('admin.vdsNodes.form.tls_no_verify_true')}</option>
+                                        </Select>
+                                    </div>
+                                    <div className='space-y-2'>
+                                        <Label className='text-sm font-semibold'>
+                                            {t('admin.vdsNodes.form.timeout')}
+                                        </Label>
+                                        <Input
+                                            type='number'
+                                            value={form.timeout}
+                                            onChange={(e) =>
+                                                setForm({
+                                                    ...form,
+                                                    timeout: parseInt(e.target.value, 10) || 0,
+                                                })
+                                            }
+                                            error={!!errors.timeout}
+                                        />
+                                        {errors.timeout && (
+                                            <p className='mt-1 text-xs font-medium text-red-500'>{errors.timeout}</p>
+                                        )}
                                     </div>
                                 </div>
+                            </PageCard>
+                        )}
 
-                                <div className='space-y-2'>
-                                    <Label className='text-sm font-semibold'>{t('admin.vdsNodes.form.params')}</Label>
-                                    <p className='text-muted-foreground text-xs'>
-                                        {t('admin.vdsNodes.form.params_help')}
-                                    </p>
+                        {!isOrvex && (
+                            <PageCard title={t('admin.vdsNodes.form.http_advanced')} icon={Server}>
+                                <div className='space-y-6'>
                                     <div className='space-y-2'>
-                                        {extraParams.map((row, index) => (
-                                            <div key={index} className='flex gap-2'>
-                                                <Input
-                                                    placeholder={t('admin.vdsNodes.form.params_key_placeholder')}
-                                                    value={row.key}
-                                                    onChange={(e) => {
-                                                        const next = [...extraParams];
-                                                        next[index] = { ...next[index], key: e.target.value };
-                                                        setExtraParams(next);
-                                                    }}
-                                                />
-                                                <Input
-                                                    placeholder={t('admin.vdsNodes.form.params_value_placeholder')}
-                                                    value={row.value}
-                                                    onChange={(e) => {
-                                                        const next = [...extraParams];
-                                                        next[index] = { ...next[index], value: e.target.value };
-                                                        setExtraParams(next);
-                                                    }}
-                                                />
-                                                <Button
-                                                    type='button'
-                                                    size='icon'
-                                                    variant='ghost'
-                                                    onClick={() =>
-                                                        setExtraParams((rows) => rows.filter((_, i) => i !== index))
-                                                    }
-                                                >
-                                                    <Trash2 className='h-4 w-4' />
-                                                </Button>
-                                            </div>
-                                        ))}
-                                        <Button
-                                            type='button'
-                                            variant='outline'
-                                            size='sm'
-                                            onClick={() => setExtraParams((rows) => [...rows, { key: '', value: '' }])}
-                                            className='mt-1'
-                                        >
-                                            <Plus className='mr-2 h-4 w-4' />
-                                            {t('admin.vdsNodes.form.params_add')}
-                                        </Button>
+                                        <Label className='text-sm font-semibold'>
+                                            {t('admin.vdsNodes.form.headers')}
+                                        </Label>
+                                        <p className='text-muted-foreground text-xs'>
+                                            {t('admin.vdsNodes.form.headers_help')}
+                                        </p>
+                                        <div className='space-y-2'>
+                                            {extraHeaders.map((row, index) => (
+                                                <div key={index} className='flex gap-2'>
+                                                    <Input
+                                                        placeholder={t('admin.vdsNodes.form.headers_key_placeholder')}
+                                                        value={row.key}
+                                                        onChange={(e) => {
+                                                            const next = [...extraHeaders];
+                                                            next[index] = { ...next[index], key: e.target.value };
+                                                            setExtraHeaders(next);
+                                                        }}
+                                                    />
+                                                    <Input
+                                                        placeholder={t('admin.vdsNodes.form.headers_value_placeholder')}
+                                                        value={row.value}
+                                                        onChange={(e) => {
+                                                            const next = [...extraHeaders];
+                                                            next[index] = { ...next[index], value: e.target.value };
+                                                            setExtraHeaders(next);
+                                                        }}
+                                                    />
+                                                    <Button
+                                                        type='button'
+                                                        size='icon'
+                                                        variant='ghost'
+                                                        onClick={() =>
+                                                            setExtraHeaders((rows) =>
+                                                                rows.filter((_, i) => i !== index),
+                                                            )
+                                                        }
+                                                    >
+                                                        <Trash2 className='h-4 w-4' />
+                                                    </Button>
+                                                </div>
+                                            ))}
+                                            <Button
+                                                type='button'
+                                                variant='outline'
+                                                size='sm'
+                                                onClick={() =>
+                                                    setExtraHeaders((rows) => [...rows, { key: '', value: '' }])
+                                                }
+                                                className='mt-1'
+                                            >
+                                                <Plus className='mr-2 h-4 w-4' />
+                                                {t('admin.vdsNodes.form.headers_add')}
+                                            </Button>
+                                        </div>
+                                    </div>
+
+                                    <div className='space-y-2'>
+                                        <Label className='text-sm font-semibold'>
+                                            {t('admin.vdsNodes.form.params')}
+                                        </Label>
+                                        <p className='text-muted-foreground text-xs'>
+                                            {t('admin.vdsNodes.form.params_help')}
+                                        </p>
+                                        <div className='space-y-2'>
+                                            {extraParams.map((row, index) => (
+                                                <div key={index} className='flex gap-2'>
+                                                    <Input
+                                                        placeholder={t('admin.vdsNodes.form.params_key_placeholder')}
+                                                        value={row.key}
+                                                        onChange={(e) => {
+                                                            const next = [...extraParams];
+                                                            next[index] = { ...next[index], key: e.target.value };
+                                                            setExtraParams(next);
+                                                        }}
+                                                    />
+                                                    <Input
+                                                        placeholder={t('admin.vdsNodes.form.params_value_placeholder')}
+                                                        value={row.value}
+                                                        onChange={(e) => {
+                                                            const next = [...extraParams];
+                                                            next[index] = { ...next[index], value: e.target.value };
+                                                            setExtraParams(next);
+                                                        }}
+                                                    />
+                                                    <Button
+                                                        type='button'
+                                                        size='icon'
+                                                        variant='ghost'
+                                                        onClick={() =>
+                                                            setExtraParams((rows) => rows.filter((_, i) => i !== index))
+                                                        }
+                                                    >
+                                                        <Trash2 className='h-4 w-4' />
+                                                    </Button>
+                                                </div>
+                                            ))}
+                                            <Button
+                                                type='button'
+                                                variant='outline'
+                                                size='sm'
+                                                onClick={() =>
+                                                    setExtraParams((rows) => [...rows, { key: '', value: '' }])
+                                                }
+                                                className='mt-1'
+                                            >
+                                                <Plus className='mr-2 h-4 w-4' />
+                                                {t('admin.vdsNodes.form.params_add')}
+                                            </Button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </PageCard>
+                            </PageCard>
+                        )}
                     </div>
                 </div>
 
@@ -619,7 +769,7 @@ export default function CreateVdsNodePage() {
                         className='bg-primary hover:bg-primary/90 h-14 w-full min-w-[200px] text-lg transition-all sm:w-auto'
                     >
                         <Save className='mr-3 h-5 w-5' />
-                        {t('admin.vdsNodes.form.submit_create')}
+                        {isOrvex ? t('admin.vdsNodes.orvex.create_submit') : t('admin.vdsNodes.form.submit_create')}
                     </Button>
                 </div>
             </form>

@@ -549,14 +549,12 @@ class Api:
         return {"vmid": vmid, "username": username}
 
     def orvex_info(self, ctx: Ctx) -> Any:
-        cfg = self.app.cfg
-        return {
-            "version": __version__, "node": cfg.node_name, "public_ipv4": self.app.net.public_ipv4(),
-            "uplink": self.app.net.uplink(), "routed_bridge": cfg.routed_bridge,
-            "nat": dict(cfg.nat), "kvm": os.path.exists("/dev/kvm"),
-            "templates": [{k: t[k] for k in ("vmid", "name", "type", "description", "default_user", "disk_gb")}
-                          for t in self.app.instances.templates.values()],
-        }
+        """The node report the panel reads for "Sync from node" (same as at registration)."""
+        from .panel import node_report
+
+        report = node_report(self.app.cfg, self.app.net)
+        report.update({"version": __version__, "node": self.app.cfg.node_name, "uplink": self.app.net.uplink()})
+        return report
 
 
 def total_gib(num: int) -> float:

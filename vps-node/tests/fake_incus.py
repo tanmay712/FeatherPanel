@@ -61,8 +61,12 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(code)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(body)))
-        self.end_headers()
-        self.wfile.write(body)
+        try:
+            self.end_headers()
+            if body:
+                self.wfile.write(body)
+        except (BrokenPipeError, ConnectionResetError):
+            pass  # the client already read the (empty) response and hung up
 
     def sync(self, metadata: Any = None) -> None:
         self._write(200, {"type": "sync", "status": "Success", "status_code": 200, "metadata": metadata})

@@ -62,6 +62,13 @@ class VmNode
         'feathertail_url',
         'feathertail_token',
         'feathertail_tls_no_verify',
+        // OrveX VPS Nodes (see App\Services\Vm\OrvexNodes)
+        'node_type',
+        'registration_token',
+        'registration_expires_at',
+        'registered_at',
+        'agent_version',
+        'agent_info',
     ];
 
     /**
@@ -114,6 +121,10 @@ class VmNode
             if (isset($data[$field]) && (!is_string($data[$field]) || trim($data[$field]) === '')) {
                 $errors[] = "{$field} must be a non-empty string";
             }
+        }
+
+        if (isset($data['node_type']) && !in_array($data['node_type'], ['proxmox', 'orvex'], true)) {
+            $errors[] = 'node_type must be either "proxmox" or "orvex"';
         }
 
         return $errors;
@@ -174,6 +185,9 @@ class VmNode
 
         $data['token_id'] = App::getInstance(true)->encryptValue((string) $data['token_id']);
         $data['secret'] = App::getInstance(true)->encryptValue((string) $data['secret']);
+        if (isset($data['registration_token']) && is_string($data['registration_token']) && $data['registration_token'] !== '') {
+            $data['registration_token'] = App::getInstance(true)->encryptValue($data['registration_token']);
+        }
 
         $data = self::normalizeFeatherTailFieldsOnWrite($data, true);
 
@@ -374,6 +388,9 @@ class VmNode
         if (isset($data['secret']) && is_string($data['secret']) && $data['secret'] !== '') {
             $data['secret'] = App::getInstance(true)->encryptValue($data['secret']);
         }
+        if (isset($data['registration_token']) && is_string($data['registration_token']) && $data['registration_token'] !== '') {
+            $data['registration_token'] = App::getInstance(true)->encryptValue($data['registration_token']);
+        }
 
         $data = self::normalizeFeatherTailFieldsOnWrite($data, false);
 
@@ -475,7 +492,8 @@ class VmNode
     }
 
     /**
-     * Strip FeatherTail token from admin list/show payloads (use setup-command / reset instead).
+     * Strip the FeatherTail token (use setup-command / reset instead) and the OrveX
+     * registration token (use the orvex endpoint) from admin list/show payloads.
      *
      * @param array<string, mixed> $row
      *
@@ -483,7 +501,14 @@ class VmNode
      */
     public static function sanitizeForAdminResponse(array $row): array
     {
-        unset($row['feathertail_token']);
+        unset($row['feathertail_token'], $row['registration_token']);
+
+        if (array_key_exists('agent_info', $row)) {
+            $row['agent_info'] = \App\Services\Vm\OrvexNodes::decodeAgentInfo($row['agent_info']);
+        }
+        if ($row !== []) {
+            $row['node_type'] = \App\Services\Vm\OrvexNodes::isOrvex($row) ? 'orvex' : 'proxmox';
+        }
 
         return $row;
     }
@@ -514,6 +539,7 @@ class VmNode
             'token_id',
             'secret',
             'feathertail_token',
+            'registration_token',
         ];
 
         $sanitized = $data;
@@ -597,6 +623,9 @@ class VmNode
             }
             if (isset($row['feathertail_token']) && is_string($row['feathertail_token']) && $row['feathertail_token'] !== '') {
                 $row['feathertail_token'] = App::getInstance(true)->decryptValue($row['feathertail_token']);
+            }
+            if (isset($row['registration_token']) && is_string($row['registration_token']) && $row['registration_token'] !== '') {
+                $row['registration_token'] = App::getInstance(true)->decryptValue($row['registration_token']);
             }
         } catch (\Throwable $e) {
             App::getInstance(true)->getLogger()->error('Failed to decrypt VM node sensitive fields: ' . $e->getMessage());

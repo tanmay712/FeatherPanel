@@ -23,6 +23,7 @@ use App\Chat\Database;
 use App\Chat\VmInstance;
 use App\Helpers\ApiResponse;
 use App\Config\ConfigInterface;
+use App\Services\Vm\OrvexNodes;
 use App\Chat\VmInstanceActivity;
 use App\Services\Vm\VmInstanceUtil;
 use App\CloudFlare\CloudFlareRealIP;
@@ -73,6 +74,11 @@ class VmCapacityController
                 'free_memory_mb' => null,
                 'full' => false,
             ];
+            if (OrvexNodes::isPending($node)) {
+                $entry['error'] = 'Waiting for the OrveX node to connect';
+                $nodes[] = $entry;
+                continue;
+            }
             try {
                 $res = VmInstanceUtil::buildProxmoxClientForNode($node)->apiGet('/api2/json/cluster/resources', ['type' => 'node']);
                 if (!$res['ok'] || !is_array($res['data'] ?? null)) {

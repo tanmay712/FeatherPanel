@@ -42,6 +42,6 @@
   <text x="28" y="318" xml:space="preserve" font-family="JetBrains Mono, Fira Code, SFMono-Regular, Menlo, Consolas, monospace" font-size="14.5" class="mono l10" fill="#86efac" font-weight="400">  ✓ Shared IPv4 bridge orvexnat0 (10.77.0.1/24, NAT)</text>
   <text x="28" y="342" xml:space="preserve" font-family="JetBrains Mono, Fira Code, SFMono-Regular, Menlo, Consolas, monospace" font-size="14.5" class="mono l11" fill="#a78bfa" font-weight="700">==&gt; OrveX node agent</text>
   <text x="28" y="366" xml:space="preserve" font-family="JetBrains Mono, Fira Code, SFMono-Regular, Menlo, Consolas, monospace" font-size="14.5" class="mono l12" fill="#86efac" font-weight="400">  ✓ Agent running on port 8006 · templates cached</text>
-  <text x="28" y="390" xml:space="preserve" font-family="JetBrains Mono, Fira Code, SFMono-Regular, Menlo, Consolas, monospace" font-size="14.5" class="mono l13" fill="#f8fafc" font-weight="700">  Add this node in OrveX Panel: Admin &gt; VDS Nodes &gt; Create</text>
+  <text x="28" y="390" xml:space="preserve" font-family="JetBrains Mono, Fira Code, SFMono-Regular, Menlo, Consolas, monospace" font-size="14.5" class="mono l13" fill="#f8fafc" font-weight="700">  ✓ Connected to OrveX Panel · 13 templates · 253 shared IPv4s</text>
   <rect class="cursor" x="28" y="402" width="9" height="17" fill="#c4b5fd"/>
 </svg>

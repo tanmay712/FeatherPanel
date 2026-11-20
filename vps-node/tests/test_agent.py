@@ -520,6 +520,21 @@ class TestAgentFlows(unittest.TestCase):
         _s, doc, _ = self.call("GET", "/api2/json/nodes/orvex1/tasks/%s/status" % urllib.parse.quote("UPID:x:1:2:3:t:i:u:", safe=""))
         self.assertIn("no such task", doc["message"])
 
+    def test_14_orvex_info_is_the_node_report(self):
+        # What the panel reads for "Sync from node": same shape as the registration payload.
+        status, doc, _ = self.call("GET", "/api2/json/nodes/orvex1/orvex/info")
+        self.assertEqual(status, 200)
+        info = doc["data"]
+        self.assertEqual(info["node"], "orvex1")
+        self.assertEqual(info["node_name"], "orvex1")
+        self.assertEqual(info["agent_version"], info["version"])
+        self.assertEqual(info["nat"]["subnet"], "10.77.0.0/24")
+        self.assertEqual(info["storage_pool"], "default")
+        self.assertEqual(info["backup_storage"], "backups")
+        self.assertIsInstance(info["kvm"], bool)
+        self.assertEqual(sorted(t["vmid"] for t in info["templates"])[:2], [9000, 9001])
+        self.assertNotIn("api_token_secret", info)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

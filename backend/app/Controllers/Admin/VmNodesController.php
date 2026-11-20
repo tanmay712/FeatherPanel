@@ -27,6 +27,7 @@ use App\Chat\VmTemplate;
 use App\Helpers\ApiResponse;
 use OpenApi\Attributes as OA;
 use App\Services\Vm\IsoLibrary;
+use App\Services\Vm\OrvexNodes;
 use App\Helpers\FeatherTailClient;
 use App\Services\Vm\VmInstanceUtil;
 use App\CloudFlare\CloudFlareRealIP;
@@ -321,6 +322,24 @@ class VmNodesController
             return ApiResponse::error('Invalid JSON in request body', 'INVALID_JSON', 400);
         }
 
+        $nodeType = strtolower(trim((string) ($data['node_type'] ?? OrvexNodes::TYPE_PROXMOX)));
+        if (!in_array($nodeType, [OrvexNodes::TYPE_PROXMOX, OrvexNodes::TYPE], true)) {
+            return ApiResponse::error('Node type must be either proxmox or orvex', 'INVALID_NODE_TYPE', 400);
+        }
+        if ($nodeType === OrvexNodes::TYPE) {
+            // OrveX nodes fill in their connection details themselves when they register.
+            $data = OrvexNodes::newNodeDefaults($data);
+        } else {
+            foreach (OrvexNodes::REGISTRATION_FIELDS as $field) {
+                unset($data[$field]);
+            }
+            // An OrveX node added by hand with the values from `orvex-node info`.
+            if (OrvexNodes::isOrvex($data)) {
+                $data['node_type'] = OrvexNodes::TYPE;
+                $data['registered_at'] = date('Y-m-d H:i:s');
+            }
+        }
+
         $requiredFields = ['name', 'fqdn', 'location_id', 'user', 'token_id', 'secret'];
         $missingFields = [];
         foreach ($requiredFields as $field) {
@@ -391,12 +410,17 @@ class VmNodesController
             return ApiResponse::error('Failed to create VM node', 'VM_NODE_CREATE_FAILED', 400);
         }
 
+        $isPendingOrvex = $nodeType === OrvexNodes::TYPE;
+        if ($isPendingOrvex) {
+            OrvexNodes::issueToken((int) $vmNodeId);
+        }
+
         $vmNode = VmNode::getVmNodeById($vmNodeId);
 
         Activity::createActivity([
             'user_uuid' => $admin['uuid'] ?? null,
             'name' => 'create_vm_node',
-            'context' => 'Created VM node: ' . ($vmNode['name'] ?? $data['name']),
+            'context' => ($isPendingOrvex ? 'Created OrveX node: ' : 'Created VM node: ') . ($vmNode['name'] ?? $data['name']),
             'ip_address' => CloudFlareRealIP::getRealIP(),
         ]);
 
@@ -409,7 +433,10 @@ class VmNodesController
             'context' => ['source' => 'admin'],
         ]);
 
-        return ApiResponse::success(['vm_node' => $safeNode], 'VM node created successfully', 201);
+        return ApiResponse::success([
+            'vm_node' => $safeNode,
+            'orvex' => $isPendingOrvex ? OrvexNodes::installInfo($vmNode ?? []) : null,
+        ], 'VM node created successfully', 201);
     }
 
     #[OA\Patch(
@@ -465,6 +492,12 @@ class VmNodesController
 
         if (isset($data['id'])) {
             unset($data['id']);
+        }
+
+        // OrveX nodes report their connection details themselves (registration), and
+        // the registration columns are never written through this endpoint.
+        foreach (OrvexNodes::isOrvex($vmNode) ? OrvexNodes::MANAGED_FIELDS : OrvexNodes::REGISTRATION_FIELDS as $field) {
+            unset($data[$field]);
         }
 
         if (isset($data['location_id'])) {
@@ -575,6 +608,12 @@ class VmNodesController
             return ApiResponse::error('VM node not found', 'VM_NODE_NOT_FOUND', 404);
         }
 
+        // Templates and the shared-IPv4 pool of an OrveX node are created automatically,
+        // so they are removed with the node once no server uses it.
+        if (OrvexNodes::isOrvex($vmNode) && count(VmInstance::getByNodeId($id)) === 0) {
+            OrvexNodes::deleteNodeResources($id);
+        }
+
         // Check if any VM templates are using this node
         if (count(VmTemplate::getByNodeId($id)) > 0) {
             return ApiResponse::error('Cannot delete VM node - it is being used by one or more VM templates', 'VM_NODE_IN_USE', 400);
@@ -665,6 +704,14 @@ class VmNodesController
         $vmNode = VmNode::getVmNodeById($id);
         if (!$vmNode) {
             return ApiResponse::error('VM node not found', 'VM_NODE_NOT_FOUND', 404);
+        }
+
+        if (OrvexNodes::isPending($vmNode)) {
+            return ApiResponse::success([
+                'ok' => false,
+                'pending' => true,
+                'error' => 'This OrveX node has not connected yet. Run its install command on the server.',
+            ], 'OrveX node has not connected yet', 200);
         }
 
         try {
@@ -1789,6 +1836,128 @@ class VmNodesController
         ]);
 
         return ApiResponse::success([], 'Rule deleted', 200);
+    }
+
+    #[OA\Get(
+        path: '/api/admin/vm-nodes/{id}/orvex',
+        summary: 'OrveX node connection state',
+        description: 'Connection state, install command data (one-time token, installer source) and agent details of an OrveX node. A node that has not connected yet always gets a valid token.',
+        tags: ['Admin - VM Nodes'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', description: 'VM Node ID', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'OrveX node state'),
+            new OA\Response(response: 400, description: 'Not an OrveX node'),
+            new OA\Response(response: 404, description: 'VM node not found'),
+        ]
+    )]
+    public function orvexStatus(Request $request, int $id): Response
+    {
+        $vmNode = VmNode::getVmNodeById($id);
+        if (!$vmNode) {
+            return ApiResponse::error('VM node not found', 'VM_NODE_NOT_FOUND', 404);
+        }
+        if (!OrvexNodes::isOrvex($vmNode)) {
+            return ApiResponse::error('This is not an OrveX node', 'NOT_ORVEX_NODE', 400);
+        }
+
+        if (OrvexNodes::isPending($vmNode) && (OrvexNodes::tokenExpired($vmNode) || (string) ($vmNode['registration_token'] ?? '') === '')) {
+            OrvexNodes::issueToken($id);
+            $vmNode = VmNode::getVmNodeById($id) ?? $vmNode;
+        }
+
+        return ApiResponse::success(['orvex' => OrvexNodes::installInfo($vmNode)], 'OrveX node state fetched', 200);
+    }
+
+    #[OA\Post(
+        path: '/api/admin/vm-nodes/{id}/orvex/token',
+        summary: 'New OrveX install command',
+        description: 'Issues a new one-time registration token (valid 24 hours). Use it to install a node or to re-pair a node that is already connected; older tokens stop working.',
+        tags: ['Admin - VM Nodes'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', description: 'VM Node ID', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Token issued'),
+            new OA\Response(response: 400, description: 'Not an OrveX node'),
+            new OA\Response(response: 404, description: 'VM node not found'),
+        ]
+    )]
+    public function orvexNewToken(Request $request, int $id): Response
+    {
+        $admin = $request->attributes->get('user');
+        $vmNode = VmNode::getVmNodeById($id);
+        if (!$vmNode) {
+            return ApiResponse::error('VM node not found', 'VM_NODE_NOT_FOUND', 404);
+        }
+        if (!OrvexNodes::isOrvex($vmNode)) {
+            return ApiResponse::error('This is not an OrveX node', 'NOT_ORVEX_NODE', 400);
+        }
+        if (OrvexNodes::issueToken($id) === null) {
+            return ApiResponse::error('Failed to create a registration token', 'ORVEX_TOKEN_FAILED', 500);
+        }
+        $vmNode = VmNode::getVmNodeById($id) ?? $vmNode;
+
+        Activity::createActivity([
+            'user_uuid' => $admin['uuid'] ?? null,
+            'name' => 'orvex_node_token',
+            'context' => 'New install command for OrveX node: ' . ($vmNode['name'] ?? $id),
+            'ip_address' => CloudFlareRealIP::getRealIP(),
+        ]);
+
+        return ApiResponse::success(['orvex' => OrvexNodes::installInfo($vmNode)], 'Registration token created', 200);
+    }
+
+    #[OA\Post(
+        path: '/api/admin/vm-nodes/{id}/orvex/sync',
+        summary: 'Sync an OrveX node',
+        description: 'Reads the agent details from the node and adds templates the panel does not know yet.',
+        tags: ['Admin - VM Nodes'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', description: 'VM Node ID', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Node synced'),
+            new OA\Response(response: 400, description: 'Not an OrveX node'),
+            new OA\Response(response: 404, description: 'VM node not found'),
+            new OA\Response(response: 409, description: 'Node has not connected yet'),
+            new OA\Response(response: 503, description: 'Node unreachable'),
+        ]
+    )]
+    public function orvexSync(Request $request, int $id): Response
+    {
+        $admin = $request->attributes->get('user');
+        $vmNode = VmNode::getVmNodeById($id);
+        if (!$vmNode) {
+            return ApiResponse::error('VM node not found', 'VM_NODE_NOT_FOUND', 404);
+        }
+        if (!OrvexNodes::isOrvex($vmNode)) {
+            return ApiResponse::error('This is not an OrveX node', 'NOT_ORVEX_NODE', 400);
+        }
+        if (OrvexNodes::isPending($vmNode)) {
+            return ApiResponse::error('This OrveX node has not connected yet', 'ORVEX_NODE_PENDING', 409);
+        }
+
+        $result = OrvexNodes::syncFromNode($vmNode);
+        if (!$result['ok']) {
+            return ApiResponse::error('Could not read the node details: ' . $result['error'], 'ORVEX_NODE_UNREACHABLE', 503);
+        }
+        $vmNode = VmNode::getVmNodeById($id) ?? $vmNode;
+
+        Activity::createActivity([
+            'user_uuid' => $admin['uuid'] ?? null,
+            'name' => 'orvex_node_sync',
+            'context' => 'Synced OrveX node ' . ($vmNode['name'] ?? $id) . ': ' . $result['templates_imported'] . ' new template(s)',
+            'ip_address' => CloudFlareRealIP::getRealIP(),
+        ]);
+
+        return ApiResponse::success([
+            'templates_imported' => $result['templates_imported'],
+            'templates_total' => $result['templates_total'],
+            'warnings' => $result['warnings'],
+            'orvex' => OrvexNodes::installInfo($vmNode),
+        ], 'OrveX node synced', 200);
     }
 
     #[OA\Get(

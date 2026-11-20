@@ -27,7 +27,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Select } from '@/components/ui/select-native';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Plus, Trash2, RefreshCw, Layers, Loader2, Monitor, Cpu, ShieldAlert } from 'lucide-react';
+import { Plus, Trash2, RefreshCw, Layers, Loader2, Monitor, Cpu, ShieldAlert, Zap } from 'lucide-react';
 import { getApiErrorMessage } from '@/lib/api-errors';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { TutorialVM } from './TutorialVM';
@@ -58,10 +58,13 @@ interface ProxmoxVm {
 interface TemplatesTabProps {
     nodeId: string | number;
     nodeName?: string;
+    /** OrveX nodes bring their own templates (added on registration, refreshed with Sync). */
+    isOrvex?: boolean;
 }
 
-export function TemplatesTab({ nodeId }: TemplatesTabProps) {
+export function TemplatesTab({ nodeId, isOrvex = false }: TemplatesTabProps) {
     const { t } = useTranslation();
+    const [syncing, setSyncing] = useState(false);
     const [templates, setTemplates] = useState<VmTemplateRow[]>([]);
     const [loading, setLoading] = useState(true);
     const [createOpen, setCreateOpen] = useState(false);
@@ -165,6 +168,19 @@ export function TemplatesTab({ nodeId }: TemplatesTabProps) {
         }
     };
 
+    const handleSync = async () => {
+        setSyncing(true);
+        try {
+            const { data } = await axios.post(`/api/admin/vm-nodes/${nodeId}/orvex/sync`);
+            toast.success(t('admin.vdsNodes.orvex.sync_done', { count: String(data.data?.templates_imported ?? 0) }));
+            loadTemplates();
+        } catch (err) {
+            toast.error(getApiErrorMessage(err, t, 'admin.vdsNodes.orvex.sync_failed'));
+        } finally {
+            setSyncing(false);
+        }
+    };
+
     const handleDelete = async (id: number) => {
         setDeletingId(id);
         try {
@@ -184,12 +200,22 @@ export function TemplatesTab({ nodeId }: TemplatesTabProps) {
             <PageCard
                 title={t('admin.vdsNodes.templates.title')}
                 icon={Layers}
-                description={t('admin.vdsNodes.templates.description')}
+                description={
+                    isOrvex
+                        ? t('admin.vdsNodes.orvex.templates_description')
+                        : t('admin.vdsNodes.templates.description')
+                }
             >
                 <TabToolbar className='mb-4'>
                     <Button size='sm' variant='outline' onClick={loadTemplates} loading={loading}>
                         <RefreshCw className='h-4 w-4' />
                     </Button>
+                    {isOrvex && (
+                        <Button size='sm' variant='outline' onClick={() => void handleSync()} loading={syncing}>
+                            <Zap className='mr-2 h-4 w-4' />
+                            {t('admin.vdsNodes.orvex.sync')}
+                        </Button>
+                    )}
                     <Button size='sm' onClick={() => setCreateOpen(true)}>
                         <Plus className='mr-2 h-4 w-4' />
                         {t('admin.vdsNodes.templates.add')}
@@ -279,30 +305,32 @@ export function TemplatesTab({ nodeId }: TemplatesTabProps) {
                 )}
             </PageCard>
 
-            <Tabs defaultValue='qemu'>
-                <TabsList className='fp-surface mb-6 grid h-auto w-full grid-cols-2 gap-2 rounded-xl border p-2'>
-                    <TabsTrigger
-                        value='qemu'
-                        className='data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/10 flex items-center gap-2 rounded-xl border border-transparent py-3'
-                    >
-                        <Monitor className='h-4 w-4' />
-                        {t('ui.admin.vdsNodes.edit.templatesTab.qEMUKVMTutorial')}
-                    </TabsTrigger>
-                    <TabsTrigger
-                        value='lxc'
-                        className='data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/10 flex items-center gap-2 rounded-xl border border-transparent py-3'
-                    >
-                        <Cpu className='h-4 w-4' />
-                        {t('ui.admin.vdsNodes.edit.templatesTab.lXCTutorial')}
-                    </TabsTrigger>
-                </TabsList>
-                <TabsContent value='qemu'>
-                    <TutorialVM />
-                </TabsContent>
-                <TabsContent value='lxc'>
-                    <TutorialLXC />
-                </TabsContent>
-            </Tabs>
+            {!isOrvex && (
+                <Tabs defaultValue='qemu'>
+                    <TabsList className='fp-surface mb-6 grid h-auto w-full grid-cols-2 gap-2 rounded-xl border p-2'>
+                        <TabsTrigger
+                            value='qemu'
+                            className='data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/10 flex items-center gap-2 rounded-xl border border-transparent py-3'
+                        >
+                            <Monitor className='h-4 w-4' />
+                            {t('ui.admin.vdsNodes.edit.templatesTab.qEMUKVMTutorial')}
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value='lxc'
+                            className='data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/10 flex items-center gap-2 rounded-xl border border-transparent py-3'
+                        >
+                            <Cpu className='h-4 w-4' />
+                            {t('ui.admin.vdsNodes.edit.templatesTab.lXCTutorial')}
+                        </TabsTrigger>
+                    </TabsList>
+                    <TabsContent value='qemu'>
+                        <TutorialVM />
+                    </TabsContent>
+                    <TabsContent value='lxc'>
+                        <TutorialLXC />
+                    </TabsContent>
+                </Tabs>
+            )}
 
             <Sheet open={createOpen} onOpenChange={setCreateOpen}>
                 <SheetContent side='right' className='w-full max-w-md'>

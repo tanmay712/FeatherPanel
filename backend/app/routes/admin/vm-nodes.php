@@ -420,6 +420,57 @@ return function (RouteCollection $routes): void {
 
     App::getInstance(true)->registerAdminRoute(
         $routes,
+        'admin-vm-nodes-orvex',
+        '/api/admin/vm-nodes/{id}/orvex',
+        function (Request $request, array $args) {
+            $id = $args['id'] ?? null;
+            if (!$id || !is_numeric($id)) {
+                return ApiResponse::error('Missing or invalid ID', 'INVALID_ID', 400);
+            }
+
+            return (new VmNodesController())->orvexStatus($request, (int) $id);
+        },
+        // Reveals or issues the one-time install token of an OrveX node.
+        Permissions::ADMIN_VM_NODES_EDIT,
+        ['GET']
+    );
+
+    App::getInstance(true)->registerAdminRoute(
+        $routes,
+        'admin-vm-nodes-orvex-token',
+        '/api/admin/vm-nodes/{id}/orvex/token',
+        function (Request $request, array $args) {
+            $id = $args['id'] ?? null;
+            if (!$id || !is_numeric($id)) {
+                return ApiResponse::error('Missing or invalid ID', 'INVALID_ID', 400);
+            }
+
+            return (new VmNodesController())->orvexNewToken($request, (int) $id);
+        },
+        // Reveals or issues the one-time install token of an OrveX node.
+        Permissions::ADMIN_VM_NODES_EDIT,
+        ['POST']
+    );
+
+    App::getInstance(true)->registerAdminRoute(
+        $routes,
+        'admin-vm-nodes-orvex-sync',
+        '/api/admin/vm-nodes/{id}/orvex/sync',
+        function (Request $request, array $args) {
+            $id = $args['id'] ?? null;
+            if (!$id || !is_numeric($id)) {
+                return ApiResponse::error('Missing or invalid ID', 'INVALID_ID', 400);
+            }
+
+            return (new VmNodesController())->orvexSync($request, (int) $id);
+        },
+        // Reveals or issues the one-time install token of an OrveX node.
+        Permissions::ADMIN_VM_NODES_EDIT,
+        ['POST']
+    );
+
+    App::getInstance(true)->registerAdminRoute(
+        $routes,
         'admin-vm-nodes-setup-command',
         '/api/admin/vm-nodes/{id}/setup-command',
         function (Request $request, array $args) {

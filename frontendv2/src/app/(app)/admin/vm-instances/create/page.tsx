@@ -216,7 +216,15 @@ export default function VmInstancesCreatePage() {
     useEffect(() => {
         axios
             .get('/api/admin/vm-nodes', { params: { limit: 100 } })
-            .then((res) => setNodes(res.data.data?.vm_nodes ?? []))
+            .then((res) =>
+                setNodes(
+                    // OrveX nodes that have not connected yet cannot host servers.
+                    (res.data.data?.vm_nodes ?? []).filter(
+                        (node: { node_type?: string; registered_at?: string | null }) =>
+                            !(node.node_type === 'orvex' && !node.registered_at),
+                    ),
+                ),
+            )
             .catch((error) => toast.error(getApiErrorMessage(error, t, 'admin.vmInstances.errors.fetch_failed')))
             .finally(() => setLoadingPlans(false));
         // Auto-placement: preselect the node recommended by the capacity overview.

@@ -10,7 +10,7 @@ through one API. Adding a node to the panel therefore works exactly like
 adding a Proxmox node.
 """
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 # Version string reported on /api2/json/version. The panel only displays it.
 PVE_COMPAT_VERSION = "8.2.4"

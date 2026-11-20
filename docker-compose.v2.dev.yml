@@ -66,6 +66,9 @@ services:
       - FEATHERPANEL_VERSION_CHANNEL=development
       - DOCKER_UPDATER_URL=http://host.docker.internal:9418/update
       - DOCKER_UPDATER_TOKEN=${DOCKER_UPDATER_TOKEN:-}
+      # Installer source for the OrveX VPS Node install command shown in the panel
+      - ORVEX_REPO=${ORVEX_REPO:-tanmay712/FeatherPanel}
+      - ORVEX_BRANCH=${ORVEX_BRANCH:-develop}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:

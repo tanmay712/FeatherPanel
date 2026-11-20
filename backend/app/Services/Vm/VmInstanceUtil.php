@@ -119,16 +119,16 @@ final class VmInstanceUtil
     }
 
     /**
-     * OrveX VPS Nodes (see vps-node/ in this repository) serve the Proxmox API on
-     * top of Incus, so they are added like any Proxmox node. They are recognised by
-     * the "@orvex" realm of the API token user printed by the node installer; Proxmox
-     * itself has no such realm.
+     * OrveX VPS Nodes (see vps-node/ in this repository) are the panel's own node
+     * system: they run KVM + LXC through Incus and serve the API the panel uses, so
+     * every VDS feature works on them. They have node_type "orvex" (nodes added by
+     * hand are recognised by the "@orvex" realm of their API user). See OrvexNodes.
      *
      * @param array<string, mixed> $vmNode
      */
     public static function isOrvexNode(array $vmNode): bool
     {
-        return str_ends_with(strtolower(trim((string) ($vmNode['user'] ?? ''))), '@orvex');
+        return OrvexNodes::isOrvex($vmNode);
     }
 
     /**

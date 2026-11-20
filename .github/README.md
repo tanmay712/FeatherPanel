@@ -35,7 +35,7 @@ The interactive menu installs the panel, turns servers into VPS nodes, updates e
 | --- | --- |
 | 🪐 Install the panel | `curl -fsSL https://raw.githubusercontent.com/tanmay712/FeatherPanel/develop/install.sh \| sudo bash -s -- panel` |
 | 🔒 …on my domain with HTTPS | `curl -fsSL https://raw.githubusercontent.com/tanmay712/FeatherPanel/develop/install.sh \| sudo bash -s -- panel --domain panel.example.com` |
-| ⚡ Turn a server into a VPS node | `curl -fsSL https://raw.githubusercontent.com/tanmay712/FeatherPanel/develop/install.sh \| sudo bash -s -- vps-node` |
+| ⚡ Add a VPS node | **Admin → VDS Nodes → Create → OrveX Node**, then run the command the panel shows on the server |
 | 🔄 Update | `orvex update` (panel) · `orvex node-update` (VPS node) |
 | 📋 See what is running | `orvex status` |
 | ❓ All options | `curl -fsSL https://raw.githubusercontent.com/tanmay712/FeatherPanel/develop/install.sh \| bash -s -- help` |
@@ -51,17 +51,19 @@ After the panel install, open the printed URL and register: **the first account 
 
 ## 🖥️ VPS hosting without Proxmox
 
-**OrveX VPS Node** turns any Debian or Ubuntu server into a hypervisor for your panel. It runs
-[Incus](https://linuxcontainers.org/incus/) (KVM virtual machines **and** LXC containers) and speaks the same API
-the panel uses for Proxmox, so nodes, IP pools, templates and customer pages work exactly the same.
-Proxmox VE nodes keep working side by side.
+**OrveX VPS Node** is the panel's own node system. Create a node in the panel, run the one command it shows on
+any Debian or Ubuntu server, and the node **connects itself**: templates, storage and the shared-IPv4 pool are
+set up automatically. Nodes run [Incus](https://linuxcontainers.org/incus/) (KVM virtual machines **and** LXC
+containers) and speak the API the panel's VDS features use, so every customer page works on them.
+Existing Proxmox VE hosts can still be added as an optional second node type.
 
 ```mermaid
 flowchart LR
     C["👤 Customers"] --> P["🪐 OrveX Panel"]
     A["🛠️ Admins"] --> P
-    P -- "HTTPS · Proxmox-compatible API" --> N["⚡ OrveX VPS Node<br/>orvex-node + Incus"]
-    P -. "still supported" .-> X["Proxmox VE"]
+    N -. "connects itself<br/>(one-time token)" .-> P
+    P -- "HTTPS · node API" --> N["⚡ OrveX VPS Node<br/>orvex-node + Incus"]
+    P -. "optional" .-> X["Proxmox VE"]
     N --> K["🖥️ KVM virtual machines"]
     N --> L["📦 LXC containers"]
     N --> D["🌐 Dedicated IPv4<br/>routed or bridged"]
@@ -96,6 +98,7 @@ flowchart LR
 | | Proxmox VE node | ⚡ OrveX VPS Node |
 | --- | :---: | :---: |
 | Installation | ISO or Proxmox on Debian | **one command** on Debian/Ubuntu |
+| Adding it to the panel | API token, templates and IP pool by hand | ✅ connects itself, templates and shared IPv4 included |
 | KVM virtual machines | ✅ | ✅ |
 | LXC containers | ✅ | ✅ |
 | Dedicated IPv4 | ✅ bridge | ✅ routed or bridge |
@@ -116,14 +119,33 @@ block of 20 ports (TCP and UDP) on its public IP, and the panel shows them to th
 | `10.77.0.10` | `node-ip:22010` → port 22 | `node-ip:30200-30219` |
 | `10.77.0.254` | `node-ip:22254` → port 22 | `node-ip:35080-35099` |
 
-### Add a VPS node in five minutes
+### Add a VPS node in two steps
 
-1. **On the server**, run `curl -fsSL https://raw.githubusercontent.com/tanmay712/FeatherPanel/develop/install.sh | sudo bash -s -- vps-node`.<br />
-   It installs Incus, creates the storage pool and the shared-IPv4 bridge, starts the agent and prints the connection details.
-2. **Admin → VDS Nodes → Create**: enter the printed FQDN, port `8006`, user `orvex@orvex`, token ID and secret, and enable *Skip TLS verification*.
-3. **Node → IPs**: add your dedicated IPv4 addresses and/or the shared pool as one range, `10.77.0.2-10.77.0.254` (CIDR `24`, gateway `10.77.0.1`).
-4. **Node → Templates**: add templates by VMID, for example `9000` Ubuntu 24.04 KVM, `9002` Debian 12 KVM, `9100` Ubuntu 24.04 LXC or `9102` Debian 12 LXC.
-5. **Admin → VDS Instances → Create** a server for a customer. Turn on **Admin → Settings → Proxy VNC via panel** for the browser console.
+1. **In the panel**: **Admin → VDS Nodes → Create → OrveX Node**. A name and a location are all it needs.
+2. **On the server**: run the command the panel shows, as root. It looks like this:
+
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/tanmay712/FeatherPanel/develop/install.sh | sudo bash -s -- vps-node --panel https://panel.example.com --token orvx_… -y
+   ```
+
+   It installs Incus, the storage pool, the shared-IPv4 bridge and the agent, then **connects the node to the panel**.
+   The node page switches to *Connected* by itself, with the templates (Ubuntu, Debian, Rocky, Alma and Alpine,
+   KVM and LXC) and the shared-IPv4 pool `10.77.0.2-10.77.0.254` already added.
+
+Then create servers under **Admin → VDS Instances → Create**. Add any extra public IPv4s of the node under
+**Node → IP Pool**, and turn on **Admin → Settings → Proxy VNC via panel** for the browser console.
+
+<details>
+<summary><b>Install commands are single-use</b>, and other questions</summary>
+
+<br />
+
+- **The command expired or was already used?** Open the node → *Connect* → **New command**. Commands work once and expire after 24 hours.
+- **Agent already installed** (or the server was reinstalled)? Run `orvex-node register --panel https://panel.example.com --token orvx_…` with a new command from the panel. *Re-pair node* does the same for a connected node.
+- **The panel can't reach the node?** The panel connects to TCP port `8006` on the node. Open it in the server's firewall and at your provider, then press *Test connection*.
+- **Prefer to do it by hand?** Install with `… | sudo bash -s -- vps-node` alone, then add the node as *Proxmox VE* using the values from `orvex-node info`.
+
+</details>
 
 <details>
 <summary><b>Node command line</b> (<code>orvex-node</code>)</summary>
@@ -132,12 +154,13 @@ block of 20 ports (TCP and UDP) on its public IP, and the panel shows them to th
 
 | Command | Does |
 | --- | --- |
-| `orvex-node info` | Show the values to enter in the panel, the IP pools and templates |
+| `orvex-node register --panel URL --token T` | Connect the node to the panel (the panel shows this command) |
+| `orvex-node info` | Show the panel connection, plus the values for adding the node by hand |
 | `orvex-node status` | List guests with type, status, IP, network mode and SSH endpoint |
 | `orvex-node templates` | List templates and which ones are downloaded |
 | `orvex-node cache-templates [name...]` | Pre-download template images for fast deploys |
 | `orvex-node doctor` | Check Incus, KVM, forwarding, storage, bridge, TLS and token |
-| `orvex-node rotate-token` | Generate a new API secret |
+| `orvex-node rotate-token` | Generate a new API secret (then re-pair the node from the panel) |
 | `journalctl -u orvex-node -f` | Follow the agent log |
 
 Configuration lives in `/etc/orvex-node/config.json` (templates in `templates.json`). Full details are in [`vps-node/README.md`](../vps-node/README.md).

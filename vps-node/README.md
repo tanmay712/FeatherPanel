@@ -1,10 +1,13 @@
 # ⚡ OrveX VPS Node
 
-Turn any Debian or Ubuntu server into a VPS hypervisor for **OrveX Panel**, with KVM virtual machines and LXC
-containers, dedicated and shared IPv4, and no Proxmox needed.
+The panel's own VPS node system: turn any Debian or Ubuntu server into a node for **OrveX Panel**, with KVM
+virtual machines and LXC containers, dedicated and shared IPv4, and no Proxmox needed.
+
+Create the node in the panel (**Admin → VDS Nodes → Create → OrveX Node**) and run the command it shows on the
+server. It looks like this, and the node connects itself:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/tanmay712/FeatherPanel/develop/install.sh | sudo bash -s -- vps-node
+curl -fsSL https://raw.githubusercontent.com/tanmay712/FeatherPanel/develop/install.sh | sudo bash -s -- vps-node --panel https://panel.example.com --token orvx_… -y
 ```
 
 ## How it works
@@ -20,7 +23,8 @@ The panel already manages Proxmox VE through its HTTP API. `orvex-node` implemen
 panel and its async runner use (nodes, storage, bridges, template clones, config, power, resize, status,
 RRD stats, snapshots, vzdump backups and restores, tasks, VNC console). It translates every call into
 [Incus](https://linuxcontainers.org/incus/), which runs containers and virtual machines through one API.
-An OrveX node is therefore added in the panel exactly like a Proxmox node, and every existing VDS screen works.
+Every VDS screen therefore works on OrveX nodes. In the panel they are their own node type, which connects
+itself (see below) and hides the Proxmox-only settings.
 
 * **Guests** are Incus instances named `vps<VMID>`. The Proxmox-style config the panel writes
   (`memory`, `cores`, `net0`, `ipconfig0`, `ciuser`, `cipassword`, `sshkeys`, ...) is stored on the instance
@@ -30,6 +34,34 @@ An OrveX node is therefore added in the panel exactly like a Proxmox node, and e
 * **Config changes on running guests** that Incus cannot apply live are kept and applied on the next start or
   reboot, like Proxmox pending changes.
 * The agent is **Python 3 standard library only** (3.7+): no pip, no virtualenv.
+
+## Connecting to the panel
+
+```
+Panel: Admin > VDS Nodes > Create > OrveX Node  ->  one-time install command (token valid 24 h)
+Server: install.sh vps-node --panel URL --token T  ->  installs everything, then `orvex-node register`
+        POST {panel}/api/remote/orvex/register  ->  panel saves the node, adds templates + shared IPv4 pool,
+                                                   checks it can reach https://<node>:8006, token is used up
+```
+
+`orvex-node register --panel URL --token TOKEN [--address HOST] [--insecure]` sends the panel how to reach the
+node (address, port 8006, API token) and what it offers: templates, storage pool, shared-IPv4 network, KVM support
+and host details. The panel then:
+
+* fills in the node's connection details (the admin never types a token or secret),
+* adds the templates it does not know yet (KVM templates stay inactive when the server has no `/dev/kvm`),
+* adds the shared-IPv4 subnet to the node's IP pool (`10.77.0.2-10.77.0.254` by default), unless the pool already
+  has addresses from that subnet,
+* checks that it can reach the node API and reports the result to the installer.
+
+Tokens work once and expire after 24 hours. To connect again after reinstalling the server, changing its address
+or running `orvex-node rotate-token`, open the node in the panel → *Connect* → **Re-pair node** (or **New command**)
+and run the `orvex-node register` command it shows. The address defaults to `public_ipv4`; pass `--address` to use
+a host name instead. `--insecure` skips the check of the panel's TLS certificate. The panel URL and node ID are
+saved in `/etc/orvex-node/panel.json`.
+
+The panel must reach TCP port `8006` on the node. *Sync from node* on the node page re-reads the node report
+(`GET /api2/json/nodes/{node}/orvex/info`) and adds new templates.
 
 ## Networking
 
@@ -96,12 +128,13 @@ variants so cloud-init is available).
 
 | Command | Does |
 | --- | --- |
-| `orvex-node info` | Values for the panel, bridges, IP pool hint and templates |
+| `orvex-node register --panel URL --token T` | Connect the node to the panel with the token from the panel |
+| `orvex-node info` | Panel connection, plus the values for adding the node by hand, bridges, IP pool and templates |
 | `orvex-node status` | Guests with type, status, IP, network mode and SSH endpoint |
 | `orvex-node templates` | Template catalog and cache state |
 | `orvex-node cache-templates [name\|vmid ...]` | Pre-download images (all templates by default) |
 | `orvex-node doctor` | Check Incus, KVM, forwarding, storage pool, NAT bridge, uplink, TLS and token |
-| `orvex-node rotate-token` | New API secret (update the node in the panel afterwards) |
+| `orvex-node rotate-token` | New API secret (then re-pair the node from the panel) |
 | `orvex node-update` | Update the agent from GitHub |
 
 Logs: `journalctl -u orvex-node -f`. Guests can also be inspected with plain Incus (`incus list`, `incus info vps5000`).

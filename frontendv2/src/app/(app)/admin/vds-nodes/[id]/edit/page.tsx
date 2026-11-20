@@ -42,6 +42,7 @@ import {
     HardDrive,
     Zap,
     Shield,
+    Terminal,
 } from 'lucide-react';
 import { usePluginWidgets } from '@/hooks/usePluginWidgets';
 import { WidgetRenderer } from '@/components/server/WidgetRenderer';
@@ -56,6 +57,7 @@ import { StorageConfigurationTab } from './StorageConfigurationTab';
 import { DhcpAgentTab } from './DhcpAgentTab';
 import { FirewallTab } from './FirewallTab';
 import { InfoTab } from './InfoTab';
+import { OrvexConnectTab } from './OrvexConnectTab';
 import { UnsavedChangesBar } from '@/components/featherui/UnsavedChangesBar';
 import { useFormBaseline } from '@/hooks/useFormBaseline';
 
@@ -137,6 +139,12 @@ export default function EditVdsNodePage() {
     const [saving, setSaving] = useState(false);
     const [loadingNode, setLoadingNode] = useState(true);
     const [nodeName, setNodeName] = useState('');
+    // OrveX VPS Nodes connect themselves; Proxmox nodes use the connection form.
+    const [isOrvex, setIsOrvex] = useState(false);
+    const [orvexPending, setOrvexPending] = useState(false);
+    const [activeTab, setActiveTab] = useState('details');
+    const [reloadKey, setReloadKey] = useState(0);
+    const handleOrvexConnected = useCallback(() => setReloadKey((key) => key + 1), []);
 
     const [headers, setHeaders] = useState<KVPair[]>([]);
     const [queryParams, setQueryParams] = useState<KVPair[]>([]);
@@ -201,6 +209,14 @@ export default function EditVdsNodePage() {
                 }
 
                 setNodeName(node.name);
+                const orvex = node.node_type === 'orvex';
+                const pending = orvex && !node.registered_at;
+                setIsOrvex(orvex);
+                setOrvexPending(pending);
+                if (reloadKey === 0) {
+                    const requested = new URLSearchParams(window.location.search).get('tab');
+                    setActiveTab(requested || (pending ? 'connect' : 'details'));
+                }
                 let vncHost = '';
                 let vncPort = 8006;
                 let vncScheme: 'http' | 'https' | '' = '';
@@ -275,7 +291,7 @@ export default function EditVdsNodePage() {
         };
         loadNode();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [id]);
+    }, [id, reloadKey]);
 
     const handleSave = async () => {
         setSaving(true);
@@ -304,6 +320,12 @@ export default function EditVdsNodePage() {
                 additional_params: Object.keys(paramsMap).length ? JSON.stringify(paramsMap) : null,
             };
             if (!form.secret) delete payload.secret;
+            if (isOrvex) {
+                // The node reports these itself when it connects; never overwrite them from the form.
+                for (const field of ['fqdn', 'scheme', 'port', 'user', 'token_id', 'secret', 'tls_no_verify']) {
+                    delete payload[field];
+                }
+            }
 
             await axios.patch(`/api/admin/vm-nodes/${id}`, payload);
             setNodeName(form.name);
@@ -361,8 +383,9 @@ export default function EditVdsNodePage() {
             l.description?.toLowerCase().includes(locationSearch.toLowerCase()),
     );
 
-    const tabs = [
+    const allTabs = [
         { value: 'details', label: t('admin.vdsNodes.tabs.details'), icon: Database },
+        { value: 'connect', label: t('admin.vdsNodes.orvex.tab'), icon: Terminal },
         { value: 'connection', label: t('admin.vdsNodes.tabs.connection'), icon: Network },
         { value: 'advanced', label: t('admin.vdsNodes.tabs.advanced'), icon: Settings },
         { value: 'storage', label: t('admin.vdsNodes.tabs.storage'), icon: HardDrive },
@@ -372,6 +395,15 @@ export default function EditVdsNodePage() {
         { value: 'firewall', label: t('admin.vdsNodes.tabs.firewall'), icon: Shield },
         { value: 'info', label: t('admin.vdsNodes.tabs.info'), icon: Activity },
     ] as const;
+    // OrveX nodes: no Proxmox connection form, FeatherTail, firewall or PVE info. Until the node
+    // has connected, only its details and the install command make sense.
+    const visibleTabs: readonly string[] = isOrvex
+        ? orvexPending
+            ? ['details', 'connect']
+            : ['details', 'connect', 'ip-pool', 'templates']
+        : ['details', 'connection', 'advanced', 'storage', 'ip-pool', 'templates', 'dhcp', 'firewall', 'info'];
+    const tabs = allTabs.filter((tab) => visibleTabs.includes(tab.value));
+    const currentTab = visibleTabs.includes(activeTab) ? activeTab : 'details';
 
     if (loadingNode) {
         return (
@@ -385,7 +417,9 @@ export default function EditVdsNodePage() {
         <div className='space-y-6'>
             <PageHeader
                 title={nodeName || t('admin.vdsNodes.edit.title')}
-                description={t('admin.vdsNodes.edit.description')}
+                description={
+                    isOrvex ? t('admin.vdsNodes.orvex.edit_description') : t('admin.vdsNodes.edit.description')
+                }
                 icon={Server}
                 actions={
                     <div className='flex flex-wrap items-center gap-3'>
@@ -393,10 +427,17 @@ export default function EditVdsNodePage() {
                             <ArrowLeft className='mr-2 h-4 w-4' />
                             {t('common.back')}
                         </Button>
-                        <Button variant='outline' size='sm' onClick={handleTestConnection} loading={connectionTesting}>
-                            <Wifi className='mr-2 h-4 w-4' />
-                            {t('admin.vdsNodes.connection.test_button')}
-                        </Button>
+                        {!orvexPending && (
+                            <Button
+                                variant='outline'
+                                size='sm'
+                                onClick={handleTestConnection}
+                                loading={connectionTesting}
+                            >
+                                <Wifi className='mr-2 h-4 w-4' />
+                                {t('admin.vdsNodes.connection.test_button')}
+                            </Button>
+                        )}
                         <Button size='sm' onClick={handleSave} loading={saving} data-fp-save-shortcut>
                             <Save className='mr-2 h-4 w-4' />
                             {t('common.save')}
@@ -436,7 +477,12 @@ export default function EditVdsNodePage() {
             <WidgetRenderer widgets={getWidgets('admin-vds-node-edit', 'top-of-page')} context={{ id }} />
 
             <div className='block'>
-                <Tabs defaultValue='details' orientation='vertical' className='flex w-full flex-col gap-6 md:flex-row'>
+                <Tabs
+                    value={currentTab}
+                    onValueChange={setActiveTab}
+                    orientation='vertical'
+                    className='flex w-full flex-col gap-6 md:flex-row'
+                >
                     <aside className='w-full shrink-0 md:sticky md:top-24 md:w-64 md:self-start'>
                         <ScrollableTabsList className='fp-surface flex h-auto w-full flex-row gap-2 rounded-xl border p-2 md:flex-col md:gap-1 md:overflow-visible'>
                             {tabs.map((tab) => {
@@ -468,6 +514,15 @@ export default function EditVdsNodePage() {
                                 fetchLocations={fetchLocations}
                             />
                         </TabsContent>
+
+                        {isOrvex && (
+                            <TabsContent
+                                value='connect'
+                                className='mt-0 focus-visible:ring-0 focus-visible:outline-none'
+                            >
+                                <OrvexConnectTab nodeId={id} onConnected={handleOrvexConnected} />
+                            </TabsContent>
+                        )}
 
                         <TabsContent
                             value='connection'
@@ -510,7 +565,7 @@ export default function EditVdsNodePage() {
                         </TabsContent>
 
                         <TabsContent value='templates' className='mt-0 focus-visible:ring-0 focus-visible:outline-none'>
-                            <TemplatesTab nodeId={id} nodeName={nodeName} />
+                            <TemplatesTab nodeId={id} nodeName={nodeName} isOrvex={isOrvex} />
                         </TabsContent>
 
                         <TabsContent value='info' className='mt-0 focus-visible:ring-0 focus-visible:outline-none'>

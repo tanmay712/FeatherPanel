@@ -56,9 +56,19 @@ def cmd_info(cfg: Config, args: argparse.Namespace) -> int:
     if args.json:
         print(json.dumps(data, indent=2))
         return 0
+    from .panel import load_state
+
+    state = load_state(cfg)
     print("")
-    print("%sOrveX VPS Node%s %s  -  add this node in OrveX Panel: Admin > VDS Nodes > Create" % (BOLD, RESET, __version__))
+    print("%sOrveX VPS Node%s %s" % (BOLD, RESET, __version__))
+    if state.get("panel_url"):
+        print("  Panel            %s%s%s (node #%s, connected %s)" % (
+            GREEN, state["panel_url"], RESET, state.get("node_id", "?"), state.get("registered_at", "?")))
+    else:
+        print("  Panel            %snot connected%s: Admin > VDS Nodes > Create > OrveX Node in the panel shows" % (YELLOW, RESET))
+        print("                   the command to run; or: orvex-node register --panel URL --token TOKEN")
     print("")
+    print("%sManual setup%s (only needed without the panel's install command)" % (DIM, RESET))
     rows = [
         ("Name", cfg.node_name), ("FQDN / IP", public or "(set public_ipv4 in the config)"),
         ("Port", str(cfg["port"])), ("Scheme", data["scheme"]), ("User", cfg["api_user"]),
@@ -179,7 +189,36 @@ def cmd_rotate(cfg: Config, args: argparse.Namespace) -> int:
     cfg.data["api_token_secret"] = str(uuid.uuid4())
     cfg.save()
     print(cfg.data["api_token_secret"])
-    print("New secret saved. Restart the agent (systemctl restart orvex-node) and update the node in the panel.", file=sys.stderr)
+    print("New secret saved. Restart the agent (systemctl restart orvex-node), then re-pair the node: in the panel open"
+          " the node > Connect > New install command, and run `orvex-node register` with it.", file=sys.stderr)
+    return 0
+
+
+def cmd_register(cfg: Config, args: argparse.Namespace) -> int:
+    from .panel import PanelError, register
+
+    net = NetworkManager(cfg, IncusClient(cfg["incus_socket"]))
+    try:
+        data, payload = register(cfg, net, args.panel, args.token, address=args.address, insecure=args.insecure)
+    except PanelError as exc:
+        print("%serror:%s %s" % (RED, RESET, exc), file=sys.stderr)
+        return 1
+    if args.json:
+        print(json.dumps(data, indent=2))
+        return 0
+    node = data.get("node") or {}
+    print("%s%sConnected to OrveX Panel%s as node \"%s\" (#%s)" % (GREEN, BOLD, RESET, node.get("name", "?"), node.get("id", "?")))
+    print("  Panel reaches the node at   https://%s:%s" % (payload["address"], payload["port"]))
+    print("  Templates added             %s of %s" % (data.get("templates_imported", 0), data.get("templates_total", 0)))
+    print("  Shared IPv4 addresses added %s" % data.get("ips_added", 0))
+    if data.get("reachable"):
+        print("  Panel -> node connection    %sok%s" % (GREEN, RESET))
+    else:
+        print("  Panel -> node connection    %sFAILED%s: %s" % (YELLOW, RESET, data.get("reach_error") or "unknown error"))
+        print("    The panel must reach TCP port %s on %s: open it in the firewall (and at your" % (payload["port"], payload["address"]))
+        print("    provider), then press \"Test connection\" on the node page in the panel.")
+    for warning in data.get("warnings") or []:
+        print("  %swarning:%s %s" % (YELLOW, RESET, warning))
     return 0
 
 
@@ -215,7 +254,7 @@ def cmd_doctor(cfg: Config, args: argparse.Namespace) -> int:
 
 
 def main(argv: Optional[List[str]] = None) -> int:
-    parser = argparse.ArgumentParser(prog="orvex-node", description="OrveX VPS Node agent (Proxmox-compatible API on Incus)")
+    parser = argparse.ArgumentParser(prog="orvex-node", description="OrveX VPS Node agent: KVM + LXC hosting for OrveX Panel")
     parser.add_argument("--config", help="config file (default /etc/orvex-node/config.json)")
     sub = parser.add_subparsers(dest="command")
     sub.add_parser("serve", help="run the API server (used by systemd)")
@@ -225,6 +264,12 @@ def main(argv: Optional[List[str]] = None) -> int:
         p.add_argument("--json", action="store_true")
     p = sub.add_parser("cache-templates", help="pre-download template images")
     p.add_argument("templates", nargs="*", help="template names or VMIDs (default: all)")
+    p = sub.add_parser("register", help="connect this node to OrveX Panel with the token from the panel")
+    p.add_argument("--panel", required=True, metavar="URL", help="panel URL, e.g. https://panel.example.com")
+    p.add_argument("--token", required=True, help="one-time install token shown by the panel (orvx_...)")
+    p.add_argument("--address", help="address the panel uses to reach this node (default: the public IPv4)")
+    p.add_argument("--insecure", action="store_true", help="do not verify the panel's TLS certificate")
+    p.add_argument("--json", action="store_true")
     sub.add_parser("rotate-token", help="generate a new API token secret")
     sub.add_parser("doctor", help="check the node setup")
     sub.add_parser("version", help="print the version")
@@ -240,7 +285,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         serve(cfg)
         return 0
     handlers = {"info": cmd_info, "status": cmd_status, "templates": cmd_templates, "cache-templates": cmd_cache,
-                "rotate-token": cmd_rotate, "doctor": cmd_doctor}
+                "register": cmd_register, "rotate-token": cmd_rotate, "doctor": cmd_doctor}
     try:
         return handlers[args.command](cfg, args)
     except IncusError as exc:

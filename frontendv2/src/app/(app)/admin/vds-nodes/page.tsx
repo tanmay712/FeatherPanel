@@ -63,9 +63,14 @@ interface VmNode {
     timeout: number;
     addional_headers?: string | null;
     additional_params?: string | null;
+    node_type?: 'orvex' | 'proxmox';
+    registered_at?: string | null;
     created_at: string;
     updated_at: string;
 }
+
+/** An OrveX node that was created in the panel but has not run its install command yet. */
+const isPendingOrvex = (node: VmNode): boolean => node.node_type === 'orvex' && !node.registered_at;
 
 interface Location {
     id: number;
@@ -178,7 +183,9 @@ export default function VdsNodesPage() {
         async (nodesToCheck: VmNode[]) => {
             setIsCheckingConnections(true);
             try {
-                await Promise.all(nodesToCheck.map((node) => testConnection(node.id)));
+                await Promise.all(
+                    nodesToCheck.filter((node) => !isPendingOrvex(node)).map((node) => testConnection(node.id)),
+                );
             } catch (error) {
                 console.error('Error testing all VM node connections:', error);
                 toast.error(getApiErrorMessage(error, t, 'admin.vdsNodes.messages.connection_check_failed'));
@@ -338,15 +345,31 @@ export default function VdsNodesPage() {
                 <ResourceTable>
                     {vmNodes.map((node) => {
                         const status = getConnectionStatus(node.id);
+                        const pending = isPendingOrvex(node);
                         const badges: ResourceBadge[] = [
+                            pending
+                                ? {
+                                      label: t('admin.vdsNodes.orvex.pending_badge'),
+                                      className: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
+                                  }
+                                : {
+                                      label: t(`admin.vdsNodes.connection.${status}`),
+                                      className:
+                                          status === 'online'
+                                              ? 'bg-green-500/10 text-green-500 border-green-500/20'
+                                              : status === 'offline'
+                                                ? 'bg-red-500/10 text-red-500 border-red-500/20'
+                                                : 'bg-muted text-muted-foreground',
+                                  },
                             {
-                                label: t(`admin.vdsNodes.connection.${status}`),
+                                label:
+                                    node.node_type === 'orvex'
+                                        ? t('admin.vdsNodes.orvex.type_badge_orvex')
+                                        : t('admin.vdsNodes.orvex.type_badge_proxmox'),
                                 className:
-                                    status === 'online'
-                                        ? 'bg-green-500/10 text-green-500 border-green-500/20'
-                                        : status === 'offline'
-                                          ? 'bg-red-500/10 text-red-500 border-red-500/20'
-                                          : 'bg-muted text-muted-foreground',
+                                    node.node_type === 'orvex'
+                                        ? 'bg-primary/10 text-primary border-primary/20'
+                                        : 'bg-muted text-muted-foreground',
                             },
                             {
                                 label: getLocationName(node.location_id),
@@ -358,7 +381,11 @@ export default function VdsNodesPage() {
                             <ResourceCard
                                 key={node.id}
                                 title={node.name}
-                                subtitle={privacyMask.text(`${node.scheme}://${node.fqdn}:${node.port}`)}
+                                subtitle={
+                                    pending
+                                        ? t('admin.vdsNodes.orvex.pending_subtitle')
+                                        : privacyMask.text(`${node.scheme}://${node.fqdn}:${node.port}`)
+                                }
                                 icon={Server}
                                 badges={badges}
                                 description={
@@ -368,14 +395,16 @@ export default function VdsNodesPage() {
                                 }
                                 actions={
                                     <div className='flex items-center gap-2'>
-                                        <Button
-                                            size='sm'
-                                            variant='ghost'
-                                            onClick={() => testConnection(node.id)}
-                                            title={t('admin.vdsNodes.actions.test_connection')}
-                                        >
-                                            <HeartHandshakeIcon className='h-4 w-4' />
-                                        </Button>
+                                        {!pending && (
+                                            <Button
+                                                size='sm'
+                                                variant='ghost'
+                                                onClick={() => testConnection(node.id)}
+                                                title={t('admin.vdsNodes.actions.test_connection')}
+                                            >
+                                                <HeartHandshakeIcon className='h-4 w-4' />
+                                            </Button>
+                                        )}
                                         <Button
                                             size='sm'
                                             variant='ghost'
