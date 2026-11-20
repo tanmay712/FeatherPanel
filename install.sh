@@ -18,7 +18,10 @@
 set -Eeuo pipefail
 
 ORVEX_REPO="${ORVEX_REPO:-tanmay712/FeatherPanel}"
-ORVEX_BRANCH="${ORVEX_BRANCH:-develop}"
+ORVEX_DEFAULT_BRANCH="develop"
+BRANCH_SET=0 # 1 when the branch was chosen with --branch or ORVEX_BRANCH
+[ -n "${ORVEX_BRANCH:-}" ] && BRANCH_SET=1
+ORVEX_BRANCH="${ORVEX_BRANCH:-$ORVEX_DEFAULT_BRANCH}"
 PANEL_DIR="${ORVEX_PANEL_DIR:-/opt/orvexpanel}"
 NODE_DIR="/opt/orvex-node"
 NODE_CONFIG_DIR="/etc/orvex-node"
@@ -172,12 +175,32 @@ gen_secret() { openssl rand -hex 24; }
 
 ufw_active() { command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -q "Status: active"; }
 
+# Without --branch, an existing checkout keeps following the branch it was installed
+# from (falling back to the default branch if that branch was deleted on GitHub).
+follow_checkout_branch() { # follow_checkout_branch DIR
+    local branch
+    [ "$BRANCH_SET" -eq 1 ] && return 0
+    branch=$(git -C "$1" symbolic-ref --quiet --short HEAD 2>/dev/null) || return 0
+    [ -n "$branch" ] || return 0
+    ORVEX_BRANCH=$branch
+    INSTALLER_URL="https://raw.githubusercontent.com/${ORVEX_REPO}/${ORVEX_BRANCH}/install.sh"
+}
+
 fetch_repo() { # fetch_repo DIR [sparse-dir]
     local dir=$1 sparse=${2:-}
     if [ -d "$dir/.git" ]; then
-        info "Updating existing checkout in $dir"
-        git -C "$dir" fetch --depth 1 origin "$ORVEX_BRANCH"
-        git -C "$dir" reset --hard FETCH_HEAD >/dev/null
+        follow_checkout_branch "$dir"
+        info "Updating existing checkout in $dir ($ORVEX_BRANCH)"
+        if ! git -C "$dir" fetch -q --depth 1 origin "$ORVEX_BRANCH"; then
+            [ "$BRANCH_SET" -eq 0 ] && [ "$ORVEX_BRANCH" != "$ORVEX_DEFAULT_BRANCH" ] ||
+                die "Could not fetch branch $ORVEX_BRANCH from github.com/${ORVEX_REPO}"
+            warn "Branch $ORVEX_BRANCH is no longer on GitHub; switching to $ORVEX_DEFAULT_BRANCH"
+            ORVEX_BRANCH=$ORVEX_DEFAULT_BRANCH
+            INSTALLER_URL="https://raw.githubusercontent.com/${ORVEX_REPO}/${ORVEX_BRANCH}/install.sh"
+            git -C "$dir" fetch -q --depth 1 origin "$ORVEX_BRANCH" ||
+                die "Could not fetch branch $ORVEX_BRANCH from github.com/${ORVEX_REPO}"
+        fi
+        git -C "$dir" checkout -q -f -B "$ORVEX_BRANCH" FETCH_HEAD
     elif [ -n "$sparse" ]; then
         git clone -q --depth 1 --filter=blob:none --sparse -b "$ORVEX_BRANCH" "https://github.com/${ORVEX_REPO}.git" "$dir"
         git -C "$dir" sparse-checkout set "$sparse"
@@ -238,7 +261,7 @@ ensure_build_memory() {
         fi
         return
     fi
-    free_mb=$(df -Pm / | awk 'NR==2 {print $4}')
+    free_mb=$(df -Pm / 2>/dev/null | awk 'NR==2 {print $4}') || free_mb=""
     if [ -n "$free_mb" ] && [ "$free_mb" -lt $((add_mb + 4096)) ]; then
         warn "Not enough free disk space for a ${add_mb} MB swap file. The build may run out of memory; use --images or a larger server if it fails."
         return
@@ -861,7 +884,8 @@ VPS node options:
 
 General:
   -y, --yes              Non-interactive: accept the defaults
-  --branch NAME          Install from another branch (default ${ORVEX_BRANCH})
+  --branch NAME          Install from another branch (default ${ORVEX_DEFAULT_BRANCH}).
+                         Updates keep the branch a server was installed from.
 
 Examples:
   curl -fsSL ${INSTALLER_URL} | sudo bash
@@ -920,6 +944,7 @@ parse_args() {
             --no-templates) SKIP_TEMPLATES=1 ;;
             --branch)
                 ORVEX_BRANCH=${2:?--branch needs a value}
+                BRANCH_SET=1
                 INSTALLER_URL="https://raw.githubusercontent.com/${ORVEX_REPO}/${ORVEX_BRANCH}/install.sh"
                 shift
                 ;;
