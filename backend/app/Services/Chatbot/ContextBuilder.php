@@ -279,7 +279,7 @@ class ContextBuilder
         }
 
         // Fallback default prompt
-        return 'You are FeatherPanel AI, an intelligent assistant for FeatherPanel - a modern server management panel. Help users manage their servers, configure settings, and troubleshoot issues.';
+        return 'You are OrveX Panel AI, an intelligent assistant for OrveX Panel - a modern server management panel. Help users manage their servers, configure settings, and troubleshoot issues.';
     }
 
     /**

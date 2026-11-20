@@ -365,7 +365,7 @@ export function FeatherOsProvider({ children }: { children: ReactNode }) {
         (panelTheme === 'dark' ? panelSettings?.app_logo_dark : panelSettings?.app_logo_white) ||
         panelSettings?.app_logo_dark ||
         panelSettings?.app_logo_white ||
-        '/assets/logo.png';
+        '/branding/orvex-logo.png';
 
     const [ready, setReady] = useState(false);
     const [bootPhase, setBootPhase] = useState<'session' | 'state' | 'servers' | 'done'>(

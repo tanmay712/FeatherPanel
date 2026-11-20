@@ -461,7 +461,7 @@ export function SetupWizard() {
 
     const isLast = step.id === 'done';
     const progress = Math.round((stepIndex / (STEPS.length - 1)) * 100);
-    const logoUrl = settings?.app_logo_dark?.trim() || settings?.app_logo_white?.trim() || '/logo.png';
+    const logoUrl = settings?.app_logo_dark?.trim() || settings?.app_logo_white?.trim() || '/branding/orvex-logo.png';
     const premiumInactive = usePremiumInactive();
 
     return (

@@ -1497,7 +1497,7 @@ class SpellsController
     #[OA\Get(
         path: '/api/admin/spells/online/list',
         summary: 'List online spells',
-        description: 'Retrieve spells from the online FeatherPanel spell registry with search and pagination.',
+        description: 'Retrieve spells from the online OrveX Panel spell registry with search and pagination.',
         tags: ['Admin - Spells'],
         parameters: [
             new OA\Parameter(
@@ -1656,7 +1656,7 @@ class SpellsController
     #[OA\Post(
         path: '/api/admin/spells/online/install',
         summary: 'Install spell from online registry',
-        description: 'Install a spell from the online FeatherPanel spell registry with comprehensive validation, variable import, and metadata preservation.',
+        description: 'Install a spell from the online OrveX Panel spell registry with comprehensive validation, variable import, and metadata preservation.',
         tags: ['Admin - Spells'],
         requestBody: new OA\RequestBody(
             required: true,

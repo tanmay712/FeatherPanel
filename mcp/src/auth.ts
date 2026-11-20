@@ -30,7 +30,7 @@ export function getApiKey(sessionId?: string): string {
     }
 
     throw new Error(
-        'Missing FeatherPanel API key. For remote MCP, send Authorization: Bearer <api_key> or x-api-key. For stdio, set FEATHERPANEL_API_KEY.',
+        'Missing OrveX Panel API key. For remote MCP, send Authorization: Bearer <api_key> or x-api-key. For stdio, set FEATHERPANEL_API_KEY.',
     );
 }
 

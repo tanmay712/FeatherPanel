@@ -197,11 +197,11 @@ class WingsServerListController
             // Parse spell startup configuration (from spell.startup field)
             // Prefer server-specific startup command if set, otherwise fallback to spell startup
             if (!empty($server['startup'])) {
-                $startupCommand = $server['startup'] . ' # Added by FeatherPanel (Server Startup)';
+                $startupCommand = $server['startup'] . ' # Added by OrveX Panel (Server Startup)';
             } elseif (!empty($spell['startup'])) {
-                $startupCommand = $spell['startup'] . ' # Added by FeatherPanel (Spell Startup)';
+                $startupCommand = $spell['startup'] . ' # Added by OrveX Panel (Spell Startup)';
             } else {
-                $startupCommand = '# Added by FeatherPanel (No Startup Command)';
+                $startupCommand = '# Added by OrveX Panel (No Startup Command)';
             }
 
             // Replace placeholders in startup command

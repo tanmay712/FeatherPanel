@@ -119,8 +119,8 @@ class SuspensionService
                 try {
                     ServerBanned::send([
                         'email' => $user['email'],
-                        'subject' => 'Server suspended on ' . $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
-                        'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
+                        'subject' => 'Server suspended on ' . $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
+                        'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
                         'app_url' => $config->getSetting(ConfigInterface::APP_URL, 'https://featherpanel.mythical.systems'),
                         'first_name' => $user['first_name'],
                         'last_name' => $user['last_name'],

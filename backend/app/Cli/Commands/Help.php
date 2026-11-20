@@ -29,7 +29,7 @@ class Help extends App implements CommandBuilder
 
         // Use simple ASCII bars and basic MC color codes (ampersand codes, as above)
         $cmd->send('&8' . str_repeat('-', 60));
-        $cmd->send($cmd->color1 . '&lFeatherPanel &7Help Menu');
+        $cmd->send($cmd->color1 . '&lOrveX Panel &7Help Menu');
         $cmd->send('');
 
         $commands = scandir(__DIR__);

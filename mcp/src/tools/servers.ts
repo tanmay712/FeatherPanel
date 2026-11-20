@@ -12,7 +12,7 @@ export function registerWhoamiTool(server: McpServer): void {
     {
       title: "Who am I",
       description:
-        "Return the authenticated FeatherPanel user session (profile and permissions).",
+        "Return the authenticated OrveX Panel user session (profile and permissions).",
       inputSchema: {},
       annotations: { readOnlyHint: true, openWorldHint: false },
     },

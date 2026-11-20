@@ -424,7 +424,7 @@ class CalagopusClientCompatController
         }
 
         $config = App::getInstance(true)->getConfig();
-        $appName = $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel');
+        $appName = $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel');
 
         return $this->json([
             'app' => [

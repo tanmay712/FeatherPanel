@@ -61,7 +61,7 @@ class ApiClientForeignIpNotifier
 
         ApiClientIpBlocked::send([
             'email' => $user['email'],
-            'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
+            'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
             'app_url' => $appUrl,
             'first_name' => $user['first_name'],
             'last_name' => $user['last_name'],

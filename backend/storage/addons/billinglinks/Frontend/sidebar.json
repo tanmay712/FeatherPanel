@@ -1,0 +1,29 @@
+{
+  "client": {
+    "/earn/link4rewards": {
+      "name": "Link 4 Rewards",
+      "icon": "🔗",
+      "lucideIcon": "link",
+      "showBadge": false,
+      "redirect": "/earn/link4rewards",
+      "component": "/billinglinks/dist/links.html",
+      "description": "Create and manage billing links",
+      "category": "client",
+      "group": "Earn Credits"
+    }
+  },
+  "admin": {
+    "/billinglinks": {
+      "name": "Link 4 Rewards",
+      "icon": "🔗",
+      "lucideIcon": "link",
+      "showBadge": false,
+      "redirect": "/billinglinks",
+      "component": "/billinglinks/dist/admin.html",
+      "description": "Create and manage billing links",
+      "category": "admin",
+      "group": "Fremium Earn Credits"
+    }
+  },
+  "server": {}
+}

@@ -106,7 +106,7 @@ class FeatherPanelPremium
         if (self::isExpired()) {
             self::setInactive();
             App::getInstance(true)->getLogger()->info(
-                'FeatherPanel Premium cache expired during upstream failure; entitlement cleared.'
+                'OrveX Panel Premium cache expired during upstream failure; entitlement cleared.'
             );
 
             return;
@@ -118,7 +118,7 @@ class FeatherPanelPremium
 
         $message = $error !== null ? $error->getMessage() : 'unknown error';
         App::getInstance(true)->getLogger()->warning(
-            'FeatherPanel Premium refresh failed; retaining cached entitlement until expires_at: ' . $message
+            'OrveX Panel Premium refresh failed; retaining cached entitlement until expires_at: ' . $message
         );
     }
 

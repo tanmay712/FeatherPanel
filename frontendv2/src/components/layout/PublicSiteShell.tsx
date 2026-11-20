@@ -46,7 +46,7 @@ export default function PublicSiteShell({ children, fillViewport = false }: Publ
         settings?.app_seo_description?.trim() ||
         settings?.app_pwa_description?.trim() ||
         t('public_portal.description');
-    const logo = settings?.app_logo_dark?.trim() || settings?.app_logo_white?.trim() || '/assets/logo.png';
+    const logo = settings?.app_logo_dark?.trim() || settings?.app_logo_white?.trim() || '/branding/orvex-logo.png';
     const homeHref = settings?.website_url?.trim() || settings?.app_url?.trim() || '/';
 
     const isPluginPublicPath = pluginPublicPages.some(

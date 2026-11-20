@@ -91,7 +91,7 @@ class NotificationSettingsController
         if ($webhook === '' || !ExternalNotifier::isValidWebhook($webhook)) {
             return ApiResponse::error('Save a Discord webhook URL first', 'INVALID_DISCORD_WEBHOOK', 400);
         }
-        $appName = (string) App::getInstance(true)->getConfig()->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel');
+        $appName = (string) App::getInstance(true)->getConfig()->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel');
         $error = ExternalNotifier::testDiscord($webhook, $appName);
         if ($error !== null) {
             return ApiResponse::error($error, 'DISCORD_WEBHOOK_TEST_FAILED', 502);

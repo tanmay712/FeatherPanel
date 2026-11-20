@@ -669,7 +669,7 @@ class RemoteDatabaseProvisioner
     {
         $data = json_decode(trim($json), true);
         if (!is_array($data) || empty($data['featherpanel_mongo_dump']) || !is_array($data['collections'] ?? null)) {
-            throw new \InvalidArgumentException('Invalid MongoDB dump format (expected FeatherPanel JSON dump)');
+            throw new \InvalidArgumentException('Invalid MongoDB dump format (expected OrveX Panel JSON dump)');
         }
         foreach ($data['collections'] as $name => $docs) {
             if (!is_array($docs) || !preg_match('/^[a-zA-Z0-9_.-]+$/', (string) $name)) {
@@ -784,7 +784,7 @@ class RemoteDatabaseProvisioner
     {
         $data = json_decode(trim($json), true);
         if (!is_array($data) || empty($data['featherpanel_clickhouse_dump']) || !is_array($data['tables'] ?? null)) {
-            throw new \InvalidArgumentException('Invalid ClickHouse dump format (expected FeatherPanel JSON dump)');
+            throw new \InvalidArgumentException('Invalid ClickHouse dump format (expected OrveX Panel JSON dump)');
         }
 
         // Validate everything first so a bad entry cannot leave a half-restored database.

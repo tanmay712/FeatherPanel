@@ -27,7 +27,7 @@ import type { AdminAccess } from "./tools/admin-common.js";
 export const MCP_SERVER_NAME = "featherpanel";
 export const MCP_SERVER_VERSION = "1.4.0";
 
-const MCP_INSTRUCTIONS = `FeatherPanel MCP - manage the user's panel resources via tools (game servers, webspaces, VDS, tickets, account). When the API key has admin.* permissions, admin_* tools expose the full /api/admin/* surface (gated per route). FeatherOS and panel plugins/addons stay out of scope unless reached through admin_api where a route exists.
+const MCP_INSTRUCTIONS = `OrveX Panel MCP - manage the user's panel resources via tools (game servers, webspaces, VDS, tickets, account). When the API key has admin.* permissions, admin_* tools expose the full /api/admin/* surface (gated per route). FeatherOS and panel plugins/addons stay out of scope unless reached through admin_api where a route exists.
 
 ALWAYS use tools. Never claim you lack access, never substitute a manual walkthrough, and never ask the user to run apt/java themselves when list_servers / get_server_startup / pull_file / update_server / server_power_action are available. If tools/list is empty, tell them to Disconnect → Connect this connector (MCP process likely restarted). Tools for disabled panel modules (game/web/vds/tickets/knowledgebase) are omitted from tools/list. Admin tools appear only for keys with admin.* permissions; use admin_capabilities → admin_list_routes → admin_api (or named admin_* helpers).
 

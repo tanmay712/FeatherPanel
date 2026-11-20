@@ -239,7 +239,10 @@ function SidebarContent({
         return translated;
     };
 
-    const logoUrl = theme === 'dark' ? settings?.app_logo_dark || '/logo.png' : settings?.app_logo_white || '/logo.png';
+    const logoUrl =
+        theme === 'dark'
+            ? settings?.app_logo_dark || '/branding/orvex-logo.png'
+            : settings?.app_logo_white || '/branding/orvex-logo.png';
 
     const isClassicChrome = chromeLayout === 'classic';
     const isCompact = sidebarDensity === 'compact';

@@ -66,8 +66,8 @@ export function PwaInstaller() {
     const appName = settings?.app_name?.trim() || 'Panel';
     const logoUrl =
         theme === 'dark'
-            ? settings?.app_logo_dark || settings?.app_logo_white || '/assets/logo.png'
-            : settings?.app_logo_white || settings?.app_logo_dark || '/assets/logo.png';
+            ? settings?.app_logo_dark || settings?.app_logo_white || '/branding/orvex-logo.png'
+            : settings?.app_logo_white || settings?.app_logo_dark || '/branding/orvex-logo.png';
 
     const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
     const [visible, setVisible] = useState(false);

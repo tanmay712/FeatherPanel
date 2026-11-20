@@ -31,7 +31,7 @@ class SeedWebPlates extends App implements CommandBuilder
     public static function execute(array $args): void
     {
         $cliApp = App::getInstance();
-        $cliApp->send($cliApp->color1 . '&l[FeatherPanel] &r' . $cliApp->color3 . 'Seed system WebPlates');
+        $cliApp->send($cliApp->color1 . '&l[OrveX Panel] &r' . $cliApp->color3 . 'Seed system WebPlates');
         $cliApp->send('&7' . str_repeat('─', 50));
 
         if (!file_exists(__DIR__ . '/../../../storage/config/.env')) {

@@ -141,7 +141,7 @@ class ExternalNotifier
                 return;
             }
             $config = App::getInstance(true)->getConfig();
-            $appName = (string) $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel');
+            $appName = (string) $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel');
             $url = rtrim((string) $config->getSetting(ConfigInterface::APP_URL, ''), '/') . $link;
             $title = self::TITLES[$kind] ?? 'Server event';
             $lines = self::describe($kind, $data);

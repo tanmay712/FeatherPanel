@@ -47,12 +47,12 @@ class PublicConfig extends ConfigFactory
         // Define settings configuration with defaults
         return [
             // App settings
-            ConfigInterface::APP_NAME => 'FeatherPanel',
+            ConfigInterface::APP_NAME => 'OrveX Panel',
             ConfigInterface::APP_URL => 'https://featherpanel.mythical.systems',
             ConfigInterface::APP_DEVELOPER_MODE => 'false',
             ConfigInterface::APP_TIMEZONE => 'UTC',
-            ConfigInterface::APP_LOGO_WHITE => 'https://github.com/featherpanel-com.png',
-            ConfigInterface::APP_LOGO_DARK => 'https://github.com/featherpanel-com.png',
+            ConfigInterface::APP_LOGO_WHITE => '/branding/orvex-logo.png',
+            ConfigInterface::APP_LOGO_DARK => '/branding/orvex-logo.png',
             ConfigInterface::APP_SSO_REDIRECT_PATH => '/',
             ConfigInterface::APP_SSO_TOKEN_LIFETIME_MINUTES => '5',
             // Appearance defaults (safe, non-sensitive)
@@ -97,7 +97,7 @@ class PublicConfig extends ConfigFactory
             ConfigInterface::APP_SUPPORT_URL => 'https://discord.mythical.systems',
 
             // SEO Settings
-            ConfigInterface::APP_SEO_TITLE => 'FeatherPanel',
+            ConfigInterface::APP_SEO_TITLE => 'OrveX Panel',
             ConfigInterface::APP_SEO_DESCRIPTION => 'A powerful game server management panel.',
             ConfigInterface::APP_SEO_KEYWORDS => 'game, server, management, panel, hosting',
             // By default, do NOT allow search engine indexing.

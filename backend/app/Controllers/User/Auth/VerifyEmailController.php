@@ -86,8 +86,8 @@ class VerifyEmailController
 
         $verifyUrl = rtrim($config->getSetting(ConfigInterface::APP_URL, 'https://featherpanel.mythical.systems'), '/') . '/auth/verify-email?token=' . urlencode((string) $user['mail_verify']);
         VerifyEmail::send([
-            'subject' => 'Verify your email for ' . $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
-            'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
+            'subject' => 'Verify your email for ' . $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
+            'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
             'app_url' => $config->getSetting(ConfigInterface::APP_URL, 'https://featherpanel.mythical.systems'),
             'first_name' => (string) ($user['first_name'] ?? ''),
             'last_name' => (string) ($user['last_name'] ?? ''),

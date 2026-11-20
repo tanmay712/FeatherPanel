@@ -1,4 +1,4 @@
-# FeatherPanel
+# OrveX Panel (based on FeatherPanel)
 # ==========================================
 
 FRONTENDV2_DIR = frontendv2
@@ -40,17 +40,18 @@ DEV = 🔍
 
 SHELL := /bin/bash
 
-.PHONY: help frontend backend mcp mcp-dev mcp-build runner release install \
+.PHONY: help frontend backend addons mcp mcp-dev mcp-build runner release install \
 	clean test lint lint-backend lint-frontend set-prod set-dev \
 	permissions readme-stats ncu-frontend deps-update clean-license
 
 # Default target
 help:
-	@echo -e "${BOLD}${BLUE}FeatherPanel Build System${NC}"
+	@echo -e "${BOLD}${BLUE}OrveX Panel Build System${NC}"
 	@echo -e "${CYAN}================================${NC}\n"
 	@echo -e "${BOLD}Build:${NC}"
 	@echo -e "  ${GREEN}make frontend${NC}     ${ROCKET} Production frontend (+ docs)"
 	@echo -e "  ${GREEN}make backend${NC}      ${BUILD} Composer install (optimized)"
+	@echo -e "  ${GREEN}make addons${NC}       ${BUILD} Rebuild bundled addon frontends"
 	@echo -e "  ${GREEN}make mcp${NC}          ${BUILD} Build MCP server"
 	@echo -e "  ${GREEN}make runner${NC}       ${BUILD} Release-build async runner"
 	@echo -e "  ${GREEN}make release${NC}      ${PACKAGE} Full release prep (includes frontend ncu -u)"
@@ -83,6 +84,12 @@ backend:
 	@echo -e "${CYAN}=================${NC}"
 	@cd $(BACKEND_DIR) && $(COMPOSER) install --optimize-autoloader
 	@echo -e "${GREEN}${CHECK} Backend build complete${NC}\n"
+
+addons:
+	@echo -e "\n${BOLD}${BLUE}Addon Frontends Build${NC} ${BUILD}"
+	@echo -e "${CYAN}=================${NC}"
+	@./scripts/build-addon-frontends.sh
+	@echo -e "${GREEN}${CHECK} Addon frontends built${NC}\n"
 
 mcp mcp-build:
 	@echo -e "\n${BOLD}${BLUE}MCP Build${NC} ${BUILD}"

@@ -77,7 +77,7 @@ class Module extends App implements CommandBuilder
 
     public static function getDescription(): string
     {
-        return 'Manage FeatherPanel modules (install, ensure, list, uninstall)';
+        return 'Manage OrveX Panel modules (install, ensure, list, uninstall)';
     }
 
     public static function getSubCommands(): array
@@ -191,7 +191,7 @@ class Module extends App implements CommandBuilder
      */
     private static function listModules(App $app): void
     {
-        $app->send($app->color1 . '&lFeatherPanel Modules');
+        $app->send($app->color1 . '&lOrveX Panel Modules');
         $app->send('&7' . str_repeat('─', 50));
         $app->send('');
 

@@ -193,7 +193,7 @@ class VdsContextBuilder
         }
 
         // Fallback default prompt
-        return 'You are FeatherPanel VDS AI, an intelligent assistant for FeatherPanel - a modern server management panel with Virtual Dedicated Server (VDS) support. Help users manage their VDS instances, configure settings, and troubleshoot issues.';
+        return 'You are OrveX Panel VDS AI, an intelligent assistant for OrveX Panel - a modern server management panel with Virtual Dedicated Server (VDS) support. Help users manage their VDS instances, configure settings, and troubleshoot issues.';
     }
 
     /**

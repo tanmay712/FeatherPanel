@@ -57,7 +57,7 @@ export class PluginEventBus {
                 entry.handler(payload);
             } catch (err) {
                 console.error(
-                    `[FeatherPanel] event handler error for ${event}`,
+                    `[OrveX Panel] event handler error for ${event}`,
                     err instanceof Error ? err.message : err,
                 );
             }

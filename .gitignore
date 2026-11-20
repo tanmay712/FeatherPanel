@@ -12,7 +12,25 @@ mysql/
 /docs/
 nginx.conf
 backend/public/addons/*
+# OrveX: bundled addon public assets stay tracked
+!backend/public/addons/billingplans
+!backend/public/addons/billingresources
+!backend/public/addons/discordplus
+!backend/public/addons/widgetbot
 backend/public/components/*
+# OrveX: bundled addon frontend components stay tracked
+!backend/public/components/billingafk
+!backend/public/components/billingcore
+!backend/public/components/billinglinks
+!backend/public/components/billingplans
+!backend/public/components/billingredeem
+!backend/public/components/billingreferrals
+!backend/public/components/billingresources
+!backend/public/components/billingresourcesnewservers
+!backend/public/components/billingresourcesstore
+!backend/public/components/discordplus
+!backend/public/components/minecraftdatapackinstaller
+!backend/public/components/pterodactylpanelapi
 backend/public/pma/
 install.log
 featherwings/
@@ -60,3 +78,8 @@ Untitled
 .env.*
 !.env.example
 FeatherTail/
+
+# OrveX: allow bundled addon frontend manifests (globally ignored above)
+!backend/storage/addons/*/Frontend/App/package.json
+!backend/storage/addons/*/Frontend/App/pnpm-lock.yaml
+!backend/storage/addons/*/Frontend/App/components.json

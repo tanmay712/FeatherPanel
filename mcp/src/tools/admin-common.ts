@@ -51,7 +51,7 @@ export async function resolveAdminAccess(
     };
   } catch (error) {
     console.error(
-      "FeatherPanel MCP: failed to resolve admin access; admin tools disabled:",
+      "OrveX Panel MCP: failed to resolve admin access; admin tools disabled:",
       error instanceof Error ? error.message : error,
     );
     return { enabled: false, permissions: [], hasRoot: false };

@@ -525,7 +525,7 @@ class DashboardController
             $projectMeta = $this->fetchUpdateServerJson('/' . self::UPDATE_PROJECT_SLUG);
             if (is_array($projectMeta) && !isset($projectMeta['error'])) {
                 $versionInfo['project'] = [
-                    'name' => $projectMeta['name'] ?? 'FeatherPanel',
+                    'name' => $projectMeta['name'] ?? 'OrveX Panel',
                     'slug' => $projectMeta['slug'] ?? self::UPDATE_PROJECT_SLUG,
                     'description' => $projectMeta['description'] ?? '',
                     'github_url' => $projectMeta['github_url'] ?? null,
@@ -600,7 +600,7 @@ class DashboardController
                 'type' => $type,
                 'release_name' => $type === 'Development'
                     ? 'Development build'
-                    : 'FeatherPanel',
+                    : 'OrveX Panel',
                 'release_description' => '',
                 'description' => '',
                 'php_version' => $this->formatPhpVersionRange($minPhp, $maxPhp) ?? PHP_VERSION,

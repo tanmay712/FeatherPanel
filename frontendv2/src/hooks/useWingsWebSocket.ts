@@ -557,7 +557,7 @@ export function useWingsWebSocket({
 
                         if (data.event === 'throttled' && onConsoleOutputRef.current) {
                             enqueueConsoleOutput(
-                                '\u001b[33m[FeatherPanel] Console output is being rate-limited by the node.\u001b[0m',
+                                '\u001b[33m[OrveX Panel] Console output is being rate-limited by the node.\u001b[0m',
                             );
                             return;
                         }

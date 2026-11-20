@@ -191,6 +191,6 @@ export async function proxy(request: NextRequest) {
 export const config = {
     /* Allow known asset/cdn paths and plugin static assets without auth gating. */
     matcher: [
-        '/((?!api|mcp|oauth|authorize|token|register|revoke|\\.well-known|_next/static|_next/image|favicon.ico|locales/|components/|addons/|attachments/).*)',
+        '/((?!api|mcp|oauth|authorize|token|register|revoke|\\.well-known|_next/static|_next/image|favicon.ico|locales/|components/|addons/|attachments/|branding/).*)',
     ],
 };

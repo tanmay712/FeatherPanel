@@ -134,7 +134,7 @@ class NodeAlertService
     {
         $result = ['inbox' => 'skipped', 'email' => 'skipped', 'webhook' => 'skipped'];
         $config = App::getInstance(true)->getConfig();
-        $appName = (string) $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel');
+        $appName = (string) $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel');
         $link = '/admin/nodes/status';
         $prefix = match ($alert['state']) {
             'resolved' => 'Resolved',

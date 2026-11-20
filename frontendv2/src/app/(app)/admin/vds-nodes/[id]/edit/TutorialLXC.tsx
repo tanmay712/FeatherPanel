@@ -109,7 +109,7 @@ apt upgrade -y
                 <p className='font-medium'>{t('admin.vdsNodes.tutorial.lxc.step5')}</p>
                 <p>
                     {t('ui.admin.vdsNodes.edit.tutorialLXC.inTheTemplatesTabOfYour')} <code>LXC</code> as the Guest
-                    Type. FeatherPanel will now be able to clone this template when creating new LXC instances.
+                    Type. OrveX Panel will now be able to clone this template when creating new LXC instances.
                 </p>
             </div>
         </PageCard>

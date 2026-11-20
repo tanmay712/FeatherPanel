@@ -88,7 +88,7 @@ export function TerminalTab({ node }: TerminalTabProps) {
         fitAddonRef.current = fitAddon;
 
         terminal.writeln('\x1b[1;36m╔' + '═'.repeat(58) + '╗\x1b[0m');
-        terminal.writeln('\x1b[1;36m║       Welcome to FeatherPanel Host Terminal            ║\x1b[0m');
+        terminal.writeln('\x1b[1;36m║       Welcome to OrveX Panel Host Terminal             ║\x1b[0m');
         terminal.writeln('\x1b[1;36m╚' + '═'.repeat(58) + '╝\x1b[0m');
         terminal.writeln('');
         terminal.writeln('\x1b[90mHost: ' + (node?.fqdn || 'Unknown') + '\x1b[0m');

@@ -70,7 +70,7 @@ function sendUnauthorized(
   const origin = resourceUrl.replace(/\/mcp\/?$/, "");
   res.setHeader(
     "WWW-Authenticate",
-    `Bearer realm="FeatherPanel MCP", resource_metadata="${origin}/.well-known/oauth-protected-resource", scope="mcp:tools"`,
+    `Bearer realm="OrveX Panel MCP", resource_metadata="${origin}/.well-known/oauth-protected-resource", scope="mcp:tools"`,
   );
   res.status(401).json({
     jsonrpc: "2.0",
@@ -277,11 +277,11 @@ app.delete("/mcp/", mcpDeleteHandler);
 
 app.listen(MCP_PORT, MCP_HOST, (error?: Error) => {
   if (error) {
-    console.error("Failed to start FeatherPanel MCP server:", error);
+    console.error("Failed to start OrveX Panel MCP server:", error);
     process.exit(1);
   }
   console.log(
-    `FeatherPanel MCP listening on http://${MCP_HOST}:${MCP_PORT}/mcp`,
+    `OrveX Panel MCP listening on http://${MCP_HOST}:${MCP_PORT}/mcp`,
   );
   console.log(`Panel API: ${FEATHERPANEL_URL}`);
   console.log("Auth: OAuth2 (DCR+PKCE) + Bearer API keys");

@@ -33,7 +33,9 @@ function ChatbotOpenButton({ onClick }: { onClick: () => void }) {
     const customAvatar = settings?.chatbot_avatar_url?.trim();
     const logoUrl =
         customAvatar ||
-        (theme === 'dark' ? settings?.app_logo_dark || '/logo.png' : settings?.app_logo_white || '/logo.png');
+        (theme === 'dark'
+            ? settings?.app_logo_dark || '/branding/orvex-logo.png'
+            : settings?.app_logo_white || '/branding/orvex-logo.png');
     const assistantName = settings?.chatbot_display_name?.trim() || t('chatbot.title');
 
     return (

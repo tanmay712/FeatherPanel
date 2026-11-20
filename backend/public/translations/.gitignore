@@ -1,3 +1,4 @@
 *
 !mapping.json
+!*.json
 !.gitignore

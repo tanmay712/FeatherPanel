@@ -2549,8 +2549,8 @@ class ServerUserController
             if ($owner) {
                 ServerDeleted::send([
                     'email' => $owner['email'],
-                    'subject' => 'Server deleted on ' . $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
-                    'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
+                    'subject' => 'Server deleted on ' . $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
+                    'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
                     'app_url' => $config->getSetting(ConfigInterface::APP_URL, 'https://featherpanel.mythical.systems'),
                     'first_name' => $owner['first_name'],
                     'last_name' => $owner['last_name'],

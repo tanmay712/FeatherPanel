@@ -1289,8 +1289,8 @@ class ServersController
             $allocation = Allocation::getAllocationById($data['allocation_id']);
             ServerCreated::send([
                 'email' => $user['email'],
-                'subject' => 'New server created on ' . $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
-                'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
+                'subject' => 'New server created on ' . $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
+                'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
                 'app_url' => $config->getSetting(ConfigInterface::APP_URL, 'https://featherpanel.mythical.systems'),
                 'first_name' => $user['first_name'],
                 'last_name' => $user['last_name'],
@@ -2197,8 +2197,8 @@ class ServersController
         try {
             ServerDeleted::send([
                 'email' => $user['email'],
-                'subject' => 'Server deleted on ' . $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
-                'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
+                'subject' => 'Server deleted on ' . $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
+                'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
                 'app_url' => $config->getSetting(ConfigInterface::APP_URL, 'https://featherpanel.mythical.systems'),
                 'first_name' => $user['first_name'],
                 'last_name' => $user['last_name'],
@@ -2318,8 +2318,8 @@ class ServersController
         try {
             ServerDeleted::send([
                 'email' => $user['email'],
-                'subject' => 'Server deleted on ' . $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
-                'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
+                'subject' => 'Server deleted on ' . $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
+                'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
                 'app_url' => $config->getSetting(ConfigInterface::APP_URL, 'https://featherpanel.mythical.systems'),
                 'first_name' => $user['first_name'],
                 'last_name' => $user['last_name'],
@@ -2674,8 +2674,8 @@ class ServersController
         try {
             ServerBanned::send([
                 'email' => $user['email'],
-                'subject' => 'Server suspended on ' . $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
-                'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
+                'subject' => 'Server suspended on ' . $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
+                'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
                 'app_url' => $config->getSetting(ConfigInterface::APP_URL, 'https://featherpanel.mythical.systems'),
                 'first_name' => $user['first_name'],
                 'last_name' => $user['last_name'],
@@ -2875,8 +2875,8 @@ class ServersController
         try {
             ServerUnbanned::send([
                 'email' => $user['email'],
-                'subject' => 'Server unsuspended on ' . $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
-                'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
+                'subject' => 'Server unsuspended on ' . $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
+                'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
                 'app_url' => $config->getSetting(ConfigInterface::APP_URL, 'fhttps://eatherpanel.mythical.systems'),
                 'first_name' => $user['first_name'],
                 'last_name' => $user['last_name'],

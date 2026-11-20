@@ -580,7 +580,7 @@ final class VmInstanceUtil
             $getConfig = $client->getVmConfig($node, $newVmid, 'lxc');
             $currentConfig = $getConfig['ok'] && is_array($getConfig['config'] ?? null) ? (array) $getConfig['config'] : [];
             $networkConfig = self::buildNetworkConfig('lxc', $networkAssignments, $currentConfig);
-            $descParts = ['FeatherPanel Managed VM (Reinstalled)'];
+            $descParts = ['OrveX Panel Managed VM (Reinstalled)'];
             if (!empty($ipAddress)) {
                 $descParts[] = 'IP: ' . $ipAddress;
             }
@@ -637,7 +637,7 @@ final class VmInstanceUtil
             $curCfg = $client->getVmConfig($node, $newVmid, 'qemu');
             $currentConfig = $curCfg['ok'] && is_array($curCfg['config'] ?? null) ? (array) $curCfg['config'] : [];
             $networkConfig = self::buildNetworkConfig('qemu', $networkAssignments, $currentConfig);
-            $descParts = ['FeatherPanel Managed VM (Reinstalled)'];
+            $descParts = ['OrveX Panel Managed VM (Reinstalled)'];
             if (!empty($ipAddress)) {
                 $descParts[] = 'IP: ' . $ipAddress;
             }
@@ -1274,7 +1274,7 @@ final class VmInstanceUtil
                 'ciuser' => $meta['ci_user'] ?? 'debian',
                 'cipassword' => $meta['ci_password'] ?? bin2hex(random_bytes(6)),
                 'tags' => 'FeatherPanel-Managed',
-                'description' => "FeatherPanel Managed VM | IP: {$primaryIpAddress} | Hostname: $hostname | User: {$task['user_uuid']} | Created: " . date('Y-m-d H:i:s'),
+                'description' => "OrveX Panel Managed VM | IP: {$primaryIpAddress} | Hostname: $hostname | User: {$task['user_uuid']} | Created: " . date('Y-m-d H:i:s'),
             ] + $networkConfig['config']);
         } else {
             $networkConfig = self::buildNetworkConfig('lxc', $networkAssignments, []);
@@ -1284,7 +1284,7 @@ final class VmInstanceUtil
                 'nameserver' => '1.1.1.1 8.8.8.8',
                 'onboot' => $onBoot ? 1 : 0,
                 'tags' => 'FeatherPanel-Managed',
-                'description' => "FeatherPanel Managed VM | IP: {$primaryIpAddress} | Hostname: $hostname | User: {$task['user_uuid']} | Created: " . date('Y-m-d H:i:s'),
+                'description' => "OrveX Panel Managed VM | IP: {$primaryIpAddress} | Hostname: $hostname | User: {$task['user_uuid']} | Created: " . date('Y-m-d H:i:s'),
             ] + $networkConfig['config']);
 
             $requestedDiskGb = (int) ($meta['disk'] ?? 0);

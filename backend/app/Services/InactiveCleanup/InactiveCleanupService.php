@@ -383,7 +383,7 @@ class InactiveCleanupService
         ], '/server/' . $item['uuid_short'], 'server_inactive:' . $item['server_id']);
 
         $config = App::getInstance(true)->getConfig();
-        $appName = (string) $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel');
+        $appName = (string) $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel');
         $url = rtrim((string) $config->getSetting(ConfigInterface::APP_URL, ''), '/') . '/server/' . $item['uuid_short'];
         $esc = static fn (string $v): string => htmlspecialchars($v, ENT_QUOTES, 'UTF-8');
         $what = [

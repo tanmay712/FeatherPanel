@@ -645,7 +645,7 @@ class CloudDataController
 
     #[OA\Post(
         path: '/api/admin/cloud/data/report',
-        summary: 'Report a FeatherPanel issue (always project featherpanel)',
+        summary: 'Report an OrveX Panel issue (always project featherpanel)',
         tags: ['Admin - FeatherCloud']
     )]
     public function reportIssue(Request $request): Response
@@ -655,7 +655,7 @@ class CloudDataController
 
     #[OA\Post(
         path: '/api/admin/cloud/data/suggestion',
-        summary: 'Submit a FeatherPanel feature suggestion (always project featherpanel)',
+        summary: 'Submit an OrveX Panel feature suggestion (always project featherpanel)',
         tags: ['Admin - FeatherCloud']
     )]
     public function submitSuggestion(Request $request): Response

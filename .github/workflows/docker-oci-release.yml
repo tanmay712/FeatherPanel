@@ -78,13 +78,13 @@ jobs:
           push: true
           pull: true
           cache-from: |
-            type=registry,ref=ghcr.io/${{ steps.repo-owner.outputs.owner }}/featherpanel-oci:buildcache-${{ matrix.cache-key }}
+            type=registry,ref=ghcr.io/${{ steps.repo-owner.outputs.owner }}/orvexpanel-oci:buildcache-${{ matrix.cache-key }}
             type=gha
           cache-to: |
-            type=registry,ref=ghcr.io/${{ steps.repo-owner.outputs.owner }}/featherpanel-oci:buildcache-${{ matrix.cache-key }},mode=max
+            type=registry,ref=ghcr.io/${{ steps.repo-owner.outputs.owner }}/orvexpanel-oci:buildcache-${{ matrix.cache-key }},mode=max
             type=gha,mode=max
           tags: |
-            ghcr.io/${{ steps.repo-owner.outputs.owner }}/featherpanel-oci:${{ steps.version.outputs.tag }}-${{ steps.platform-tag.outputs.tag }}
+            ghcr.io/${{ steps.repo-owner.outputs.owner }}/orvexpanel-oci:${{ steps.version.outputs.tag }}-${{ steps.platform-tag.outputs.tag }}
 
   manifest-oci:
     name: Create Multi-Arch Manifest - OCI (Release)
@@ -136,9 +136,9 @@ jobs:
         run: |
           OWNER="${{ steps.repo-owner.outputs.owner }}"
           TAG="${{ steps.version.outputs.tag }}"
-          docker buildx imagetools create --tag "ghcr.io/${OWNER}/featherpanel-oci:${TAG}" \
-            "ghcr.io/${OWNER}/featherpanel-oci:${TAG}-linux-amd64" \
-            "ghcr.io/${OWNER}/featherpanel-oci:${TAG}-linux-arm64"
-          docker buildx imagetools create --tag "ghcr.io/${OWNER}/featherpanel-oci:latest" \
-            "ghcr.io/${OWNER}/featherpanel-oci:${TAG}-linux-amd64" \
-            "ghcr.io/${OWNER}/featherpanel-oci:${TAG}-linux-arm64"
+          docker buildx imagetools create --tag "ghcr.io/${OWNER}/orvexpanel-oci:${TAG}" \
+            "ghcr.io/${OWNER}/orvexpanel-oci:${TAG}-linux-amd64" \
+            "ghcr.io/${OWNER}/orvexpanel-oci:${TAG}-linux-arm64"
+          docker buildx imagetools create --tag "ghcr.io/${OWNER}/orvexpanel-oci:latest" \
+            "ghcr.io/${OWNER}/orvexpanel-oci:${TAG}-linux-amd64" \
+            "ghcr.io/${OWNER}/orvexpanel-oci:${TAG}-linux-arm64"

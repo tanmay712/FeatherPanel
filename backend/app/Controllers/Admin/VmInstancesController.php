@@ -2746,8 +2746,8 @@ class VmInstancesController
             try {
                 VmSuspended::send([
                     'email' => $user['email'],
-                    'subject' => 'VM suspended on ' . $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
-                    'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
+                    'subject' => 'VM suspended on ' . $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
+                    'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
                     'app_url' => $config->getSetting(ConfigInterface::APP_URL, 'https://featherpanel.mythical.systems'),
                     'first_name' => $user['first_name'],
                     'last_name' => $user['last_name'],
@@ -2842,8 +2842,8 @@ class VmInstancesController
             try {
                 VmUnsuspended::send([
                     'email' => $user['email'],
-                    'subject' => 'VM unsuspended on ' . $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
-                    'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
+                    'subject' => 'VM unsuspended on ' . $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
+                    'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
                     'app_url' => $config->getSetting(ConfigInterface::APP_URL, 'https://featherpanel.mythical.systems'),
                     'first_name' => $user['first_name'],
                     'last_name' => $user['last_name'],

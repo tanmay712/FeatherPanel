@@ -35,8 +35,8 @@ class FeatherPanelPremiumController
 
     #[OA\Get(
         path: '/api/admin/featherpanel-premium',
-        summary: 'Get FeatherPanel Premium entitlement and customization settings',
-        tags: ['Admin - FeatherPanel Premium']
+        summary: 'Get OrveX Panel Premium entitlement and customization settings',
+        tags: ['Admin - OrveX Panel Premium']
     )]
     public function show(Request $request): Response
     {
@@ -49,13 +49,13 @@ class FeatherPanelPremiumController
             $this->tryRefreshEntitlement($request);
         }
 
-        return ApiResponse::success($this->payload($request), 'FeatherPanel Premium status retrieved', 200);
+        return ApiResponse::success($this->payload($request), 'OrveX Panel Premium status retrieved', 200);
     }
 
     #[OA\Post(
         path: '/api/admin/featherpanel-premium',
-        summary: 'Update FeatherPanel Premium customization settings',
-        tags: ['Admin - FeatherPanel Premium']
+        summary: 'Update OrveX Panel Premium customization settings',
+        tags: ['Admin - OrveX Panel Premium']
     )]
     public function update(Request $request): Response
     {
@@ -68,7 +68,7 @@ class FeatherPanelPremiumController
 
         if (!FeatherPanelPremium::canCustomizeUi()) {
             return ApiResponse::error(
-                'FeatherPanel Premium is required to customize branding and AI appearance.',
+                'OrveX Panel Premium is required to customize branding and AI appearance.',
                 'PREMIUM_REQUIRED',
                 403
             );
@@ -117,7 +117,7 @@ class FeatherPanelPremiumController
         if (array_key_exists('sidebar_navigation_config', $body)) {
             if (!FeatherPanelPremium::canCustomSidebar()) {
                 return ApiResponse::error(
-                    'FeatherPanel Premium is required to customize the sidebar.',
+                    'OrveX Panel Premium is required to customize the sidebar.',
                     'PREMIUM_REQUIRED',
                     403
                 );
@@ -138,7 +138,7 @@ class FeatherPanelPremiumController
             $config->setSetting(ConfigInterface::SIDEBAR_NAVIGATION_CONFIG, $encoded);
         }
 
-        return ApiResponse::success($this->payload($request), 'FeatherPanel Premium settings saved', 200);
+        return ApiResponse::success($this->payload($request), 'OrveX Panel Premium settings saved', 200);
     }
 
     public function claimFree(Request $request): Response
@@ -150,7 +150,7 @@ class FeatherPanelPremiumController
         $body = json_decode($request->getContent() ?: '[]', true);
         $method = is_array($body) ? (string) ($body['method'] ?? '') : '';
         if (!in_array($method, FeatherPanelPremium::FREE_CLAIM_METHODS, true)) {
-            return ApiResponse::error('Choose how you supported FeatherPanel: star or share.', 'INVALID_FREE_CLAIM_METHOD', 400);
+            return ApiResponse::error('Choose how you supported OrveX Panel: star or share.', 'INVALID_FREE_CLAIM_METHOD', 400);
         }
 
         FeatherPanelPremium::claimFree($method);

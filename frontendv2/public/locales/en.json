@@ -1940,7 +1940,7 @@
     "branding": {
         "running_on": "Running on {name} {version}",
         "copyright": "{company}",
-        "powered_by": "Powered by FeatherPanel"
+        "powered_by": "Powered by OrveX Panel"
     },
     "links": {
         "aria_label": "Panel links",
@@ -3978,7 +3978,7 @@
             "security": "Security",
             "settings": "Settings",
             "system": "System",
-            "myfeatherpanel": "MyFeatherPanel",
+            "myfeatherpanel": "My OrveX Panel",
             "developer": "Developer",
             "feathercloud": "FeatherCloud",
             "tickets": "Tickets",
@@ -4038,7 +4038,7 @@
             "cloudManagement": "Cloud Management",
             "cloudConnections": "Cloud Connections",
             "featherpanelPremium": "FeatherPanel Premium",
-            "myFeatherPanel": "MyFeatherPanel",
+            "myFeatherPanel": "My OrveX Panel",
             "reportIssue": "Report an Issue",
             "suggestFeature": "Suggest a New Thing",
             "knowledgebase": "Knowledge Base",
@@ -4276,7 +4276,7 @@
             "node_needs_updates_one": "{count} node needs updates"
         },
         "panel": {
-            "title": "FeatherPanel",
+            "title": "OrveX Panel",
             "current": "Current Version",
             "latest": "Latest Version",
             "up_to_date": "Panel is up to date",
@@ -4343,7 +4343,7 @@
         },
         "integrity": {
             "title": "System Integrity & Infrastructure Health",
-            "description": "FeatherPanel checks Wings nodes and marketplace plugins for newer versions so you can keep them current.",
+            "description": "OrveX Panel checks Wings nodes and marketplace plugins for newer versions so you can keep them current.",
             "note": "Updates are non-destructive and preserve all your configurations.",
             "view_docs": "View Documentation"
         },
@@ -4360,8 +4360,8 @@
         "column_version": "Version",
         "column_status": "Status",
         "hero": {
-            "available_title": "FeatherPanel {version} is available",
-            "latest_title": "FeatherPanel is up to date",
+            "available_title": "OrveX Panel {version} is available",
+            "latest_title": "OrveX Panel is up to date",
             "channel": "Channel",
             "php": "PHP",
             "running": "running {version}",
@@ -4467,7 +4467,7 @@
         "copyEmail": "Copy email",
         "showEmail": "Show email",
         "hideEmail": "Hide email",
-        "poweredBy": "powered by featherpanel",
+        "poweredBy": "powered by orvex panel",
         "localStorageMenu": "Browser storage",
         "localStorageDefaultAppName": "Hosting panel",
         "localStorageTitle": "{appName} browser storage",
@@ -8043,8 +8043,8 @@
                 "flag_none": "None",
                 "type": "Location Type",
                 "type_description": "Each location serves one infrastructure type only. The type is permanent and cannot be changed after creation.",
-                "webhosting_alpha_title": "FeatherPanel WebHosting is still in ALPHA",
-                "webhosting_alpha_description": "Bugs, outages, or data loss may occur. To the extent permitted by applicable law, FeatherPanel and its developers are not liable for damages, losses, or issues arising from use of this alpha feature. Please report problems so we can fix them. Thank you for supporting FeatherPanel!",
+                "webhosting_alpha_title": "OrveX Panel WebHosting is still in ALPHA",
+                "webhosting_alpha_description": "Bugs, outages, or data loss may occur. To the extent permitted by applicable law, OrveX Panel and its developers are not liable for damages, losses, or issues arising from use of this alpha feature. Please report problems so we can fix them. Thank you for supporting OrveX Panel!",
                 "webhosting_alpha_consent": "I understand the alpha risks and agree to the notice above.",
                 "webhosting_alpha_required": "Please agree to the WebHosting alpha notice before creating this location.",
                 "type_immutable_notice": "Location type is permanent and was set when this location was created.",
@@ -8146,7 +8146,7 @@
                 "field_description": "Description (optional)",
                 "field_lxc_root_password": "Default LXC root password",
                 "field_lxc_root_password_placeholder": "e.g. P@ssw0rd (shown to users after deploy)",
-                "field_lxc_root_password_help": "Informational only. FeatherPanel does not change the root password on the container; this value is just displayed to users as the default root password for LXC instances created from this template.",
+                "field_lxc_root_password_help": "Informational only. OrveX Panel does not change the root password on the container; this value is just displayed to users as the default root password for LXC instances created from this template.",
                 "security_recommendation": "Security Recommendation",
                 "lxc_security_warning": "LXC is not recommended for public hosting due to security risks.",
                 "create_success": "Template added successfully.",
@@ -8154,7 +8154,7 @@
                 "delete_success": "Template deleted.",
                 "delete_failed": "Failed to delete template.",
                 "delete_confirm_title": "Delete template?",
-                "delete_confirm_desc": "This only removes the template from FeatherPanel. The VM on Proxmox is not affected."
+                "delete_confirm_desc": "This only removes the template from OrveX Panel. The VM on Proxmox is not affected."
             },
             "info": {
                 "version_title": "Proxmox VE Version",
@@ -8183,7 +8183,7 @@
             },
             "form": {
                 "create_title": "Create VDS Node",
-                "create_description": "Connect a new Proxmox hypervisor to FeatherPanel using a PVE API token.",
+                "create_description": "Connect a new Proxmox hypervisor to OrveX Panel using a PVE API token.",
                 "create_short": "Create VDS Node",
                 "edit_title": "Edit VDS Node",
                 "edit_description": "Update Proxmox connection details, location and network settings.",
@@ -8289,7 +8289,7 @@
                 "success": "Connected {count} node(s) returned in {ms}ms.",
                 "failed": "Connection failed.",
                 "token_setup_reminder_title": "Token setup reminder",
-                "token_setup_reminder_description": "Use a Proxmox API token created for the intended account, and verify the permissions match the actions FeatherPanel will perform on this node.",
+                "token_setup_reminder_description": "Use a Proxmox API token created for the intended account, and verify the permissions match the actions OrveX Panel will perform on this node.",
                 "vnc_upstream_title": "VNC console upstream",
                 "vnc_upstream_description": "Where async-runner opens the Proxmox VNC WebSocket when “Proxy VNC via panel” is enabled. Leave empty to reuse the API hostname above.",
                 "vnc_upstream_hint_title": "Needed behind Cloudflare / Access",
@@ -8443,11 +8443,11 @@
             "help": {
                 "what": {
                     "title": "What are VDS Nodes?",
-                    "description": "VDS nodes in FeatherPanel map to your Proxmox hypervisors and allow you to provision and manage virtual machines."
+                    "description": "VDS nodes in OrveX Panel map to your Proxmox hypervisors and allow you to provision and manage virtual machines."
                 },
                 "utility": {
                     "title": "How are they used?",
-                    "connect": "Connect Proxmox clusters to FeatherPanel using API tokens.",
+                    "connect": "Connect Proxmox clusters to OrveX Panel using API tokens.",
                     "monitor": "Monitor basic connectivity to each hypervisor from the panel.",
                     "mapLocations": "Bind each VDS node to a VPS location so customers know where their VMs live."
                 },
@@ -8457,7 +8457,7 @@
                 },
                 "proxmox": {
                     "title": "Proxmox Integration",
-                    "p1": "FeatherPanel talks to Proxmox using PVE API tokens over HTTPS, so your credentials never need to be entered directly on each node.",
+                    "p1": "OrveX Panel talks to Proxmox using PVE API tokens over HTTPS, so your credentials never need to be entered directly on each node.",
                     "p2": "Use the connection test action to quickly verify that your token, host, and SSL configuration are valid."
                 }
             },
@@ -8543,7 +8543,7 @@
                     "step1": "1. Download latest cloud images on your Proxmox node",
                     "step2": "2. Create a Debian 13 cloud-init template (example VMID 9000)",
                     "step3": "3. Create an Ubuntu 24.04 cloud-init template (example VMID 9001)",
-                    "step4": "4. Hook into FeatherPanel",
+                    "step4": "4. Hook into OrveX Panel",
                     "step5": "5. Avoid disk resize timeouts (recommended)",
                     "best_practice_title": "Best Practice: Why use VMs?"
                 },
@@ -8552,9 +8552,9 @@
                     "security_warning": "Security Warning",
                     "step1": "1. Download a Container Template",
                     "step2": "2. Create the Container",
-                    "step3": "3. Prepare for FeatherPanel (before converting to template)",
+                    "step3": "3. Prepare for OrveX Panel (before converting to template)",
                     "step4": "4. Convert to Template",
-                    "step5": "5. Hook into FeatherPanel"
+                    "step5": "5. Hook into OrveX Panel"
                 }
             }
         },
@@ -8655,7 +8655,7 @@
                     "description": "Templates are pre-built VM images (e.g. Ubuntu 22.04, Debian 12) that Proxmox clones when creating a new VM. For QEMU/KVM plans, creating an instance always uses a template the panel clones that VM and applies the plan's CPU, RAM and disk. LXC can use different flows.",
                     "how_to_setup": "How to set up templates",
                     "step1": "On your Proxmox host: create a VM, install the OS, clean it (e.g. remove machine-id, cloud-init if needed), then in the Proxmox UI right‑click the VM → Convert to template.",
-                    "step2": "In FeatherPanel: go to VM Nodes (VDS Nodes), open the node that runs that Proxmox host, and open the Templates tab. Add a template: give it a name and the Template VMID (the VMID of the template VM in Proxmox). Once registered, that template appears when creating a VM instance from a plan on this node."
+                    "step2": "In OrveX Panel: go to VM Nodes (VDS Nodes), open the node that runs that Proxmox host, and open the Templates tab. Add a template: give it a name and the Template VMID (the VMID of the template VM in Proxmox). Once registered, that template appears when creating a VM instance from a plan on this node."
                 }
             }
         },
@@ -8711,7 +8711,7 @@
             "create_ip_and_assign": "Create IP and assign",
             "initiating_creation": "Initiating VM creation…",
             "network_multi_hint": "Add or remove IPs (Proxmox net0, net1, …). Select IP from pool for each interface.",
-            "network_multi_qemu_hint": "Add or remove IPs for this VM. FeatherPanel will keep virtual NICs and cloud-init ipconfig entries aligned automatically.",
+            "network_multi_qemu_hint": "Add or remove IPs for this VM. OrveX Panel will keep virtual NICs and cloud-init ipconfig entries aligned automatically.",
             "add_ip": "Add IP",
             "primary_ip": "Primary",
             "secondary_ip": "Secondary",
@@ -8751,7 +8751,7 @@
             "reinstall_lxc_help": "Enter a new root password for the reinstalled LXC container.",
             "reinstall_lxc_password": "Root password",
             "lxc_root_password_label": "Default LXC root password",
-            "lxc_root_password_help": "This is the informational root password stored on the LXC template. FeatherPanel does not change the password on the container; this is for you to show the default credentials to users.",
+            "lxc_root_password_help": "This is the informational root password stored on the LXC template. OrveX Panel does not change the password on the container; this is for you to show the default credentials to users.",
             "lxc_root_password_show": "Show password",
             "lxc_root_password_hide": "Hide password",
             "lxc_root_password_copied": "Root password copied to clipboard.",
@@ -9010,13 +9010,13 @@
                 "daemon_type": "Daemon type",
                 "daemon_type_featherwings": "FeatherWings (recommended)",
                 "daemon_type_wings_rs": "Calagopus / wings-rs (performance)",
-                "daemon_type_recommended_title": "FeatherWings is recommended for FeatherPanel",
+                "daemon_type_recommended_title": "FeatherWings is recommended for OrveX Panel",
                 "daemon_type_recommended_body": "Choose FeatherWings if you want panel features such as trash, firewall, FastDL, proxy, import, share, modules, and self-update.",
                 "daemon_type_performance_title": "Calagopus is for peak performance only",
-                "daemon_type_performance_body": "Calagopus (wings-rs) is generally recommended only when raw performance is the priority. It has fewer features and does not support the full FeatherPanel feature set.",
+                "daemon_type_performance_body": "Calagopus (wings-rs) is generally recommended only when raw performance is the priority. It has fewer features and does not support the full OrveX Panel feature set.",
                 "daemon_type_last_warning_title": "Last warning",
-                "daemon_type_last_warning_body": "If you choose Calagopus, you will not have all FeatherPanel features. You also cannot change the daemon type for this node later.",
-                "daemon_type_confirm_checkbox": "I hereby confirm by clicking this checkbox that my choice of daemon is not changeable and I will not be able to change my daemon or use all FeatherPanel features with my choice.",
+                "daemon_type_last_warning_body": "If you choose Calagopus, you will not have all OrveX Panel features. You also cannot change the daemon type for this node later.",
+                "daemon_type_confirm_checkbox": "I hereby confirm by clicking this checkbox that my choice of daemon is not changeable and I will not be able to change my daemon or use all OrveX Panel features with my choice.",
                 "daemon_type_confirm_required": "You must confirm the Calagopus daemon choice before creating this node.",
                 "daemon_type_immutable_help": "Daemon type is set when the node is created and cannot be changed.",
                 "daemon_type_immutable": "Daemon type cannot be changed after the node is created.",
@@ -9148,7 +9148,7 @@
                 },
                 "wings": {
                     "title": "About Wings (the daemon)",
-                    "p1": "Wings is the daemon FeatherPanel uses to talk to your Docker host. It schedules and runs containers so game servers start and stop where you put them.",
+                    "p1": "Wings is the daemon OrveX Panel uses to talk to your Docker host. It schedules and runs containers so game servers start and stop where you put them.",
                     "p2": "Locations group regions; nodes are the machines Wings runs on. Together they give you health checks, resource limits, and a clear place to deploy each server."
                 }
             },
@@ -10309,16 +10309,16 @@
             },
             "update_banner": {
                 "title": "Update {version} available",
-                "message": "A newer FeatherPanel build is ready. Review release notes and update when convenient.",
+                "message": "A newer OrveX Panel build is ready. Review release notes and update when convenient.",
                 "action": "View updates"
             },
             "eula": {
                 "title": "End User License Agreement",
-                "subtitle": "Terms and conditions for using FeatherPanel"
+                "subtitle": "Terms and conditions for using OrveX Panel"
             }
         },
         "welcome": {
-            "running_version": "Running FeatherPanel {version}",
+            "running_version": "Running OrveX Panel {version}",
             "welcome_back": "Welcome back, ",
             "subtitle": "Here’s what’s happening across your panel.",
             "subtitle_update": "Update {version} is available • Review release notes when ready",
@@ -10411,7 +10411,7 @@
             "dismiss": "Hide for 30 days"
         },
         "cloud_hub": {
-            "title": "MyFeatherPanel",
+            "title": "My OrveX Panel",
             "description": "Cloud services, marketplace, and community",
             "premium": "FeatherPanel Premium",
             "premium_desc": "Optional donation to support the project",
@@ -10502,8 +10502,8 @@
                 "removed": "Removed"
             },
             "update_instructions": {
-                "title": "Update FeatherPanel",
-                "description": "To update your FeatherPanel installation, please log in to your server via SSH and run one of the following commands:",
+                "title": "Update OrveX Panel",
+                "description": "To update your OrveX Panel installation, please log in to your server via SSH and run one of the following commands:",
                 "ssh_method": "Using SSH:",
                 "curl_method": "Using cURL:",
                 "follow_process": "Follow the update process on your server after running the command.",
@@ -11016,7 +11016,7 @@
         },
         "marketplace": {
             "title": "FeatherCloud Marketplace",
-            "subtitle": "Browse and install extensions, spells, and translations to enhance your FeatherPanel experience",
+            "subtitle": "Browse and install extensions, spells, and translations to enhance your OrveX Panel experience",
             "index": {
                 "plugins": {
                     "title": "Plugins",
@@ -11025,7 +11025,7 @@
                 },
                 "spells": {
                     "title": "Spells",
-                    "description": "Server templates to run specific games and applications on FeatherPanel",
+                    "description": "Server templates to run specific games and applications on OrveX Panel",
                     "available": "Available"
                 },
                 "translations": {
@@ -11046,7 +11046,7 @@
                 },
                 "about": {
                     "title": "About the Marketplace",
-                    "description": "Browse official and community plugins and spells for FeatherPanel. Install what you need from here."
+                    "description": "Browse official and community plugins and spells for OrveX Panel. Install what you need from here."
                 },
                 "browse": "Browse",
                 "tips": {
@@ -11069,7 +11069,7 @@
                 "marketplace": "Marketplace",
                 "refresh": "Refresh",
                 "loading_error": "Failed to load Mythic store",
-                "credentials_error": "Mythic Cloud is not linked. Connect under MyFeatherPanel → Cloud Connections.",
+                "credentials_error": "Mythic Cloud is not linked. Connect under My OrveX Panel → Cloud Connections.",
                 "not_linked": {
                     "title": "Not linked",
                     "action": "Open Cloud Connections"
@@ -11311,7 +11311,7 @@
                 "install_success": "Successfully installed {identifier}",
                 "pterodactyl_banner": {
                     "title": "Pterodactyl Game Eggs Store",
-                    "description": "FeatherPanel uses the official Pterodactyl eggs repository. Browse and install game server configurations that are verified and maintained by the Pterodactyl community.",
+                    "description": "OrveX Panel uses the official Pterodactyl eggs repository. Browse and install game server configurations that are verified and maintained by the Pterodactyl community.",
                     "powered_by": "Powered by Pterodactyl Official Eggs",
                     "view_github": "Browse Eggs",
                     "learn_more": "Learn More"
@@ -11392,7 +11392,7 @@
                     "install_title": "Install Spells",
                     "install_desc": "Select a realm and install spells with one click. Verified spells are marked with a checkmark for your safety.",
                     "security_title": "Security & Liability",
-                    "security_desc": "Installing third-party spells can be risky. FeatherPanel and its team are not liable for what you install."
+                    "security_desc": "Installing third-party spells can be risky. OrveX Panel and its team are not liable for what you install."
                 }
             }
         },
@@ -11402,7 +11402,7 @@
                 "open_cloud_connections": "Open Cloud Connections",
                 "checking_connection": "Checking connection",
                 "checking_link": "Checking Mythic Cloud link…",
-                "credentials_error": "Mythic Cloud is not linked. Connect under MyFeatherPanel → Cloud Connections first.",
+                "credentials_error": "Mythic Cloud is not linked. Connect under My OrveX Panel → Cloud Connections first.",
                 "not_linked_short": "Mythic Cloud is not linked.",
                 "member_uuid_required": "Link your Mythic account or ask your team owner to invite a matching email."
             },
@@ -11548,16 +11548,16 @@
             },
             "customize": {
                 "card_title": "Premium thank-you extras",
-                "description": "These settings apply across the panel for all users. Clearing a field restores the FeatherPanel default.",
+                "description": "These settings apply across the panel for all users. Clearing a field restores the OrveX Panel default.",
                 "ai_name": "AI assistant name",
-                "ai_name_placeholder": "FeatherPanel AI",
+                "ai_name_placeholder": "OrveX Panel AI",
                 "ai_name_help": "Shown in the chat header and assistant bubbles. Leave empty for the default name.",
                 "ai_avatar": "AI assistant picture",
                 "ai_avatar_help": "Upload an image or paste a URL. Leave empty to use your panel logo.",
-                "show_powered_by": "Show \"Powered by FeatherPanel\"",
-                "show_powered_by_help": "Turn off to hide FeatherPanel branding in the sidebar and related surfaces.",
+                "show_powered_by": "Show \"Powered by OrveX Panel\"",
+                "show_powered_by_help": "Turn off to hide OrveX Panel branding in the sidebar and related surfaces.",
                 "show_version": "Show panel version",
-                "show_version_help": "Turn off to hide the FeatherPanel version badge in the sidebar.",
+                "show_version_help": "Turn off to hide the OrveX Panel version badge in the sidebar.",
                 "save": "Save changes"
             },
             "sidebar": {
@@ -11678,7 +11678,7 @@
                 "title": "Security & Benefits",
                 "identification": {
                     "title": "Instance Identification",
-                    "description": "Your credentials uniquely identify your FeatherPanel instance to its owner."
+                    "description": "Your credentials uniquely identify your OrveX Panel instance to its owner."
                 },
                 "privacy": {
                     "title": "Security & Privacy",
@@ -11736,7 +11736,7 @@
                 "missing_params": "Missing OAuth return parameters (public_identity_key, private_key, mythic_user_id, team_uuid). Try connecting again.",
                 "whats_next": "What's next?",
                 "next_step1": "Open Panel Marketplace for purchased products",
-                "next_step2": "Report issues or suggest features under MyFeatherPanel",
+                "next_step2": "Report issues or suggest features under My OrveX Panel",
                 "next_step3": "Browse and import Mythic eggs",
                 "error_desc": "Try connecting again from Cloud Connections.",
                 "go_to_cloud": "Back to Cloud Connections",
@@ -12398,18 +12398,18 @@
                 "button": "Update Docker Deployment",
                 "in_progress_button": "System Update Ongoing",
                 "updating": "Updating Docker Deployment...",
-                "confirm": "This will pull the latest FeatherPanel Docker images and recreate containers. Continue?",
+                "confirm": "This will pull the latest OrveX Panel Docker images and recreate containers. Continue?",
                 "success": "Docker update has been triggered successfully.",
                 "failed": "Failed to trigger Docker update.",
                 "confirm_modal": {
-                    "title": "Update FeatherPanel",
-                    "description": "This will pull the latest FeatherPanel Docker images and recreate containers. Do you want to continue?",
+                    "title": "Update OrveX Panel",
+                    "description": "This will pull the latest OrveX Panel Docker images and recreate containers. Do you want to continue?",
                     "confirm": "Update to Latest",
                     "cancel": "Cancel"
                 },
                 "progress_modal": {
                     "title": "System update ongoing",
-                    "description": "Please wait for FeatherPanel to update. Do not close this tab. Containers are restarting, so your browser may show a connection error; that usually means the update has started. This page will refresh periodically until the panel responds again."
+                    "description": "Please wait for OrveX Panel to update. Do not close this tab. Containers are restarting, so your browser may show a connection error; that usually means the update has started. This page will refresh periodically until the panel responds again."
                 }
             },
             "fields": {
@@ -13511,7 +13511,7 @@
             "import_tab_preset": "Bundled preset",
             "import_tab_url": "From URL",
             "import_tab_paste": "Paste text",
-            "import_preset_body": "Import the FeatherPanel disposable-domain preset from the bundled file. Large lists run in batches; existing domains stay unchanged.",
+            "import_preset_body": "Import the OrveX Panel disposable-domain preset from the bundled file. Large lists run in batches; existing domains stay unchanged.",
             "import_preset": "Import preset list",
             "import_help": "Adds thousands of disposable / throwaway domains from the bundled file into the database. Existing domains are skipped. You can remove entries anytime.",
             "import_confirm": "Import the bundled disposable-domain preset ({file})? This may take a minute.",
@@ -13566,7 +13566,7 @@
         },
         "pterodactyl_importer": {
             "title": "Pterodactyl Importer",
-            "description": "Import servers, users, and nodes from Pterodactyl into FeatherPanel. Follow the steps below.",
+            "description": "Import servers, users, and nodes from Pterodactyl into OrveX Panel. Follow the steps below.",
             "toasts": {
                 "failed_load_key": "Failed to load API key details",
                 "failed_fetch_keys": "Failed to fetch API keys",
@@ -13654,7 +13654,7 @@
             },
             "create_key": {
                 "title": "Create New API Key",
-                "description": "Create a new API key for the Pterodactyl Migration Agent. This key will be used to authenticate the migration agent with your FeatherPanel instance.",
+                "description": "Create a new API key for the Pterodactyl Migration Agent. This key will be used to authenticate the migration agent with your OrveX Panel instance.",
                 "name_label": "API Key Name",
                 "placeholder": "e.g., Pterodactyl Migration Agent",
                 "help_text": "Choose a descriptive name to identify this API key.",
@@ -13757,11 +13757,11 @@
                 },
                 "migrations": {
                     "title": "Migrations",
-                    "description": "Execute database schema updates when upgrading FeatherPanel or installing plugins. Always verify output logs."
+                    "description": "Execute database schema updates when upgrading OrveX Panel or installing plugins. Always verify output logs."
                 },
                 "safety": {
                     "title": "Safety & Backups",
-                    "description": "Always backup your database before running migrations or major operations. FeatherPanel is not responsible for data loss due to unsafe operations."
+                    "description": "Always backup your database before running migrations or major operations. OrveX Panel is not responsible for data loss due to unsafe operations."
                 }
             }
         },
@@ -13838,7 +13838,7 @@
         "dev": {
             "plugins": {
                 "title": "Plugin Manager",
-                "description": "Create and manage FeatherPanel plugins",
+                "description": "Create and manage OrveX Panel plugins",
                 "search_placeholder": "Search plugins by name, identifier, description, or author...",
                 "loading": "Loading plugins...",
                 "no_results": "No plugins found matching your search",
@@ -14193,7 +14193,7 @@
                     "title": "Install From URL",
                     "url_label": "Plugin URL",
                     "url_placeholder": "https://example.com/plugin.fpa",
-                    "url_description": "Enter the direct URL to a FeatherPanel plugin file (.fpa).",
+                    "url_description": "Enter the direct URL to an OrveX Panel plugin file (.fpa).",
                     "security_warning_title": "Security Warning",
                     "warning": "Warning: It is unsafe to install plugins from URLs that are not from the official repository."
                 },
@@ -14236,7 +14236,7 @@
                 },
                 "security": {
                     "title": "Security & Liability",
-                    "description": "Installing third‑party plugins can be risky (panel corruption or system compromise). FeatherPanel and its team are not liable for what you install or develop."
+                    "description": "Installing third‑party plugins can be risky (panel corruption or system compromise). OrveX Panel and its team are not liable for what you install or develop."
                 },
                 "reminder": {}
             },
@@ -14554,7 +14554,7 @@
             "help": {
                 "cross_compatible": {
                     "title": "Cross-compatible spells",
-                    "description": "Realms and spells are fully cross-compatible. We maintain a spells repository that works with both FeatherPanel and Pterodactyl, so you can fetch and use the same spells in either panel. You can also bring your own spells - import them here or host them in your own repo."
+                    "description": "Realms and spells are fully cross-compatible. We maintain a spells repository that works with both OrveX Panel and Pterodactyl, so you can fetch and use the same spells in either panel. You can also bring your own spells - import them here or host them in your own repo."
                 },
                 "what_are_spells": {
                     "title": "What are Spells (eggs)?",
@@ -14570,7 +14570,7 @@
                 },
                 "sources": {
                     "title": "Sources & compatibility",
-                    "description": "Use our cross-compatible spells repo (FeatherPanel ↔ Pterodactyl) or bring your own JSON-defined spells. Import locally or host them in your own repository."
+                    "description": "Use our cross-compatible spells repo (OrveX Panel ↔ Pterodactyl) or bring your own JSON-defined spells. Import locally or host them in your own repository."
                 }
             }
         },
@@ -14641,7 +14641,7 @@
             "title": "Mail",
             "description": "Built-in mail is provisioned automatically when you install Mailserver on a web node. Customers get mailboxes, DNS records, and webmail from the WebSpace email page.",
             "autoTitle": "Most setups need zero configuration here",
-            "autoHint": "Install the Mailserver package on a web node (Admin → Web node → Package manager). FeatherPanel registers the mail host, MX/SPF/DKIM/DMARC hints, and optional node webmail automatically.",
+            "autoHint": "Install the Mailserver package on a web node (Admin → Web node → Package manager). OrveX Panel registers the mail host, MX/SPF/DKIM/DMARC hints, and optional node webmail automatically.",
             "builtinSection": "Active on your nodes",
             "builtinHint": "Mail hosts registered from FeatherQuilld Mailserver packages on your web nodes.",
             "setupSection": "Finish mail setup",
@@ -15389,7 +15389,7 @@
             "help": {
                 "what": {
                     "title": "What are Web Nodes?",
-                    "description": "Web nodes are machines that run FeatherQuilld, the daemon that manages web hosting accounts for FeatherPanel."
+                    "description": "Web nodes are machines that run FeatherQuilld, the daemon that manages web hosting accounts for OrveX Panel."
                 },
                 "utility": {
                     "title": "What can Web Nodes do?",
@@ -15946,7 +15946,7 @@
             },
             "pterodactyl_importer": {
                 "t1_title": "Moving from Pterodactyl",
-                "t1_body": "The importer copies users, nodes, nests and servers from a Pterodactyl database into FeatherPanel.",
+                "t1_body": "The importer copies users, nodes, nests and servers from a Pterodactyl database into OrveX Panel.",
                 "t2_title": "Before you start",
                 "t2_body": "Run it on a fresh panel and keep a backup of both databases. Server files stay on your nodes."
             },
@@ -18855,7 +18855,7 @@
                 }
             },
             "featherpanelAiAgent": {
-                "youAreAHelpfulAssistantFor": "You are a helpful assistant for FeatherPanel...",
+                "youAreAHelpfulAssistantFor": "You are a helpful assistant for OrveX Panel...",
                 "userIsAnAdminWithFull": "User is an admin with full access...",
                 "reset": "Reset",
                 "tryAgain": "Try Again"
@@ -19007,14 +19007,14 @@
                         "network": "Network:",
                         "set": "Set",
                         "static": "Static",
-                        "featherPanelWillOverrideTheseSettingsDuring": "(FeatherPanel will override these settings during cloning).",
+                        "featherPanelWillOverrideTheseSettingsDuring": "(OrveX Panel will override these settings during cloning).",
                         "confirm": "Confirm:",
                         "reviewSettingsAndClick": "Review settings and click",
                         "finish": "Finish",
                         "beforeYouConvertThisCTTo": "Before you convert this CT to a template, start it once and configure SSH so deployed clients can actually connect. Open",
                         "passwordAuthenticationYes": "PasswordAuthentication yes",
                         "permitRootLoginYes": "PermitRootLogin yes",
-                        "onceSSHSettingsAreCorrectEnsure": "Once SSH settings are correct, ensure the container also has the needed tools for FeatherPanel. Run:",
+                        "onceSSHSettingsAreCorrectEnsure": "Once SSH settings are correct, ensure the container also has the needed tools for OrveX Panel. Run:",
                         "stopTheContainerRightClickIt": "Stop the container. Right-click it in the Proxmox tree and select",
                         "convertToTemplate": "Convert to template",
                         "inTheTemplatesTabOfYour": "In the Templates tab of your VDS Node, add a new template using the VMID of the LXC template you just created. Ensure you select"
@@ -19060,8 +19060,8 @@
                         "importantBeforeConvertingBootTheVM": "Important before converting: boot the VM once and verify",
                         "inYourPlansProductsUseTemplate": "In your plans / products, use template ID",
                         "ifCreatesFailWith": "If creates fail with",
-                        "thisIsACommonFixFor": "This is a common fix for intermittent resize timeouts under load and is safe for directory / NFS / qcow2-backed storages used by FeatherPanel provisioning.",
-                        "vMsQEMUKVMProvideTheStrongest": "VMs (QEMU/KVM) provide the strongest isolation and best compatibility with modern workloads like Docker and complex networking. FeatherPanel developers and security experts recommend VMs over LXC for all commercial hosting applications to prevent container escapes and resource abuse."
+                        "thisIsACommonFixFor": "This is a common fix for intermittent resize timeouts under load and is safe for directory / NFS / qcow2-backed storages used by OrveX Panel provisioning.",
+                        "vMsQEMUKVMProvideTheStrongest": "VMs (QEMU/KVM) provide the strongest isolation and best compatibility with modern workloads like Docker and complex networking. OrveX Panel developers and security experts recommend VMs over LXC for all commercial hosting applications to prevent container escapes and resource abuse."
                     }
                 },
                 "create": {
@@ -19777,7 +19777,7 @@
         "progress_label": "Setup progress",
         "keyboard_hint": "Tip: press Enter to continue, Alt + ← to go back, Alt + → to continue.",
         "hero": {
-            "title": "Welcome to FeatherPanel",
+            "title": "Welcome to OrveX Panel",
             "body": "Let's get your panel ready. A few quick steps and you are good to go.",
             "chip_time": "About 5 minutes",
             "chip_later": "Change anything later",

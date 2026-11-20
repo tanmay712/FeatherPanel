@@ -470,13 +470,13 @@ export default function ServerConsolePage() {
 
     const handleInstallStarted = useCallback(() => {
         if (terminalRef.current) {
-            terminalRef.current.writeln('\u001b[33m[FeatherPanel] Install started...\u001b[0m');
+            terminalRef.current.writeln('\u001b[33m[OrveX Panel] Install started...\u001b[0m');
         }
     }, []);
 
     const handleInstallCompleted = useCallback(() => {
         if (terminalRef.current) {
-            terminalRef.current.writeln('\u001b[32m[FeatherPanel] Install completed.\u001b[0m');
+            terminalRef.current.writeln('\u001b[32m[OrveX Panel] Install completed.\u001b[0m');
         }
     }, []);
 

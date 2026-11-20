@@ -1,0 +1,29 @@
+{
+  "client": {
+    "/earn/redeem": {
+      "name": "Redeem Codes",
+      "icon": "🎟️",
+      "lucideIcon": "ticket",
+      "showBadge": false,
+      "redirect": "/earn/redeem",
+      "component": "/billingredeem/dist/redeem.html",
+      "description": "Redeem coupon codes for credits",
+      "category": "client",
+      "group": "Earn Credits"
+    }
+  },
+  "admin": {
+    "/billingredeem": {
+      "name": "Redeem Codes",
+      "icon": "🎟️",
+      "lucideIcon": "ticket",
+      "showBadge": false,
+      "redirect": "/billingredeem",
+      "component": "/billingredeem/dist/admin.html",
+      "description": "Manage redemption codes and view usage",
+      "category": "admin",
+      "group": "Fremium Earn Credits"
+    }
+  },
+  "server": {}
+}

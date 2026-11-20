@@ -357,7 +357,7 @@ class UserDataExportProcessor implements TimeTask
 
     private function buildSystemReplyMessage(string $filename): string
     {
-        $appName = App::getInstance(false, true)->getConfig()->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel');
+        $appName = App::getInstance(false, true)->getConfig()->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel');
 
         return implode("\n", [
             'Your personal data export has been generated automatically by ' . $appName . '.',

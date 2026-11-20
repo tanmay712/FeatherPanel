@@ -372,7 +372,7 @@ class SettingsController
         ],
         'telemetry' => [
             'name' => 'Telemetry',
-            'description' => 'Enable or disable installation reports, browser analytics, heatmaps, and session recordings to FeatherPanel.',
+            'description' => 'Enable or disable installation reports, browser analytics, heatmaps, and session recordings to OrveX Panel.',
             'icon' => 'activity',
             'settings' => [ConfigInterface::TELEMETRY],
         ],
@@ -1329,11 +1329,11 @@ class SettingsController
                 'name' => ConfigInterface::APP_NAME,
                 'value' => $this->app
                     ->getConfig()
-                    ->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
+                    ->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
                 'description' => 'The name of the application (shown in the sidebar and browser title)',
                 'type' => 'text',
                 'required' => true,
-                'placeholder' => 'FeatherPanel',
+                'placeholder' => 'OrveX Panel',
                 'validation' => 'required|string|max:255',
                 'options' => [],
                 'category' => 'app',
@@ -1422,12 +1422,12 @@ class SettingsController
                     ->getConfig()
                     ->getSetting(
                         ConfigInterface::APP_LOGO_WHITE,
-                        'https://github.com/mythicalltd.png',
+                        '/branding/orvex-logo.png',
                     ),
                 'description' => 'The logo of the application (sidebar & UI, light mode)',
                 'type' => 'image',
                 'required' => true,
-                'placeholder' => 'https://github.com/mythicalltd.png',
+                'placeholder' => '/branding/orvex-logo.png',
                 'validation' => 'required|string|max:2048',
                 'options' => [],
                 'category' => 'app',
@@ -1451,12 +1451,12 @@ class SettingsController
                     ->getConfig()
                     ->getSetting(
                         ConfigInterface::APP_LOGO_DARK,
-                        'https://github.com/featherpanel-com.png',
+                        '/branding/orvex-logo.png',
                     ),
                 'description' => 'The logo of the application (sidebar & UI, dark mode)',
                 'type' => 'image',
                 'required' => true,
-                'placeholder' => 'https://github.com/featherpanel-com.png',
+                'placeholder' => '/branding/orvex-logo.png',
                 'validation' => 'required|string|max:2048',
                 'options' => [],
                 'category' => 'app',
@@ -3659,12 +3659,12 @@ class SettingsController
                     ->getConfig()
                     ->getSetting(
                         ConfigInterface::APP_SEO_TITLE,
-                        'FeatherPanel',
+                        'OrveX Panel',
                     ),
                 'description' => 'The default title for the application pages',
                 'type' => 'text',
                 'required' => true,
-                'placeholder' => 'FeatherPanel',
+                'placeholder' => 'OrveX Panel',
                 'validation' => 'required|string|max:255',
                 'options' => [],
                 'category' => 'seo',
@@ -4047,7 +4047,7 @@ class SettingsController
                 'description' => 'System prompt to prepend to all messages (optional)',
                 'type' => 'textarea',
                 'required' => false,
-                'placeholder' => 'You are a helpful assistant for FeatherPanel...',
+                'placeholder' => 'You are a helpful assistant for OrveX Panel...',
                 'validation' => 'string|max:1000',
                 'max_length' => 1000,
                 'options' => [],
@@ -5277,7 +5277,7 @@ class SettingsController
 
         $appName = $this->app
             ->getConfig()
-            ->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel');
+            ->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel');
         $appUrl = $this->app
             ->getConfig()
             ->getSetting(

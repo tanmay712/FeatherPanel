@@ -1,0 +1,20 @@
+plugin:
+  name: BillingAFK
+  identifier: billingafk
+  description: 'Reward users with credits for AFKing - incentivize engagement and activity!'
+  flags:
+    - hasEvents
+  version: 2.1.1
+  target: v2
+  author:
+    - NaysKutzu
+    - MythicalSystems
+  icon: 'https://cdn.mythical.systems/featherpanel/logo.png'
+  requiredConfigs: {  }
+  dependencies:
+    - php=8.5
+    - php-ext=pdo
+    - plugin=billingcore
+config: {  }
+
+

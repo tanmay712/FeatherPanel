@@ -124,7 +124,7 @@ class Saas extends App implements CommandBuilder
 
     private static function showHelp(): void
     {
-        self::$cliApp->send(self::$cliApp->color1 . '&l=== FeatherPanel SaaS Helper ===');
+        self::$cliApp->send(self::$cliApp->color1 . '&l=== OrveX Panel SaaS Helper ===');
         self::$cliApp->send('');
         self::$cliApp->send(self::$cliApp->color3 . 'Available Commands:');
         self::$cliApp->send('');
@@ -526,7 +526,7 @@ class Saas extends App implements CommandBuilder
     {
         if (count($args) < 4) {
             self::$cliApp->send('&cUsage: saas setsetting <key> <value>');
-            self::$cliApp->send(self::$cliApp->color3 . 'Example: saas setsetting APP_NAME "FeatherPanel"');
+            self::$cliApp->send(self::$cliApp->color3 . 'Example: saas setsetting APP_NAME "OrveX Panel"');
 
             return;
         }

@@ -1,0 +1,1691 @@
+<?php
+
+/*
+ * This file is part of FeatherPanel.
+ *
+ * Copyright (C) 2025 MythicalSystems Studios
+ * Copyright (C) 2025 FeatherPanel Contributors
+ * Copyright (C) 2025 Cassian Gherman (aka NaysKutzu)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * See the LICENSE file or <https://www.gnu.org/licenses/>.
+ */
+
+namespace App\Addons\billingplans\Controllers\User;
+
+use App\App;
+use App\Chat\Node;
+use App\Chat\Realm;
+use App\Chat\Spell;
+use App\Chat\Server;
+use App\Chat\Activity;
+use App\Chat\Database;
+use App\Chat\Location;
+use App\Chat\Allocation;
+use App\Chat\SpellVariable;
+use App\Chat\ServerVariable;
+use App\Helpers\ApiResponse;
+use App\Helpers\WingsUrlHelper;
+use App\Services\Wings\Wings;
+use App\CloudFlare\CloudFlareRealIP;
+use App\Addons\billingplans\Chat\Plan;
+use App\Addons\billingplans\Chat\Category;
+use App\Addons\billingredeem\Chat\RedeemCode;
+use Symfony\Component\HttpFoundation\Request;
+use App\Addons\billingplans\Chat\Subscription;
+use App\Addons\billingredeem\Chat\RedeemUsage;
+use Symfony\Component\HttpFoundation\Response;
+use App\Addons\billingcore\Helpers\CreditsHelper;
+use App\Addons\billingplans\Helpers\InvoiceHelper;
+use App\Addons\billingplans\Helpers\SettingsHelper;
+use App\Addons\billingplans\Services\VdsProvisioningService;
+
+class PlansController
+{
+    public function list(Request $request): Response
+    {
+        $user = $request->get('user');
+        $userId = (int) ($user['id'] ?? 0);
+        $userCredits = CreditsHelper::getUserCredits($userId);
+
+        $plans = Plan::getAll(true);
+        $planIds = array_map(
+            static fn (array $p): int => (int) ($p['id'] ?? 0),
+            $plans,
+        );
+        $preloaded = [
+            'activeCounts' => $this->getActiveSubscriptionCountsPublic($planIds),
+            'allRealms' => Realm::getAll(null, 500, 0) ?: [],
+            'allSpells' => Spell::getAllSpells() ?: [],
+            'realmById' => [],
+            'spellById' => [],
+        ];
+        $categoryCache = [];
+
+        foreach ($plans as &$plan) {
+            $plan = $this->hydratePlanPublic(
+                $plan,
+                $userCredits,
+                $categoryCache,
+                $preloaded,
+            );
+        }
+
+        $maxPlansPerUser = SettingsHelper::getMaxPlansPerUser();
+        $userActivePlanCount = count(Subscription::getActiveByUserId($userId));
+        $canSubscribeMore =
+            $maxPlansPerUser === 0 || $userActivePlanCount < $maxPlansPerUser;
+
+        return ApiResponse::success(
+            [
+                'data' => array_values($plans),
+                'user_credits' => $userCredits,
+                'max_plans_per_user' => $maxPlansPerUser,
+                'user_active_plan_count' => $userActivePlanCount,
+                'can_subscribe_more' => $canSubscribeMore,
+            ],
+            'Plans retrieved successfully',
+            200,
+        );
+    }
+
+    public function get(Request $request, int $planId): Response
+    {
+        $user = $request->get('user');
+        $userId = (int) ($user['id'] ?? 0);
+        $userCredits = CreditsHelper::getUserCredits($userId);
+
+        $plan = Plan::getById($planId);
+        if ($plan === null || (int) ($plan['is_active'] ?? 0) !== 1) {
+            return ApiResponse::error('Plan not found', 'PLAN_NOT_FOUND', 404);
+        }
+
+        $cache = [];
+        $preloaded = [
+            'activeCounts' => [
+                (int) $plan['id'] => Plan::getActiveSubscriptionCount(
+                    (int) $plan['id'],
+                ),
+            ],
+            'allRealms' => Realm::getAll(null, 500, 0) ?: [],
+            'allSpells' => Spell::getAllSpells() ?: [],
+            'realmById' => [],
+            'spellById' => [],
+        ];
+        $plan = $this->hydratePlanPublic($plan, $userCredits, $cache, $preloaded);
+
+        return ApiResponse::success($plan, 'Plan retrieved successfully', 200);
+    }
+
+    public function validateCoupon(Request $request, int $planId): Response
+    {
+        $user = $request->get('user');
+        $userId = (int) ($user['id'] ?? 0);
+        $input = json_decode($request->getContent(), true) ?: [];
+        $couponCode = strtoupper(trim((string) ($input['coupon_code'] ?? '')));
+
+        if ($couponCode === '') {
+            return ApiResponse::error(
+                'Coupon code is required',
+                'COUPON_REQUIRED',
+                400,
+            );
+        }
+
+        $plan = Plan::getById($planId);
+        if ($plan === null || (int) ($plan['is_active'] ?? 0) !== 1) {
+            return ApiResponse::error('Plan not found', 'PLAN_NOT_FOUND', 404);
+        }
+
+        $plan = $this->applyCustomResourcesToPlan(
+            $plan,
+            isset($input['custom_resources'])
+                && is_array($input['custom_resources'])
+                ? $input['custom_resources']
+                : [],
+        );
+        $chargeBreakdown = Plan::calculateChargeBreakdown($plan);
+        $totalChargeCredits = (int) $chargeBreakdown['total_credits'];
+
+        $couponResult = $this->resolveCouponForSubscription(
+            $userId,
+            $planId,
+            $couponCode,
+            $totalChargeCredits,
+        );
+        if (!$couponResult['ok']) {
+            return ApiResponse::error(
+                $couponResult['message'] ?? 'Invalid coupon code',
+                $couponResult['error_code'] ?? 'COUPON_INVALID',
+                400,
+            );
+        }
+
+        $context = $couponResult['context'] ?? [];
+        $initialCharge = (int) ($context['initial_charge_credits'] ?? $totalChargeCredits);
+        $initialDiscount = (int) ($context['initial_discount_credits'] ?? 0);
+
+        return ApiResponse::success(
+            [
+                'valid' => true,
+                'coupon' => $context,
+                'total_credits' => $totalChargeCredits,
+                'charge_credits' => $initialCharge,
+                'discount_credits' => $initialDiscount,
+            ],
+            'Coupon is valid',
+            200,
+        );
+    }
+
+    public function subscribe(Request $request, int $planId): Response
+    {
+        $user = $request->get('user');
+        $userId = (int) ($user['id'] ?? 0);
+        $input = json_decode($request->getContent(), true) ?: [];
+        $skipInitialCharge = (bool) $request->attributes->get(
+            '_billingplans_skip_initial_charge',
+            false,
+        );
+        $forcedInitialPeriodDaysRaw = $request->attributes->get(
+            '_billingplans_initial_period_days',
+        );
+        $forcedInitialPeriodDays =
+            $forcedInitialPeriodDaysRaw !== null
+                ? max(1, (int) $forcedInitialPeriodDaysRaw)
+                : null;
+        $subscriptionSource = (string) $request->attributes->get(
+            '_billingplans_subscription_source',
+            'manual',
+        );
+
+        $plan = Plan::getById($planId);
+        if ($plan === null || (int) ($plan['is_active'] ?? 0) !== 1) {
+            return ApiResponse::error('Plan not found', 'PLAN_NOT_FOUND', 404);
+        }
+
+        $maxPlansPerUser = SettingsHelper::getMaxPlansPerUser();
+        if ($maxPlansPerUser > 0) {
+            $userActivePlanCount = count(Subscription::getActiveByUserId($userId));
+            if ($userActivePlanCount >= $maxPlansPerUser) {
+                return ApiResponse::error(
+                    'You have reached the maximum number of active plan subscriptions (' .
+                        $maxPlansPerUser .
+                        ').',
+                    'MAX_PLANS_REACHED',
+                    400,
+                );
+            }
+        }
+
+        $customResources =
+            isset($input['custom_resources'])
+            && is_array($input['custom_resources'])
+                ? $input['custom_resources']
+                : [];
+        $plan = $this->applyCustomResourcesToPlan($plan, $customResources);
+        $cleanCustomResources = $plan['custom_resources'] ?? [];
+        $isVds = ($plan['product_type'] ?? 'server') === 'vds';
+
+        $chargeBreakdown = Plan::calculateChargeBreakdown($plan);
+        $totalChargeCredits = (int) $chargeBreakdown['total_credits'];
+        $chargeCreditsNow = $totalChargeCredits;
+        $periodDays = max(1, (int) ($plan['billing_period_days'] ?? 30));
+        $couponCode = strtoupper(trim((string) ($input['coupon_code'] ?? '')));
+        $couponContext = null;
+
+        if (!$skipInitialCharge && $couponCode !== '') {
+            $couponResult = $this->resolveCouponForSubscription(
+                $userId,
+                (int) $planId,
+                $couponCode,
+                $totalChargeCredits,
+            );
+            if (!$couponResult['ok']) {
+                return ApiResponse::error(
+                    $couponResult['message'] ?? 'Invalid coupon code',
+                    $couponResult['error_code'] ?? 'COUPON_INVALID',
+                    400,
+                );
+            }
+            $couponContext = $couponResult['context'] ?? null;
+            if (is_array($couponContext)) {
+                $chargeCreditsNow = max(
+                    0,
+                    (int) ($couponContext['initial_charge_credits'] ??
+                        $totalChargeCredits),
+                );
+            }
+        }
+
+        $maxSubscriptions =
+            isset($plan['max_subscriptions'])
+            && $plan['max_subscriptions'] !== null
+                ? (int) $plan['max_subscriptions']
+                : null;
+        if ($maxSubscriptions !== null && $maxSubscriptions > 0) {
+            $activeCount = Plan::getActiveSubscriptionCount((int) $plan['id']);
+            if ($activeCount >= $maxSubscriptions) {
+                return ApiResponse::error(
+                    'This plan is sold out right now.',
+                    'PLAN_SOLD_OUT',
+                    400,
+                );
+            }
+        }
+
+        if (!$skipInitialCharge) {
+            $currentCredits = CreditsHelper::getUserCredits($userId);
+            if ($currentCredits < $chargeCreditsNow) {
+                return ApiResponse::error(
+                    'Insufficient credits for this plan.',
+                    'INSUFFICIENT_CREDITS',
+                    400,
+                );
+            }
+
+            // Zero after a 100% coupon is a valid free checkout (no-op deduct).
+            if (
+                $chargeCreditsNow > 0
+                && !CreditsHelper::removeUserCredits($userId, $chargeCreditsNow)
+            ) {
+                return ApiResponse::error(
+                    'Failed to deduct credits.',
+                    'CREDITS_DEDUCTION_FAILED',
+                    500,
+                );
+            }
+        }
+
+        $refundCreditsIfNeeded = static function () use (
+            $skipInitialCharge,
+            $userId,
+            $chargeCreditsNow,
+        ): void {
+            if (!$skipInitialCharge && $chargeCreditsNow > 0) {
+                CreditsHelper::addUserCredits($userId, $chargeCreditsNow);
+            }
+        };
+
+        $effectiveRealmId = !empty($plan['realms_id'])
+            ? (int) $plan['realms_id']
+            : null;
+        if (!$isVds && !empty($plan['user_can_choose_realm'])) {
+            $chosenRealmId = isset($input['chosen_realm_id'])
+                ? (int) $input['chosen_realm_id']
+                : null;
+            $allowedRealmIds = Plan::decodeIds($plan['allowed_realms'] ?? null);
+            if (!$chosenRealmId) {
+                if (count($allowedRealmIds) === 1) {
+                    $chosenRealmId = (int) $allowedRealmIds[0];
+                } elseif ($allowedRealmIds === []) {
+                    $allRealms = Realm::getAll(null, 2, 0) ?: [];
+                    if (count($allRealms) === 1) {
+                        $chosenRealmId = (int) ($allRealms[0]['id'] ?? 0) ?: null;
+                    }
+                }
+            }
+            if (!$chosenRealmId) {
+                $refundCreditsIfNeeded();
+
+                return ApiResponse::error(
+                    'Please select a realm (nest) for your server.',
+                    'REALM_REQUIRED',
+                    400,
+                );
+            }
+            if (
+                !empty($allowedRealmIds)
+                && !in_array($chosenRealmId, $allowedRealmIds, true)
+            ) {
+                $refundCreditsIfNeeded();
+
+                return ApiResponse::error(
+                    'The selected realm is not allowed for this plan.',
+                    'REALM_NOT_ALLOWED',
+                    400,
+                );
+            }
+            $effectiveRealmId = $chosenRealmId;
+        }
+
+        $effectiveSpellId = !empty($plan['spell_id'])
+            ? (int) $plan['spell_id']
+            : null;
+        if (!$isVds && !empty($plan['user_can_choose_spell'])) {
+            $chosenSpellId = isset($input['chosen_spell_id'])
+                ? (int) $input['chosen_spell_id']
+                : null;
+            $allowedSpellIds = Plan::decodeIds($plan['allowed_spells'] ?? null);
+            if (!$chosenSpellId) {
+                if (count($allowedSpellIds) === 1) {
+                    $chosenSpellId = (int) $allowedSpellIds[0];
+                } elseif ($allowedSpellIds === []) {
+                    $spellCandidates = Spell::getAllSpells() ?: [];
+                    if ($effectiveRealmId) {
+                        $spellCandidates = array_values(
+                            array_filter(
+                                $spellCandidates,
+                                static fn (array $spell): bool => (int) ($spell['realm_id'] ?? 0) === $effectiveRealmId,
+                            ),
+                        );
+                    }
+                    if (count($spellCandidates) === 1) {
+                        $chosenSpellId = (int) ($spellCandidates[0]['id'] ?? 0) ?: null;
+                    }
+                }
+            }
+            if (!$chosenSpellId) {
+                $refundCreditsIfNeeded();
+
+                return ApiResponse::error(
+                    'Please select a spell (game type) for your server.',
+                    'SPELL_REQUIRED',
+                    400,
+                );
+            }
+            if (
+                !empty($allowedSpellIds)
+                && !in_array($chosenSpellId, $allowedSpellIds, true)
+            ) {
+                $refundCreditsIfNeeded();
+
+                return ApiResponse::error(
+                    'The selected spell is not allowed for this plan.',
+                    'SPELL_NOT_ALLOWED',
+                    400,
+                );
+            }
+            $effectiveSpellId = $chosenSpellId;
+        }
+
+        if (!$isVds && $effectiveSpellId && $effectiveRealmId) {
+            $spellRow = Spell::getSpellById($effectiveSpellId);
+            if (!$spellRow) {
+                $refundCreditsIfNeeded();
+
+                return ApiResponse::error(
+                    'The selected game type is invalid.',
+                    'SPELL_NOT_FOUND',
+                    400,
+                );
+            }
+            if ((int) ($spellRow['realm_id'] ?? 0) !== $effectiveRealmId) {
+                $refundCreditsIfNeeded();
+
+                return ApiResponse::error(
+                    'That spell does not belong to the selected realm. Choose a spell from the same realm.',
+                    'SPELL_REALM_MISMATCH',
+                    400,
+                );
+            }
+        }
+
+        $planExpectsServer = !$isVds
+            && (!empty($plan['spell_id'])
+                || !empty($plan['user_can_choose_spell']))
+            && (!empty($plan['realms_id'])
+                || !empty($plan['user_can_choose_realm']));
+        if ($planExpectsServer) {
+            if (!$effectiveRealmId) {
+                $refundCreditsIfNeeded();
+
+                return ApiResponse::error(
+                    'This product cannot create a server: no realm is set. An administrator must assign a realm on the plan or enable realm selection.',
+                    'REALM_NOT_CONFIGURED',
+                    400,
+                );
+            }
+            if (!$effectiveSpellId) {
+                $refundCreditsIfNeeded();
+
+                return ApiResponse::error(
+                    'This product cannot create a server: no spell (server type) is set. An administrator must assign a spell on the plan or enable spell selection.',
+                    'SPELL_NOT_CONFIGURED',
+                    400,
+                );
+            }
+            $realmRow = Realm::getById($effectiveRealmId);
+            if ($realmRow === null) {
+                $refundCreditsIfNeeded();
+
+                return ApiResponse::error(
+                    'The realm linked to this product was removed from the panel. An administrator must update the plan.',
+                    'REALM_NOT_FOUND',
+                    400,
+                );
+            }
+            $spellExists = Spell::getSpellById($effectiveSpellId);
+            if ($spellExists === null) {
+                $refundCreditsIfNeeded();
+
+                return ApiResponse::error(
+                    'The spell linked to this product was removed from the panel. An administrator must update the plan.',
+                    'SPELL_NOT_FOUND',
+                    400,
+                );
+            }
+        }
+
+        $chosenLocationId = null;
+        $planLocationData = $this->resolvePlanLocations($plan);
+        $availableLocationIds = $planLocationData['ids'];
+        if (!empty($availableLocationIds) && $planExpectsServer) {
+            $chosenLocationId = isset($input['chosen_location_id'])
+                ? (int) $input['chosen_location_id']
+                : null;
+            // Single-node / single-location plans: auto-select so fixed packages
+            // and trial redeem do not fail with LOCATION_REQUIRED.
+            if (!$chosenLocationId && count($availableLocationIds) === 1) {
+                $chosenLocationId = (int) $availableLocationIds[0];
+            }
+            if (!$chosenLocationId) {
+                $refundCreditsIfNeeded();
+
+                return ApiResponse::error(
+                    'Please select a location for your server.',
+                    'LOCATION_REQUIRED',
+                    400,
+                );
+            }
+            if (!in_array($chosenLocationId, $availableLocationIds, true)) {
+                $refundCreditsIfNeeded();
+
+                return ApiResponse::error(
+                    'The selected location is not available for this plan.',
+                    'LOCATION_NOT_ALLOWED',
+                    400,
+                );
+            }
+        }
+
+        $serverUuid = null;
+        $vmCreationTaskId = null;
+        if ($isVds) {
+            $vdsResult = VdsProvisioningService::provision(
+                $plan,
+                $user,
+                isset($input['server_name']) ? (string) $input['server_name'] : null,
+            );
+            if (!$vdsResult['success']) {
+                $refundCreditsIfNeeded();
+
+                return ApiResponse::error(
+                    'Failed to provision VDS. Please contact staff.',
+                    (string) ($vdsResult['code'] ?? 'VDS_CREATE_FAILED'),
+                    500,
+                );
+            }
+            $vmCreationTaskId = $vdsResult['creation_task_id'] ?? null;
+        } elseif ($effectiveSpellId && $effectiveRealmId) {
+            $planForProvision = $plan;
+            $planForProvision['spell_id'] = $effectiveSpellId;
+            $planForProvision['realms_id'] = $effectiveRealmId;
+            $serverResult = $this->provisionServer(
+                $planForProvision,
+                $user,
+                $input['server_name'] ?? null,
+                $chosenLocationId,
+            );
+            if ($serverResult['success']) {
+                $serverUuid = $serverResult['uuid'];
+            } else {
+                $refundCreditsIfNeeded();
+                $provisionCode =
+                    (string) ($serverResult['code'] ?? 'PROVISION_FAILED');
+                $rawProvisionError =
+                    (string) ($serverResult['error'] ?? 'Unknown error');
+                $publicError =
+                    'Failed to provision server. Please contact staff.';
+
+                if (
+                    $provisionCode === 'WINGS_ERROR'
+                    || str_contains(strtolower($rawProvisionError), 'cURL error 7')
+                ) {
+                    $publicError =
+                        'Target node is offline. Please contact staff team.';
+                } elseif (
+                    $provisionCode === 'NO_AVAILABLE_NODE'
+                    || $provisionCode === 'NO_FREE_ALLOCATIONS'
+                ) {
+                    $publicError =
+                        'No suitable node is currently available. Please contact staff team.';
+                }
+
+                return ApiResponse::error($publicError, $provisionCode, 500);
+            }
+        }
+
+        $initialPeriodDays = $forcedInitialPeriodDays ?? $periodDays;
+        $nextRenewal = date(
+            'Y-m-d H:i:s',
+            strtotime("+{$initialPeriodDays} days"),
+        );
+        $subscriptionId = Subscription::create([
+            'user_id' => $userId,
+            'plan_id' => $planId,
+            'coupon_code_id' => is_array($couponContext)
+                ? (int) ($couponContext['code_id'] ?? 0)
+                : null,
+            'coupon_code' => is_array($couponContext)
+                ? $couponContext['code'] ?? null
+                : null,
+            'coupon_scope' => is_array($couponContext)
+                ? $couponContext['scope'] ?? null
+                : null,
+            'renewal_discount_percent' => is_array($couponContext)
+                ? $couponContext['renewal_discount_percent'] ?? null
+                : null,
+            'renewal_discount_credits' => is_array($couponContext)
+                ? $couponContext['renewal_discount_credits'] ?? null
+                : null,
+            'server_uuid' => $serverUuid,
+            'vm_creation_task_id' => $vmCreationTaskId,
+            'status' => 'active',
+            'next_renewal_at' => $nextRenewal,
+            'custom_resources' => !empty($cleanCustomResources)
+                ? json_encode($cleanCustomResources)
+                : null,
+        ]);
+
+        if ($subscriptionId === null) {
+            if ($serverUuid) {
+                $this->cleanupProvisionedServer($serverUuid);
+            }
+            $refundCreditsIfNeeded();
+
+            return ApiResponse::error(
+                'Failed to create subscription. Payment has been refunded.',
+                'CREATE_SUBSCRIPTION_FAILED',
+                500,
+            );
+        }
+
+        if (is_array($couponContext) && !empty($couponContext['code_id'])) {
+            $this->markCouponUsed($userId, (int) $couponContext['code_id']);
+        }
+
+        $subscription = Subscription::getById($subscriptionId);
+
+        if (!$skipInitialCharge) {
+            InvoiceHelper::createPurchaseInvoice(
+                $userId,
+                $planId,
+                $plan['name'],
+                $subscriptionId,
+                $chargeBreakdown,
+                $periodDays,
+            );
+        }
+
+        Activity::createActivity([
+            'user_uuid' => $user['uuid'] ?? null,
+            'name' => 'billingplans_subscribe',
+            'context' => "User subscribed to plan: {$plan['name']} (ID: {$planId}). Subscription #$subscriptionId. Paid: " .
+                ($skipInitialCharge ? '0 (trial)' : $chargeCreditsNow) .
+                " credits. Source: {$subscriptionSource}." .
+                ($serverUuid ? " Server UUID: {$serverUuid}." : '') .
+                " Next renewal: {$nextRenewal}",
+            'ip_address' => CloudFlareRealIP::getRealIP(),
+        ]);
+
+        return ApiResponse::success(
+            [
+                'subscription' => $subscription,
+                'credits_deducted' => $skipInitialCharge
+                    ? 0
+                    : $chargeCreditsNow,
+                'credits_before_discount' => $skipInitialCharge
+                    ? 0
+                    : $totalChargeCredits,
+                'base_credits' => (int) $chargeBreakdown['base_credits'],
+                'tax_credits' => (int) $chargeBreakdown['tax_credits'],
+                'extra_charge_credits' => (int) $chargeBreakdown['extra_charge_credits'],
+                'new_credits_balance' => CreditsHelper::getUserCredits($userId),
+                'next_renewal_at' => $nextRenewal,
+                'server_uuid' => $serverUuid,
+                'vm_creation_task_id' => $vmCreationTaskId,
+                'product_type' => $isVds ? 'vds' : 'server',
+                'coupon' => $couponContext,
+                'initial_charge_skipped' => $skipInitialCharge,
+                'subscription_source' => $subscriptionSource,
+            ],
+            $skipInitialCharge
+                ? 'Successfully activated trial plan!'
+                : 'Successfully subscribed to plan!',
+            200,
+        );
+    }
+
+    /**
+     * @param array<string,mixed> $plan
+     * @param array<int,array<string,mixed>|null> $categoryCache
+     * @param array{
+     *   activeCounts: array<int,int>,
+     *   allRealms: array<int,array<string,mixed>>,
+     *   allSpells: array<int,array<string,mixed>>,
+     *   realmById: array<int,array<string,mixed>|null>,
+     *   spellById: array<int,array<string,mixed>|null>
+     * } $preloaded
+     *
+     * @return array<string,mixed>
+     */
+    public function hydratePlanPublic(
+        array $plan,
+        int $userCredits,
+        array &$categoryCache,
+        array &$preloaded,
+    ): array {
+        $plan['billing_period_label'] = Plan::getBillingPeriodLabel(
+            (int) ($plan['billing_period_days'] ?? 30),
+        );
+        $plan['product_type'] = ($plan['product_type'] ?? 'server') === 'vds' ? 'vds' : 'server';
+        if (is_string($plan['vds_config'] ?? null)) {
+            $plan['vds_config'] = json_decode($plan['vds_config'], true);
+        }
+        $breakdown = Plan::calculateChargeBreakdown($plan);
+        $plan['base_credits'] = (int) $breakdown['base_credits'];
+        $plan['tax_rate_percent'] = (float) $breakdown['tax_rate_percent'];
+        $plan['tax_credits'] = (int) $breakdown['tax_credits'];
+        $plan['extra_charge_percent'] =
+            (float) $breakdown['extra_charge_percent'];
+        $plan['extra_charge_name'] = $breakdown['extra_charge_name'];
+        $plan['extra_charge_credits'] =
+            (int) $breakdown['extra_charge_credits'];
+        $plan['total_credits'] = (int) $breakdown['total_credits'];
+        $plan['can_afford'] = $userCredits >= (int) $breakdown['total_credits'];
+        $plan['has_server_template'] =
+            $plan['product_type'] !== 'vds'
+            && (!empty($plan['realms_id'])
+                || !empty($plan['user_can_choose_realm']))
+            && (!empty($plan['spell_id'])
+                || !empty($plan['user_can_choose_spell']));
+
+        $planId = (int) ($plan['id'] ?? 0);
+        $activeSubscriptionCount =
+            (int) ($preloaded['activeCounts'][$planId] ?? 0);
+        $plan['active_subscription_count'] = $activeSubscriptionCount;
+
+        $maxSubscriptions =
+            isset($plan['max_subscriptions'])
+            && $plan['max_subscriptions'] !== null
+                ? (int) $plan['max_subscriptions']
+                : null;
+        $plan['slots_available'] =
+            $maxSubscriptions === null
+                ? null
+                : max(0, $maxSubscriptions - $activeSubscriptionCount);
+        $plan['is_sold_out'] =
+            $maxSubscriptions !== null
+            && $maxSubscriptions > 0
+            && $activeSubscriptionCount >= $maxSubscriptions;
+
+        $plan['user_can_choose_realm'] =
+            (bool) ($plan['user_can_choose_realm'] ?? false);
+        $plan['user_can_choose_spell'] =
+            (bool) ($plan['user_can_choose_spell'] ?? false);
+
+        if (
+            isset($plan['slider_config'])
+            && is_string($plan['slider_config'])
+        ) {
+            $plan['slider_config'] = json_decode($plan['slider_config'], true);
+        }
+
+        $allowedRealmIds = Plan::decodeIds($plan['allowed_realms'] ?? null);
+        $allowedSpellIds = Plan::decodeIds($plan['allowed_spells'] ?? null);
+
+        $plan['allowed_realms_options'] = $this->resolveRealmOptions(
+            $plan,
+            $allowedRealmIds,
+            $preloaded,
+        );
+        $plan['allowed_spells_options'] = $this->resolveSpellOptions(
+            $plan,
+            $allowedSpellIds,
+            $plan['allowed_realms_options'],
+            $preloaded,
+        );
+        $plan['allowed_upgrade_plan_ids'] = Plan::decodeIds(
+            $plan['allowed_upgrade_plan_ids'] ?? null,
+        );
+        $plan['allowed_downgrade_plan_ids'] = Plan::decodeIds(
+            $plan['allowed_downgrade_plan_ids'] ?? null,
+        );
+        $locationData = $this->resolvePlanLocations($plan, $preloaded);
+        $plan['location_ids'] = $locationData['ids'];
+        $plan['location_names'] = $locationData['names'];
+
+        $categoryId = (int) ($plan['category_id'] ?? 0);
+        if ($categoryId > 0) {
+            if (!array_key_exists($categoryId, $categoryCache)) {
+                $cat = Category::getById($categoryId);
+                $categoryCache[$categoryId] = $cat
+                    ? [
+                        'id' => (int) $cat['id'],
+                        'name' => $cat['name'],
+                        'icon' => $cat['icon'],
+                        'color' => $cat['color'],
+                    ]
+                    : null;
+            }
+            $plan['category'] = $categoryCache[$categoryId];
+        } else {
+            $plan['category'] = null;
+        }
+
+        return $plan;
+    }
+
+    /**
+     * @param int[] $planIds
+     *
+     * @return array<int,int>
+     */
+    public function getActiveSubscriptionCountsPublic(array $planIds): array
+    {
+        $planIds = array_values(
+            array_filter(
+                array_map('intval', $planIds),
+                static fn (int $id): bool => $id > 0,
+            ),
+        );
+        if (empty($planIds)) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($planIds), '?'));
+        $pdo = Database::getPdoConnection();
+        $stmt = $pdo->prepare(
+            "SELECT plan_id, COUNT(*) AS count
+             FROM featherpanel_billingplans_subscriptions
+             WHERE plan_id IN ({$placeholders}) AND status IN ('active','suspended','pending')
+             GROUP BY plan_id",
+        );
+        $stmt->execute($planIds);
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+
+        $counts = [];
+        foreach ($rows as $row) {
+            $counts[(int) $row['plan_id']] = (int) $row['count'];
+        }
+
+        return $counts;
+    }
+
+    /**
+     * Provision a server based on the plan template.
+     *
+     * @param array<string,mixed> $plan
+     * @param array<string,mixed> $user
+     *
+     * @return array{success: bool, uuid?: string, error?: string, code?: string}
+     */
+    private function provisionServer(
+        array $plan,
+        array $user,
+        ?string $customName,
+        ?int $chosenLocationId = null,
+    ): array {
+        $app = App::getInstance(false, true);
+        $userId = (int) $user['id'];
+
+        try {
+            $spellId = (int) $plan['spell_id'];
+            $realmId = (int) $plan['realms_id'];
+            $spell = Spell::getSpellById($spellId);
+            if (!$spell) {
+                return [
+                    'success' => false,
+                    'error' => 'Spell not found or was deleted from the panel',
+                    'code' => 'SPELL_NOT_FOUND',
+                ];
+            }
+            $realm = Realm::getById($realmId);
+            if ($realm === null) {
+                return [
+                    'success' => false,
+                    'error' => 'Realm not found or was deleted from the panel',
+                    'code' => 'REALM_NOT_FOUND',
+                ];
+            }
+            if ((int) ($spell['realm_id'] ?? 0) !== $realmId) {
+                return [
+                    'success' => false,
+                    'error' => 'Spell does not belong to the selected realm; fix the plan template in admin.',
+                    'code' => 'SPELL_REALM_MISMATCH',
+                ];
+            }
+
+            $requirements = [
+                'memory' => (int) ($plan['memory'] ?? 512),
+                'disk' => (int) ($plan['disk'] ?? 1024),
+                'cpu' => (int) ($plan['cpu'] ?? 100),
+            ];
+
+            $nodeIds = Plan::getNodeIds($plan);
+            if (empty($nodeIds)) {
+                $allNodes = Node::getAllNodes();
+                $nodeIds = array_map(
+                    static fn ($n) => (int) $n['id'],
+                    $allNodes,
+                );
+            }
+
+            if ($chosenLocationId !== null && $chosenLocationId > 0) {
+                $nodeIds = $this->filterNodeIdsByLocation(
+                    $nodeIds,
+                    $chosenLocationId,
+                );
+                if (empty($nodeIds)) {
+                    return [
+                        'success' => false,
+                        'error' => 'No selected node is available in the chosen location.',
+                        'code' => 'NO_AVAILABLE_NODE',
+                    ];
+                }
+            }
+
+            $nodeId = $this->resolveProvisionNode($nodeIds, $requirements);
+            if (!$nodeId) {
+                return [
+                    'success' => false,
+                    'error' => 'No selected node has enough free resources and a free allocation.',
+                    'code' => 'NO_AVAILABLE_NODE',
+                ];
+            }
+
+            $node = Node::getNodeById($nodeId);
+            if (!$node) {
+                return [
+                    'success' => false,
+                    'error' => 'The selected node no longer exists',
+                    'code' => 'NODE_NOT_FOUND',
+                ];
+            }
+
+            $allocations = $this->getFreeNodeAllocations($nodeId, 100);
+            if (empty($allocations)) {
+                $hint = !empty($plan['node_id'])
+                    ? 'This plan uses a fixed node and it has no free IPs. Pick another node or create allocations.'
+                    : 'No free IPs on the chosen node.';
+
+                return [
+                    'success' => false,
+                    'error' => $hint,
+                    'code' => 'NO_FREE_ALLOCATIONS',
+                ];
+            }
+
+            shuffle($allocations);
+            $allocation = $allocations[0];
+            $allocationId = (int) $allocation['id'];
+
+            $startup = !empty($plan['startup_override'])
+                ? $plan['startup_override']
+                : $spell['startup'] ?? '';
+            $image = !empty($plan['image_override'])
+                ? $plan['image_override']
+                : $spell['docker_image'] ?? '';
+            if (empty($image) && !empty($spell['docker_images'])) {
+                $images = is_string($spell['docker_images'])
+                    ? json_decode($spell['docker_images'], true)
+                    : $spell['docker_images'];
+                if (is_array($images)) {
+                    $image = array_values($images)[0] ?? '';
+                }
+            }
+            $image = is_string($image) ? trim($image) : '';
+            if ($image === '') {
+                return [
+                    'success' => false,
+                    'error' => 'Spell has no Docker image configured. Set docker image on the spell or an image override on the plan.',
+                    'code' => 'SPELL_DOCKER_IMAGE_MISSING',
+                ];
+            }
+
+            $serverName =
+                trim($customName ?? '') ?:
+                $plan['name'] . ' - ' . $user['username'];
+            $uuid = $this->generateUuidV4();
+            $uuidShort = substr(
+                str_replace('-', '', $this->generateUuidV4()),
+                0,
+                8,
+            );
+
+            $serverData = [
+                'uuid' => $uuid,
+                'uuidShort' => $uuidShort,
+                'node_id' => $nodeId,
+                'name' => $serverName,
+                'owner_id' => $userId,
+                'memory' => (int) ($plan['memory'] ?? 512),
+                'swap' => (int) ($plan['swap'] ?? 0),
+                'disk' => (int) ($plan['disk'] ?? 1024),
+                'io' => (int) ($plan['io'] ?? 500),
+                'cpu' => (int) ($plan['cpu'] ?? 100),
+                'allocation_id' => $allocationId,
+                'realms_id' => $realmId,
+                'spell_id' => $spellId,
+                'startup' => $startup,
+                'image' => $image,
+                'description' => $plan['description'] ?? null,
+                'status' => 'installing',
+                'skip_scripts' => 0,
+                'oom_disabled' => 0,
+                'allocation_limit' => !empty($plan['allocation_limit'])
+                    ? (int) $plan['allocation_limit']
+                    : null,
+                'database_limit' => (int) ($plan['database_limit'] ?? 0),
+                'backup_limit' => (int) ($plan['backup_limit'] ?? 0),
+            ];
+
+            $serverId = Server::createServer($serverData);
+            if (!$serverId) {
+                return [
+                    'success' => false,
+                    'error' => 'Could not save the server in the database. Check panel logs.',
+                    'code' => 'CREATE_SERVER_FAILED',
+                ];
+            }
+
+            if (!Allocation::assignToServer($allocationId, $serverId)) {
+                Server::hardDeleteServer((int) $serverId);
+
+                return [
+                    'success' => false,
+                    'error' => 'Could not assign a network allocation to the server.',
+                    'code' => 'ALLOCATION_ASSIGN_FAILED',
+                ];
+            }
+
+            $spellVariables = SpellVariable::getVariablesBySpellId($spellId);
+            $variablesToCreate = [];
+            foreach ($spellVariables as $sv) {
+                $default = $sv['default_value'] ?? '';
+                if ($default !== null && $default !== '') {
+                    $variablesToCreate[] = [
+                        'variable_id' => (int) $sv['id'],
+                        'variable_value' => (string) $default,
+                    ];
+                } elseif (strpos($sv['rules'] ?? '', 'required') !== false) {
+                    Server::hardDeleteServer($serverId);
+
+                    return [
+                        'success' => false,
+                        'error' => 'Required variable "' .
+                            $sv['name'] .
+                            '" has no default',
+                        'code' => 'MISSING_REQUIRED_VARIABLE',
+                    ];
+                }
+            }
+            if (!empty($variablesToCreate)) {
+                ServerVariable::createOrUpdateServerVariables(
+                    $serverId,
+                    $variablesToCreate,
+                );
+            }
+
+            $wings = new Wings(
+                $node['fqdn'],
+                $node['daemonListen'],
+                $node['scheme'],
+                $node['daemon_token'],
+                30,
+                WingsUrlHelper::isBehindProxy($node),
+            );
+            $response = $wings
+                ->getServer()
+                ->createServer([
+                    'uuid' => $uuid,
+                    'start_on_completion' => true,
+                ]);
+            if (!$response->isSuccessful()) {
+                Server::hardDeleteServer($serverId);
+                $err = $response->getError();
+                $err =
+                    is_string($err) && $err !== ''
+                        ? $err
+                        : 'Unknown Wings response';
+
+                return [
+                    'success' => false,
+                    'error' => 'Daemon rejected server creation: ' . $err,
+                    'code' => 'WINGS_ERROR',
+                ];
+            }
+
+            $app->getLogger()->info(
+                "BillingPlans: Server {$uuid} provisioned for user #{$userId} (plan: {$plan['name']}).",
+            );
+
+            return ['success' => true, 'uuid' => $uuid];
+        } catch (\Throwable $e) {
+            $app->getLogger()->error(
+                'BillingPlans: Server provisioning failed: ' . $e->getMessage(),
+            );
+
+            return [
+                'success' => false,
+                'error' => 'Provisioning failed: ' .
+                    ($e->getMessage() !== ''
+                        ? $e->getMessage()
+                        : 'unexpected error'),
+                'code' => 'PROVISION_EXCEPTION',
+            ];
+        }
+    }
+
+    /**
+     * Try each node in order, return first enabled node with a free allocation.
+     *
+     * This intentionally mirrors admin manual server creation behavior, which
+     * does not hard-block on node usage counters before attempting creation.
+     *
+     * @param int[] $nodeIds
+     * @param array{memory:int,disk:int,cpu:int} $requirements
+     */
+    private function resolveProvisionNode(
+        array $nodeIds,
+        array $requirements,
+    ): ?int {
+        foreach ($nodeIds as $nodeId) {
+            if ($this->nodeCanProvision($nodeId)) {
+                return $nodeId;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Check if node exists, is enabled, and has at least one free allocation.
+     */
+    private function nodeCanProvision(int $nodeId): bool
+    {
+        $node = Node::getNodeById($nodeId);
+        if (!$node) {
+            return false;
+        }
+
+        // Different panel versions expose node enabled and usage fields under different keys.
+        $isEnabled =
+            $node['is_enabled'] ??
+            ($node['enabled'] ?? ($node['isEnabled'] ?? 1));
+        if ((int) $isEnabled === 0) {
+            return false;
+        }
+
+        $allocs = $this->getFreeNodeAllocations($nodeId, 1);
+
+        return !empty($allocs);
+    }
+
+    /**
+     * Get free allocations on a node across allocation API variants.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    private function getFreeNodeAllocations(
+        int $nodeId,
+        int $limit = 100,
+    ): array {
+        $allocs =
+            Allocation::getAll(null, $nodeId, null, $limit, 0, true) ?: [];
+
+        if (!empty($allocs)) {
+            return array_values($allocs);
+        }
+
+        // Fallback: some implementations may ignore/interpret the final boolean differently.
+        $fallback =
+            Allocation::getAll(null, $nodeId, null, $limit, 0, false) ?: [];
+        if (empty($fallback)) {
+            return [];
+        }
+
+        return array_values(
+            array_filter($fallback, static function (array $alloc): bool {
+                return empty($alloc['server_id'])
+                    && empty($alloc['serverId'])
+                    && empty($alloc['assigned'])
+                    && empty($alloc['is_assigned']);
+            }),
+        );
+    }
+
+    /**
+     * Keep only node IDs that belong to the chosen location.
+     *
+     * @param int[] $nodeIds
+     *
+     * @return int[]
+     */
+    private function filterNodeIdsByLocation(
+        array $nodeIds,
+        int $locationId,
+    ): array {
+        if ($locationId <= 0 || empty($nodeIds)) {
+            return [];
+        }
+
+        $filtered = [];
+        foreach ($nodeIds as $nodeId) {
+            $nodeId = (int) $nodeId;
+            if ($nodeId <= 0) {
+                continue;
+            }
+            $node = Node::getNodeById($nodeId);
+            if (!$node) {
+                continue;
+            }
+            if ((int) ($node['location_id'] ?? 0) === $locationId) {
+                $filtered[] = $nodeId;
+            }
+        }
+
+        return $filtered;
+    }
+
+    /**
+     * Resolve unique location IDs and labels for the plan's configured nodes.
+     *
+     * @param array<string,mixed> $plan
+     * @param array{
+     *   nodesById?: array<int,array<string,mixed>>,
+     *   locationsById?: array<int,array<string,mixed>>
+     * } $preloaded
+     *
+     * @return array{ids: int[], names: array<string,string>}
+     */
+    private function resolvePlanLocations(array $plan, array &$preloaded = []): array
+    {
+        $nodeIds = Plan::getNodeIds($plan);
+        if (empty($nodeIds)) {
+            return ['ids' => [], 'names' => []];
+        }
+
+        if (!isset($preloaded['nodesById']) || !is_array($preloaded['nodesById'])) {
+            $preloaded['nodesById'] = [];
+        }
+        if (!isset($preloaded['locationsById']) || !is_array($preloaded['locationsById'])) {
+            $preloaded['locationsById'] = [];
+        }
+
+        $missingNodeIds = [];
+        foreach ($nodeIds as $nodeId) {
+            if ($nodeId > 0 && !isset($preloaded['nodesById'][$nodeId])) {
+                $missingNodeIds[] = $nodeId;
+            }
+        }
+        if ($missingNodeIds !== []) {
+            foreach (Node::getNodesByIds($missingNodeIds) as $id => $node) {
+                $preloaded['nodesById'][$id] = $node;
+            }
+        }
+
+        $locationIds = [];
+        $locationNames = [];
+        $missingLocationIds = [];
+        foreach ($nodeIds as $nodeId) {
+            if ($nodeId <= 0) {
+                continue;
+            }
+            $node = $preloaded['nodesById'][$nodeId] ?? null;
+            if (!$node || empty($node['location_id'])) {
+                continue;
+            }
+            $locationId = (int) $node['location_id'];
+            $locationIds[$locationId] = true;
+            if (!isset($preloaded['locationsById'][$locationId])) {
+                $missingLocationIds[] = $locationId;
+            }
+        }
+        if ($missingLocationIds !== []) {
+            foreach (Location::getByIds($missingLocationIds) as $id => $location) {
+                $preloaded['locationsById'][$id] = $location;
+            }
+        }
+
+        foreach (array_keys($locationIds) as $locationId) {
+            $locationId = (int) $locationId;
+            if (!isset($locationNames[(string) $locationId])) {
+                $location = $preloaded['locationsById'][$locationId] ?? null;
+                $name = isset($location['name'])
+                    ? trim((string) $location['name'])
+                    : '';
+                $locationNames[(string) $locationId] =
+                    $name !== '' ? $name : "Location #{$locationId}";
+            }
+        }
+
+        return [
+            'ids' => array_values(
+                array_map('intval', array_keys($locationIds)),
+            ),
+            'names' => $locationNames,
+        ];
+    }
+
+    /**
+     * @param array<string,mixed> $plan
+     * @param int[] $allowedRealmIds
+     * @param array{
+     *   activeCounts: array<int,int>,
+     *   allRealms: array<int,array<string,mixed>>,
+     *   allSpells: array<int,array<string,mixed>>,
+     *   realmById: array<int,array<string,mixed>|null>,
+     *   spellById: array<int,array<string,mixed>|null>
+     * } $preloaded
+     *
+     * @return array<int,array{id:int,name:string}>
+     */
+    private function resolveRealmOptions(
+        array $plan,
+        array $allowedRealmIds,
+        array &$preloaded,
+    ): array {
+        $options = [];
+
+        if (!empty($plan['user_can_choose_realm'])) {
+            if (!empty($allowedRealmIds)) {
+                foreach ($allowedRealmIds as $realmId) {
+                    $realm = $this->getRealmByIdCached(
+                        (int) $realmId,
+                        $preloaded,
+                    );
+                    if ($realm !== null) {
+                        $options[] = [
+                            'id' => (int) $realm['id'],
+                            'name' => (string) $realm['name'],
+                        ];
+                    }
+                }
+            } else {
+                foreach ($preloaded['allRealms'] as $realm) {
+                    $options[] = [
+                        'id' => (int) $realm['id'],
+                        'name' => (string) $realm['name'],
+                    ];
+                }
+            }
+        } elseif (!empty($plan['realms_id'])) {
+            $realm = $this->getRealmByIdCached(
+                (int) $plan['realms_id'],
+                $preloaded,
+            );
+            if ($realm !== null) {
+                $options[] = [
+                    'id' => (int) $realm['id'],
+                    'name' => (string) $realm['name'],
+                ];
+            }
+        }
+
+        return array_values($options);
+    }
+
+    /**
+     * @param array<string,mixed> $plan
+     * @param int[] $allowedSpellIds
+     * @param array<int,array{id:int,name:string}> $allowedRealmOptions
+     * @param array{
+     *   activeCounts: array<int,int>,
+     *   allRealms: array<int,array<string,mixed>>,
+     *   allSpells: array<int,array<string,mixed>>,
+     *   realmById: array<int,array<string,mixed>|null>,
+     *   spellById: array<int,array<string,mixed>|null>
+     * } $preloaded
+     *
+     * @return array<int,array{id:int,name:string,realm_id:int}>
+     */
+    private function resolveSpellOptions(
+        array $plan,
+        array $allowedSpellIds,
+        array $allowedRealmOptions,
+        array &$preloaded,
+    ): array {
+        $options = [];
+        $allowedRealmSet = [];
+        foreach ($allowedRealmOptions as $opt) {
+            $allowedRealmSet[(int) $opt['id']] = true;
+        }
+
+        if (!empty($plan['user_can_choose_spell'])) {
+            if (!empty($allowedSpellIds)) {
+                foreach ($allowedSpellIds as $spellId) {
+                    $spell = $this->getSpellByIdCached(
+                        (int) $spellId,
+                        $preloaded,
+                    );
+                    if ($spell !== null) {
+                        $realmId = (int) ($spell['realm_id'] ?? 0);
+                        if (
+                            !empty($allowedRealmSet)
+                            && !isset($allowedRealmSet[$realmId])
+                        ) {
+                            continue;
+                        }
+                        $options[] = [
+                            'id' => (int) $spell['id'],
+                            'name' => (string) $spell['name'],
+                            'realm_id' => $realmId,
+                        ];
+                    }
+                }
+            } else {
+                foreach ($preloaded['allSpells'] as $spell) {
+                    $realmId = (int) ($spell['realm_id'] ?? 0);
+                    if (
+                        !empty($allowedRealmSet)
+                        && !isset($allowedRealmSet[$realmId])
+                    ) {
+                        continue;
+                    }
+                    $options[] = [
+                        'id' => (int) $spell['id'],
+                        'name' => (string) $spell['name'],
+                        'realm_id' => $realmId,
+                    ];
+                }
+            }
+        } elseif (!empty($plan['spell_id'])) {
+            $spell = $this->getSpellByIdCached(
+                (int) $plan['spell_id'],
+                $preloaded,
+            );
+            if ($spell !== null) {
+                $options[] = [
+                    'id' => (int) $spell['id'],
+                    'name' => (string) $spell['name'],
+                    'realm_id' => (int) ($spell['realm_id'] ?? 0),
+                ];
+            }
+        }
+
+        return array_values($options);
+    }
+
+    /**
+     * @param array{
+     *   activeCounts: array<int,int>,
+     *   allRealms: array<int,array<string,mixed>>,
+     *   allSpells: array<int,array<string,mixed>>,
+     *   realmById: array<int,array<string,mixed>|null>,
+     *   spellById: array<int,array<string,mixed>|null>
+     * } $preloaded
+     *
+     * @return array<string,mixed>|null
+     */
+    private function getRealmByIdCached(int $realmId, array &$preloaded): ?array
+    {
+        if ($realmId <= 0) {
+            return null;
+        }
+        if (!array_key_exists($realmId, $preloaded['realmById'])) {
+            $match = null;
+            foreach ($preloaded['allRealms'] as $realm) {
+                if ((int) ($realm['id'] ?? 0) === $realmId) {
+                    $match = $realm;
+                    break;
+                }
+            }
+            $preloaded['realmById'][$realmId] =
+                $match ?: Realm::getById($realmId);
+        }
+
+        return $preloaded['realmById'][$realmId];
+    }
+
+    /**
+     * @param array{
+     *   activeCounts: array<int,int>,
+     *   allRealms: array<int,array<string,mixed>>,
+     *   allSpells: array<int,array<string,mixed>>,
+     *   realmById: array<int,array<string,mixed>|null>,
+     *   spellById: array<int,array<string,mixed>|null>
+     * } $preloaded
+     *
+     * @return array<string,mixed>|null
+     */
+    private function getSpellByIdCached(int $spellId, array &$preloaded): ?array
+    {
+        if ($spellId <= 0) {
+            return null;
+        }
+        if (!array_key_exists($spellId, $preloaded['spellById'])) {
+            $match = null;
+            foreach ($preloaded['allSpells'] as $spell) {
+                if ((int) ($spell['id'] ?? 0) === $spellId) {
+                    $match = $spell;
+                    break;
+                }
+            }
+            $preloaded['spellById'][$spellId] =
+                $match ?: Spell::getSpellById($spellId);
+        }
+
+        return $preloaded['spellById'][$spellId];
+    }
+
+    private function cleanupProvisionedServer(string $serverUuid): void
+    {
+        $server = Server::getServerByUuid($serverUuid);
+        if ($server && !empty($server['id'])) {
+            Server::hardDeleteServer((int) $server['id']);
+        }
+    }
+
+    private function generateUuidV4(): string
+    {
+        $data = random_bytes(16);
+        $data[6] = chr((ord($data[6]) & 0x0F) | 0x40);
+        $data[8] = chr((ord($data[8]) & 0x3F) | 0x80);
+
+        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
+    }
+
+    private function applyCustomResourcesToPlan(
+        array $plan,
+        array $customResources,
+    ): array {
+        $cleanCustomResources = [];
+        $sliderConfig = isset($plan['slider_config'])
+            ? (is_string($plan['slider_config'])
+                ? json_decode($plan['slider_config'], true)
+                : $plan['slider_config'])
+            : null;
+        if (is_array($sliderConfig)) {
+            foreach ($sliderConfig as $resourceKey => $config) {
+                if (!empty($config['enabled'])) {
+                    $baseVal = isset($config['base'])
+                        ? (float) $config['base']
+                        : 0;
+                    $maxVal = isset($config['max'])
+                        ? (float) $config['max']
+                        : 0;
+                    $stepVal = isset($config['step'])
+                        ? (float) $config['step']
+                        : 1;
+                    $rounding = $config['rounding'] ?? 'nearest';
+
+                    $selectedVal = isset($customResources[$resourceKey])
+                        ? (float) $customResources[$resourceKey]
+                        : $baseVal;
+                    $selectedVal = max($baseVal, min($maxVal, $selectedVal));
+
+                    $diff = $selectedVal - $baseVal;
+                    $steps = $diff / ($stepVal ?: 1);
+                    if ($rounding === 'up') {
+                        $steps = ceil($steps);
+                    } elseif ($rounding === 'down') {
+                        $steps = floor($steps);
+                    } else {
+                        $steps = round($steps);
+                    }
+
+                    $finalVal = $baseVal + $steps * $stepVal;
+                    $finalVal = max($baseVal, min($maxVal, $finalVal));
+
+                    $cleanCustomResources[$resourceKey] = $finalVal;
+                    $plan[$resourceKey] = $finalVal;
+                }
+            }
+        }
+        if (!empty($cleanCustomResources)) {
+            $plan['custom_resources'] = $cleanCustomResources;
+        }
+
+        return $plan;
+    }
+
+    /**
+     * @return array{ok:bool,message?:string,error_code?:string,context?:array<string,mixed>}
+     */
+    private function resolveCouponForSubscription(
+        int $userId,
+        int $planId,
+        string $couponCode,
+        int $totalChargeCredits,
+    ): array {
+        if (!class_exists(RedeemCode::class)) {
+            return [
+                'ok' => false,
+                'message' => 'Coupon system is not available.',
+                'error_code' => 'COUPON_UNAVAILABLE',
+            ];
+        }
+        $code = RedeemCode::getByCode($couponCode);
+        if (!$code || !RedeemCode::isValid($code)) {
+            return [
+                'ok' => false,
+                'message' => 'Coupon code is invalid or expired.',
+                'error_code' => 'COUPON_INVALID',
+            ];
+        }
+        if (($code['reward_type'] ?? 'credits') !== 'billing_plan_coupon') {
+            return [
+                'ok' => false,
+                'message' => 'This code cannot be used as a checkout coupon.',
+                'error_code' => 'COUPON_WRONG_TYPE',
+            ];
+        }
+        $targetPlanId = isset($code['plan_id']) ? (int) $code['plan_id'] : 0;
+        if ($targetPlanId > 0 && $targetPlanId !== $planId) {
+            return [
+                'ok' => false,
+                'message' => 'This coupon is for a different plan.',
+                'error_code' => 'COUPON_PLAN_MISMATCH',
+            ];
+        }
+        if (
+            class_exists(RedeemUsage::class)
+            && RedeemUsage::hasUserUsedCode($userId, (int) $code['id'])
+        ) {
+            return [
+                'ok' => false,
+                'message' => 'You already used this coupon code.',
+                'error_code' => 'COUPON_ALREADY_USED',
+            ];
+        }
+
+        $scope = (string) ($code['coupon_scope'] ?? 'initial');
+        if (!in_array($scope, ['initial', 'renewal', 'both'], true)) {
+            $scope = 'initial';
+        }
+        $discountPercent = max(
+            0.0,
+            min(100.0, (float) ($code['discount_percent'] ?? 0)),
+        );
+        $discountCredits = max(0, (int) ($code['discount_credits'] ?? 0));
+        if ($discountPercent <= 0 && $discountCredits <= 0) {
+            return [
+                'ok' => false,
+                'message' => 'Coupon discount configuration is invalid.',
+                'error_code' => 'COUPON_MISCONFIGURED',
+            ];
+        }
+
+        $percentDiscountCredits = (int) round(
+            $totalChargeCredits * ($discountPercent / 100),
+            0,
+            PHP_ROUND_HALF_UP,
+        );
+        $initialDiscountCredits = in_array($scope, ['initial', 'both'], true)
+            ? min(
+                $totalChargeCredits,
+                max(0, $percentDiscountCredits + $discountCredits),
+            )
+            : 0;
+        $initialChargeCredits = max(
+            0,
+            $totalChargeCredits - $initialDiscountCredits,
+        );
+
+        return [
+            'ok' => true,
+            'context' => [
+                'code_id' => (int) $code['id'],
+                'code' => (string) $code['code'],
+                'scope' => $scope,
+                'discount_percent' => round($discountPercent, 2),
+                'discount_credits' => $discountCredits,
+                'initial_discount_credits' => $initialDiscountCredits,
+                'initial_charge_credits' => $initialChargeCredits,
+                'renewal_discount_percent' => in_array(
+                    $scope,
+                    ['renewal', 'both'],
+                    true,
+                )
+                    ? round($discountPercent, 2)
+                    : null,
+                'renewal_discount_credits' => in_array(
+                    $scope,
+                    ['renewal', 'both'],
+                    true,
+                )
+                    ? $discountCredits
+                    : null,
+            ],
+        ];
+    }
+
+    private function markCouponUsed(int $userId, int $codeId): void
+    {
+        try {
+            if (
+                !class_exists(RedeemUsage::class)
+                || !class_exists(RedeemCode::class)
+            ) {
+                return;
+            }
+            if (RedeemUsage::hasUserUsedCode($userId, $codeId)) {
+                return;
+            }
+            if (
+                RedeemUsage::recordUsage($userId, $codeId)
+                && RedeemCode::incrementUses($codeId)
+            ) {
+                return;
+            }
+            App::getInstance(false, true)
+                ->getLogger()
+                ->warning(
+                    "BillingPlans: coupon usage tracking failed for code #$codeId user #$userId.",
+                );
+        } catch (\Throwable $e) {
+            App::getInstance(false, true)
+                ->getLogger()
+                ->error(
+                    'BillingPlans: Failed to mark coupon used: ' .
+                        $e->getMessage(),
+                );
+        }
+    }
+}

@@ -125,7 +125,7 @@ class DatabaseSnapshotsController
     #[OA\Post(
         path: '/api/admin/database-snapshots',
         summary: 'Create a new database snapshot',
-        description: 'Create a complete SQL dump of the entire database and save it as a FeatherPanel Backup (.fpb) file.',
+        description: 'Create a complete SQL dump of the entire database and save it as an OrveX Panel Backup (.fpb) file.',
         tags: ['Admin - Database Snapshots'],
         requestBody: new OA\RequestBody(
             description: 'Password verification required',
@@ -599,7 +599,7 @@ class DatabaseSnapshotsController
     #[OA\Post(
         path: '/api/admin/database-snapshots/restore-upload',
         summary: 'Restore database from uploaded snapshot file',
-        description: 'Upload and restore a FeatherPanel Backup (.fpb) file. WARNING: This will wipe all tables and delete all current data!',
+        description: 'Upload and restore an OrveX Panel Backup (.fpb) file. WARNING: This will wipe all tables and delete all current data!',
         tags: ['Admin - Database Snapshots'],
         requestBody: new OA\RequestBody(
             required: true,
@@ -608,7 +608,7 @@ class DatabaseSnapshotsController
                 schema: new OA\Schema(
                     required: ['file', 'confirm', 'password'],
                     properties: [
-                        new OA\Property(property: 'file', type: 'string', format: 'binary', description: 'FeatherPanel Backup (.fpb) file to restore'),
+                        new OA\Property(property: 'file', type: 'string', format: 'binary', description: 'OrveX Panel Backup (.fpb) file to restore'),
                         new OA\Property(property: 'confirm', type: 'boolean', description: 'Must be true to confirm restoration'),
                         new OA\Property(property: 'password', type: 'string', description: 'Current user password for security verification'),
                     ]
@@ -669,7 +669,7 @@ class DatabaseSnapshotsController
             // Validate file extension
             $extension = strtolower(pathinfo($file->getClientOriginalName(), PATHINFO_EXTENSION));
             if ($extension !== 'fpb') {
-                return ApiResponse::error('Invalid file type. Only .fpb (FeatherPanel Backup) files are allowed', 'INVALID_FILE_TYPE', 400);
+                return ApiResponse::error('Invalid file type. Only .fpb (OrveX Panel Backup) files are allowed', 'INVALID_FILE_TYPE', 400);
             }
 
             // Check file size (max 1GB for safety)
@@ -937,7 +937,7 @@ class DatabaseSnapshotsController
 
         foreach ($htmlIndicators as $indicator) {
             if (stripos($contentStart, $indicator) !== false) {
-                return ApiResponse::error('Invalid backup file: The file appears to contain HTML content instead of SQL. This usually means the file is corrupted, was downloaded incorrectly, or is not a valid FeatherPanel Backup (.fpb) file. Please try downloading the backup again or create a new snapshot.', 'INVALID_SQL_CONTENT', 400);
+                return ApiResponse::error('Invalid backup file: The file appears to contain HTML content instead of SQL. This usually means the file is corrupted, was downloaded incorrectly, or is not a valid OrveX Panel Backup (.fpb) file. Please try downloading the backup again or create a new snapshot.', 'INVALID_SQL_CONTENT', 400);
             }
         }
 
@@ -974,7 +974,7 @@ class DatabaseSnapshotsController
         }
 
         if (!$hasSqlKeyword) {
-            return ApiResponse::error('Invalid backup file: The file does not appear to contain valid SQL statements. This usually means the file is corrupted or is not a valid FeatherPanel Backup (.fpb) file. Please try downloading the backup again or create a new snapshot.', 'INVALID_SQL_CONTENT', 400);
+            return ApiResponse::error('Invalid backup file: The file does not appear to contain valid SQL statements. This usually means the file is corrupted or is not a valid OrveX Panel Backup (.fpb) file. Please try downloading the backup again or create a new snapshot.', 'INVALID_SQL_CONTENT', 400);
         }
 
         return null;

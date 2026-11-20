@@ -69,7 +69,7 @@ class AbuseIPDBBanReporter
         $comment = trim((string) ($body['abuseipdb_comment'] ?? ''));
         if ($comment === '') {
             $username = (string) ($user['username'] ?? 'unknown');
-            $comment = 'User "' . $username . '" banned on FeatherPanel.';
+            $comment = 'User "' . $username . '" banned on OrveX Panel.';
             if (trim($banReason) !== '') {
                 $comment .= ' Reason: ' . trim($banReason);
             }

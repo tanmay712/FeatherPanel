@@ -1,5 +1,21 @@
 # Changelog
 
+## OrveX Panel (unreleased)
+
+The panel is now **OrveX Panel**, based on FeatherPanel v1.5.5, and bundles the official FeatherPanel addons, translations and spells.
+
+### Added
+- 17 official addons bundled in `backend/storage/addons/` and active without marketplace installs: Billing Core, Billing Plans, Billing Resources (+ New Servers, Store), Billing AFK, Billing Links, Billing Redeem, Billing Referrals, Pterodactyl Panel API, DiscordPlus, WidgetBot, Minecraft Datapack Installer, CryptIO, DevUtils, Let It Snow and Let's Celebrate. Their Vue frontends are prebuilt into `Frontend/Components/<addon>/dist/`; `make addons` (`scripts/build-addon-frontends.sh`) rebuilds them.
+- 18 additional languages in `backend/public/translations/` (Amharic, Czech, German, Spanish (Latin America), French, Croatian, Hungarian, Italian, Japanese, Khmer, Dutch, Polish, Portuguese, Romanian, Russian, Slovak, Serbian, Turkish) and their entries in `mapping.json`.
+- 12 spells (eggs) in `backend/storage/eggs/` (Minecraft Vanilla/Forge/BungeeCord/Pumpkin, Rust, CS:GO, TF2, Insurgency, custom Source games, discord.py, Mumble, TeamSpeak 3).
+- Docker: the backend image keeps a copy of the bundled addons and translations in `/opt/orvex`, and `init.sh` seeds the ones missing from the persistent volumes on start (once per addon, so uninstalled addons stay removed and marketplace updates are kept).
+- Default OrveX Panel logo (`frontendv2/public/branding/orvex-logo.png`), served without login so the sign-in page can show it.
+
+### Changed
+- Product name in the UI, backend defaults, CLI output, AI assistant, mails, MCP server and docs is now OrveX Panel. Copyright headers, the `window.FeatherPanel` plugin SDK, `FEATHERPANEL_*` environment variables, config paths, HTTP User-Agents, `X-FeatherPanel-Signature`, Docker volume/container names and upstream services (Premium, donations, support, telemetry, the official plugin repository) keep their FeatherPanel names for compatibility and attribution.
+- Docker images are published to and pulled from `ghcr.io/tanmay712/orvexpanel-*` (backend, frontendv2, mcp, async-runner, oci).
+- `/api/system/translations/languages` also lists languages with UN M.49 region codes such as `es-419`.
+
 ## v1.5.5 STABLE
 
 ### Added

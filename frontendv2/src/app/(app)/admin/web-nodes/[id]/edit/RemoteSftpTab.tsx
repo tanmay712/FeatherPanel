@@ -34,7 +34,7 @@ interface RemoteSftpTabProps {
 export function RemoteSftpTab({ form, setForm, errors }: RemoteSftpTabProps) {
     const { t } = useTranslation();
     const { settings } = useSettings();
-    const panelAppName = settings?.app_name?.trim() || 'FeatherPanel';
+    const panelAppName = settings?.app_name?.trim() || 'OrveX Panel';
 
     return (
         <div className='space-y-6'>

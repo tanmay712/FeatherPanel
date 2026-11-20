@@ -230,7 +230,7 @@ class TwoFactorController
         $google2fa = new Google2FA();
         $secret = $google2fa->generateSecretKey();
         $qrCodeUrl = $google2fa->getQRCodeUrl(
-            $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
+            $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
             $userInfo['email'],
             $secret
         );

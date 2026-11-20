@@ -36,10 +36,10 @@ class FeatherQuilldHealthController
         }
 
         try {
-            $appName = App::getInstance(true)->getConfig()->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel');
-            $appName = is_string($appName) && trim($appName) !== '' ? trim($appName) : 'FeatherPanel';
+            $appName = App::getInstance(true)->getConfig()->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel');
+            $appName = is_string($appName) && trim($appName) !== '' ? trim($appName) : 'OrveX Panel';
         } catch (\Throwable) {
-            $appName = 'FeatherPanel';
+            $appName = 'OrveX Panel';
         }
 
         return ApiResponse::success([

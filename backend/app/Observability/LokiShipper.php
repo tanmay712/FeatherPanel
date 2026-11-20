@@ -162,7 +162,7 @@ final class LokiShipper
     public static function test(?array $config = null): array
     {
         $config ??= ObservabilityConfig::get();
-        $entry = StructuredLog::entry('info', 'FeatherPanel Loki connection test', ['type' => 'test'], 'observability');
+        $entry = StructuredLog::entry('info', 'OrveX Panel Loki connection test', ['type' => 'test'], 'observability');
         $item = (string) json_encode([(string) $entry['_ts_ns'], 'info', StructuredLog::encode($entry)]);
 
         return self::pushItems([$item], $config, false);

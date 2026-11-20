@@ -47,7 +47,7 @@ services:
       retries: 10
 
   backend:
-    image: ghcr.io/mythicalltd/featherpanel-backend:dev
+    image: ghcr.io/tanmay712/orvexpanel-backend:dev
     container_name: featherpanel_backend
     restart: unless-stopped
     environment:
@@ -99,7 +99,7 @@ services:
       - featherpanel_network
 
   frontendv2:
-    image: ghcr.io/mythicalltd/featherpanel-frontendv2:dev
+    image: ghcr.io/tanmay712/orvexpanel-frontendv2:dev
     container_name: featherpanel_frontendv2
     restart: unless-stopped
     environment:
@@ -130,7 +130,7 @@ services:
       - featherpanel_network
 
   mcp:
-    image: ghcr.io/mythicalltd/featherpanel-mcp:dev
+    image: ghcr.io/tanmay712/orvexpanel-mcp:dev
     container_name: featherpanel_mcp
     restart: unless-stopped
     environment:
@@ -159,7 +159,7 @@ services:
       - featherpanel_network
 
   async-runner:
-    image: ghcr.io/mythicalltd/featherpanel-async-runner:dev
+    image: ghcr.io/tanmay712/orvexpanel-async-runner:dev
     container_name: featherpanel_async_runner
     restart: unless-stopped
     sysctls:

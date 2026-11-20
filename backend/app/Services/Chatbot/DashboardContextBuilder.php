@@ -110,7 +110,7 @@ class DashboardContextBuilder
             return trim($content);
         }
 
-        return 'You are FeatherPanel Dashboard AI. Help users understand and navigate their dashboard, servers, VDS instances, and knowledgebase while keeping answers concise and using tools for specific details.';
+        return 'You are OrveX Panel Dashboard AI. Help users understand and navigate their dashboard, servers, VDS instances, and knowledgebase while keeping answers concise and using tools for specific details.';
     }
 
     private function getUserServers(int $userId): array

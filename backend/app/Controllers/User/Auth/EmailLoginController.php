@@ -188,7 +188,7 @@ class EmailLoginController
         }
 
         // Send email
-        $appName = $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel');
+        $appName = $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel');
         $appUrl = $config->getSetting(ConfigInterface::APP_URL, '');
         $appSupportUrl = $config->getSetting(ConfigInterface::APP_SUPPORT_URL, '');
 

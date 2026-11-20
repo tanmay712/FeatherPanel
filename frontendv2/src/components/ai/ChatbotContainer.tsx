@@ -155,7 +155,7 @@ export default function ChatbotContainer({ open, onClose, mode = 'server', vdsIn
     const [loadingConversations, setLoadingConversations] = useState(false);
     const [showSidebar, setShowSidebar] = useState(false);
     const [expandedActivityMessages, setExpandedActivityMessages] = useState<string[]>([]);
-    const [chatModelName, setChatModelName] = useState('FeatherPanel AI');
+    const [chatModelName, setChatModelName] = useState('OrveX Panel AI');
     const [pendingActions, setPendingActions] = useState<PendingAction[]>([]);
     const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogState>({
         open: false,
@@ -181,7 +181,9 @@ export default function ChatbotContainer({ open, onClose, mode = 'server', vdsIn
     const customAvatar = settings?.chatbot_avatar_url?.trim();
     const logoUrl =
         customAvatar ||
-        (theme === 'dark' ? settings?.app_logo_dark || '/logo.png' : settings?.app_logo_white || '/logo.png');
+        (theme === 'dark'
+            ? settings?.app_logo_dark || '/branding/orvex-logo.png'
+            : settings?.app_logo_white || '/branding/orvex-logo.png');
     const assistantName = settings?.chatbot_display_name?.trim() || t('chatbot.title');
     const slashQuery = inputMessage.startsWith('/') ? inputMessage.trim().toLowerCase() : '';
     const commandSuggestions = useMemo(() => {
@@ -376,7 +378,7 @@ export default function ChatbotContainer({ open, onClose, mode = 'server', vdsIn
             if (data.messages.length > 0) {
                 const lastMessage = data.messages[data.messages.length - 1];
                 if (lastMessage?.model) {
-                    setChatModelName(lastMessage.model || 'FeatherPanel AI');
+                    setChatModelName(lastMessage.model || 'OrveX Panel AI');
                 }
             }
             setShowSidebar(false);

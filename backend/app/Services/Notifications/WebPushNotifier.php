@@ -109,7 +109,7 @@ class WebPushNotifier
             }
 
             $config = App::getInstance(true)->getConfig();
-            $appName = (string) $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel');
+            $appName = (string) $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel');
             $base = rtrim((string) $config->getSetting(ConfigInterface::APP_URL, ''), '/');
             $url = $link !== '' ? ($base !== '' ? $base . $link : $link) : ($base !== '' ? $base . '/dashboard' : '/dashboard');
             $title = self::titleFor($kind, $appName);
@@ -142,7 +142,7 @@ class WebPushNotifier
             return 'No push subscriptions on this account';
         }
         $config = App::getInstance(true)->getConfig();
-        $appName = (string) $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel');
+        $appName = (string) $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel');
         $base = rtrim((string) $config->getSetting(ConfigInterface::APP_URL, ''), '/');
 
         self::sendToSubscriptions($subs, [

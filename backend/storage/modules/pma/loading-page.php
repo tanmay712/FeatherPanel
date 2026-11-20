@@ -199,7 +199,7 @@ $pmaPostLoadScript = $pmaPostLoadScript ?? '';
             </div>
             <div>
                 <a id="app-home-link" class="app-name" href="/">
-                    <span id="app-name">FeatherPanel</span>
+                    <span id="app-name">OrveX Panel</span>
                 </a>
                 <p id="brand-subtitle" class="brand-subtitle" data-i18n="databaseManagement">Database Management</p>
             </div>
@@ -223,7 +223,7 @@ $pmaPostLoadScript = $pmaPostLoadScript ?? '';
             </div>
 
             <div id="powered-by-footer" class="footer">
-                <span id="powered-by-prefix"></span><a id="powered-by-link" href="https://featherpanel.com" target="_blank" rel="noopener noreferrer"><span id="powered-by-name">FeatherPanel</span></a>
+                <span id="powered-by-prefix"></span><a id="powered-by-link" href="https://github.com/tanmay712/FeatherPanel" target="_blank" rel="noopener noreferrer"><span id="powered-by-name">OrveX Panel</span></a>
             </div>
         </div>
     </div>
@@ -364,7 +364,7 @@ $pmaPostLoadScript = $pmaPostLoadScript ?? '';
             var branding = {
                 appName: (context && context.branding && context.branding.appName)
                     || (settings && settings.app_name)
-                    || 'FeatherPanel',
+                    || 'OrveX Panel',
                 logoDark: (context && context.branding && context.branding.logoDark)
                     || (settings && settings.app_logo_dark)
                     || '',

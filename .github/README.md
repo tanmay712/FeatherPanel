@@ -1,25 +1,19 @@
 <div align="center">
 
-# 🪶 FeatherPanel
+<img src="../frontendv2/public/branding/orvex-logo.png" alt="OrveX Panel" width="96" />
 
-**Open-source game server management fast, secure, and built for operators.**
+# OrveX Panel
 
-<br />
+**Open-source game server management with built-in billing, fast, secure, and built for operators.**
 
-[![Frontend](https://img.shields.io/github/actions/workflow/status/mythicalltd/featherpanel/frontend.yml?branch=develop&label=Frontend&style=for-the-badge&logo=react&logoColor=white)](https://github.com/mythicalltd/featherpanel/actions/workflows/frontend.yml)
-[![Backend](https://img.shields.io/github/actions/workflow/status/mythicalltd/featherpanel/backend.yml?branch=develop&label=Backend&style=for-the-badge&logo=php&logoColor=white)](https://github.com/mythicalltd/featherpanel/actions/workflows/backend.yml)
-[![Async Runner](https://img.shields.io/github/actions/workflow/status/mythicalltd/featherpanel/runner.yml?branch=develop&label=Async%20Runner&style=for-the-badge&logo=rust&logoColor=white)](https://github.com/mythicalltd/featherpanel/actions/workflows/runner.yml)
-[![Installer](https://img.shields.io/github/actions/workflow/status/mythicalltd/featherpanel/shell-lint.yml?branch=develop&label=Installer&style=for-the-badge&logo=gnubash&logoColor=white)](https://github.com/mythicalltd/featherpanel/actions/workflows/shell-lint.yml)
-[![Developer Docs](https://img.shields.io/github/actions/workflow/status/mythicalltd/featherpanel/docs-pages.yml?branch=develop&label=Developer%20Docs&style=for-the-badge&logo=readthedocs&logoColor=white)](https://github.com/mythicalltd/featherpanel/actions/workflows/docs-pages.yml)
+<sub>OrveX Panel is based on <a href="https://github.com/MythicalLTD/FeatherPanel">FeatherPanel</a> by Mythical Systems and bundles the official FeatherPanel addons out of the box.</sub>
 
-<br />
+<br /><br />
 
-[![License](https://img.shields.io/github/license/mythicalltd/featherpanel?style=for-the-badge&color=2563eb)](https://github.com/mythicalltd/featherpanel/blob/develop/LICENSE)
-[![Release](https://img.shields.io/github/v/release/mythicalltd/featherpanel?style=for-the-badge&color=f97316)](https://github.com/mythicalltd/featherpanel/releases)
-[![Stars](https://img.shields.io/github/stars/mythicalltd/featherpanel?style=for-the-badge&color=eab308)](https://github.com/mythicalltd/featherpanel/stargazers)
-[![Issues](https://img.shields.io/github/issues/mythicalltd/featherpanel?style=for-the-badge&color=ef4444)](https://github.com/mythicalltd/featherpanel/issues)
-[![Discord](https://img.shields.io/discord/1399372922480492608?style=for-the-badge&logo=discord&logoColor=white&label=Discord&color=5865F2)](https://discord.mythical.systems)
-[![Last Commit](https://img.shields.io/github/last-commit/mythicalltd/featherpanel/develop?style=for-the-badge&color=a855f7)](https://github.com/mythicalltd/featherpanel/commits/develop)
+[![Frontend](https://img.shields.io/github/actions/workflow/status/tanmay712/FeatherPanel/frontend.yml?branch=develop&label=Frontend&style=for-the-badge&logo=react&logoColor=white)](https://github.com/tanmay712/FeatherPanel/actions/workflows/frontend.yml)
+[![Backend](https://img.shields.io/github/actions/workflow/status/tanmay712/FeatherPanel/backend.yml?branch=develop&label=Backend&style=for-the-badge&logo=php&logoColor=white)](https://github.com/tanmay712/FeatherPanel/actions/workflows/backend.yml)
+[![Async Runner](https://img.shields.io/github/actions/workflow/status/tanmay712/FeatherPanel/runner.yml?branch=develop&label=Async%20Runner&style=for-the-badge&logo=rust&logoColor=white)](https://github.com/tanmay712/FeatherPanel/actions/workflows/runner.yml)
+[![License](https://img.shields.io/github/license/tanmay712/FeatherPanel?style=for-the-badge&color=2563eb)](https://github.com/tanmay712/FeatherPanel/blob/develop/LICENSE)
 
 </div>
 
@@ -34,11 +28,66 @@
 
 **Do not run `develop` in production.**
 
-This branch ships experimental features that may be unstable, incomplete, or unsafe. For live environments, install a [stable release](https://github.com/mythicalltd/featherpanel/releases) and follow the [official docs](https://docs.mythical.systems/docs).
+This branch ships experimental features that may be unstable, incomplete, or unsafe. For live environments, deploy a tagged OrveX Panel release (see [Deploying OrveX Panel](#-deploying-orvex-panel)). The upstream [FeatherPanel docs](https://docs.mythical.systems/docs) still apply to everything that is not OrveX-specific.
 
 </td>
 </tr>
 </table>
+
+---
+
+## ✨ What OrveX Panel adds
+
+Everything below ships **in this repository** and is active as soon as the panel starts, with no marketplace installs needed.
+
+### Bundled addons (`backend/storage/addons/`)
+
+| Addon | What it does |
+| --- | --- |
+| **Billing Core** (`billingcore`) | Core billing: user credits, invoices and admin billing management. Required by the other billing addons. |
+| **Billing Plans** (`billingplans`) | Sell servers as renewable plans with credit-based billing (WHMCS-style subscriptions, renewals, suspensions). |
+| **Billing Resources** (`billingresources`) | Gives users an account-level pool of resources (memory, CPU, disk) that they can split across multiple servers. |
+| **Billing Resources: New Servers** (`billingresourcesnewservers`) | Lets users create servers from their purchased resources. |
+| **Billing Resources: Store** (`billingresourcesstore`) | Lets users buy resources, or packages of resources, with credits. |
+| **Billing AFK** (`billingafk`) | Rewards users with credits for staying on the AFK page. |
+| **Billing Links** (`billinglinks`) | Users earn credits by visiting links (Linkvertise, LinkPays, GyaniLinks, ShareUS). |
+| **Billing Redeem** (`billingredeem`) | Coupon codes that users redeem for credits. |
+| **Billing Referrals** (`billingreferrals`) | Referral system that rewards users with credits for inviting new users. |
+| **Pterodactyl Panel API** (`pterodactylpanelapi`) | Brings back a Pterodactyl-style API (application and client endpoints) for tools built against the Pterodactyl API. |
+| **DiscordPlus** (`discordplus`) | Search users by Discord ID and optionally require Discord account linking. |
+| **WidgetBot** (`widgetbot`) | Embeds your Discord server in the panel through WidgetBot. |
+| **Minecraft Datapack Installer** (`minecraftdatapackinstaller`) | Install Vanilla Tweaks datapacks straight from the server page. |
+| **CryptIO** (`cryptio`) | Wrapper to encrypt and decrypt strings in the MythicalPanel encryption format. |
+| **DevUtils** (`devutils`) | Helper utilities for plugin developers. |
+| **Let It Snow** (`letitsnow`) | Snowfall effect across the panel. |
+| **Let's Celebrate** (`letscelebrate`) | New-year fireworks effect. |
+
+They are active as soon as the panel starts; configure them under **Admin → Plugins**. Their database tables are created by the normal `php cli migrate` run (Docker runs it on every start).
+
+### Translations and spells
+
+- **19 languages** in `backend/public/translations/`: Amharic, Czech, German, Spanish (Latin America), French, Croatian, Hungarian, Italian, Japanese, Khmer, Dutch, Polish, Portuguese, Romanian, Russian, Slovak, Serbian, Turkish, plus English. Choose which ones are offered in **Admin → Translations**.
+- **12 spells (eggs)** in `backend/storage/eggs/`: Minecraft (Vanilla, Forge, BungeeCord, Pumpkin), Rust, CS:GO, Team Fortress 2, Insurgency, custom Source engine games, discord.py bots, Mumble and TeamSpeak 3. Import them with **Admin → Spells → Import Spell**.
+
+### Rebuilding addon frontends
+
+The addon UIs are prebuilt into `Frontend/Components/<addon>/dist/`. After changing an addon's Vue source, rebuild with:
+
+```bash
+make addons            # or: scripts/build-addon-frontends.sh [addon ...]
+```
+
+---
+
+## 🐳 Deploying OrveX Panel
+
+The Docker workflows publish OrveX images to GHCR under `ghcr.io/tanmay712/orvexpanel-*`, and `docker-compose.yml` uses those images.
+
+1. **Publish images:** pushing to `develop` builds the `:dev` images (*Docker Dev* workflow). Pushing a version tag (for example `git tag v1.0.0 && git push origin v1.0.0`) builds `:latest` (*Docker Release* workflow). Make the packages public in GitHub → Packages if servers should pull them without logging in.
+2. **Run:** clone this repository on your server and run `docker compose up -d`.
+3. **Upgrading an existing install:** on startup the backend copies any bundled addon or translation that your persistent volumes don't have yet. Each addon is seeded only once, so addons you uninstall stay uninstalled and marketplace updates are never overwritten.
+
+Volume, container and database names keep their `featherpanel_*` names on purpose, so existing installs upgrade in place without losing data.
 
 ---
 
@@ -275,7 +324,7 @@ _Last updated: 2026-11-19T22:14:17.270Z_
 
 ## 🚀 Try it (stable installer)
 
-These commands install the latest **stable** build ideal for evaluation, not for running `develop` in production.
+These commands install the latest **stable upstream FeatherPanel** build. They do **not** install OrveX Panel; use the Docker steps in [Deploying OrveX Panel](#-deploying-orvex-panel) for that.
 
 <table>
 <tr>
@@ -315,7 +364,7 @@ powershell -ExecutionPolicy Bypass -Command "iwr https://get.featherpanel.com/st
 
 1. Register the first account it becomes the admin automatically.
 2. Follow the [configuration docs](https://docs.mythical.systems/docs).
-3. Report bugs on [GitHub Issues](https://github.com/mythicalltd/featherpanel/issues).
+3. Report OrveX-specific bugs on [GitHub Issues](https://github.com/tanmay712/FeatherPanel/issues).
 
 </details>
 
@@ -335,13 +384,13 @@ Contributions are welcome. Please read the [contributing guide](CONTRIBUTING.md)
 
 ## 📄 License
 
-FeatherPanel is licensed under the **[GNU Affero General Public License v3.0](../LICENSE)**.
+OrveX Panel is a modified version of [FeatherPanel](https://github.com/MythicalLTD/FeatherPanel) (Copyright © FeatherPanel Contributors / Mythical Systems) and, like the original, is licensed under the **[GNU Affero General Public License v3.0](../LICENSE)**. If you run a modified version for users over a network, the AGPL requires you to offer them its source code.
 
 ---
 
 <div align="center">
 
-<sub>Made with ❤️ by <a href="https://mythical.systems"><strong>Mythical Systems</strong></a></sub>
+<sub>OrveX Panel, built on FeatherPanel, made with ❤️ by <a href="https://mythical.systems"><strong>Mythical Systems</strong></a> and contributors</sub>
 
 <br /><br />
 
@@ -351,8 +400,8 @@ FeatherPanel is licensed under the **[GNU Affero General Public License v3.0](..
 &nbsp;·&nbsp;
 <a href="https://discord.mythical.systems">Discord</a>
 &nbsp;·&nbsp;
-<a href="https://github.com/mythicalltd/featherpanel/issues">Issues</a>
+<a href="https://github.com/tanmay712/FeatherPanel/issues">Issues</a>
 &nbsp;·&nbsp;
-<a href="https://github.com/mythicalltd/featherpanel/releases">Releases</a>
+<a href="https://github.com/tanmay712/FeatherPanel/releases">Releases</a>
 
 </div>
