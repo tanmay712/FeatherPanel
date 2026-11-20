@@ -81,13 +81,22 @@ make addons            # or: scripts/build-addon-frontends.sh [addon ...]
 
 ## 🐳 Deploying OrveX Panel
 
-The Docker workflows publish OrveX images to GHCR under `ghcr.io/tanmay712/orvexpanel-*`, and `docker-compose.yml` uses those images.
+**Option A: build on your server (no registry needed)**
 
-1. **Publish images:** pushing to `develop` builds the `:dev` images (*Docker Dev* workflow). Pushing a version tag (for example `git tag v1.0.0 && git push origin v1.0.0`) builds `:latest` (*Docker Release* workflow). Make the packages public in GitHub → Packages if servers should pull them without logging in.
-2. **Run:** clone this repository on your server and run `docker compose up -d`.
-3. **Upgrading an existing install:** on startup the backend copies any bundled addon or translation that your persistent volumes don't have yet. Each addon is seeded only once, so addons you uninstall stay uninstalled and marketplace updates are never overwritten.
+```bash
+git clone https://github.com/tanmay712/FeatherPanel.git orvexpanel && cd orvexpanel
+docker compose -f docker-compose.v2.git.yml up -d --build
+```
 
-Volume, container and database names keep their `featherpanel_*` names on purpose, so existing installs upgrade in place without losing data.
+**Option B: use prebuilt images from GHCR**
+
+The Docker workflows publish OrveX images as `ghcr.io/tanmay712/orvexpanel-*`, and `docker-compose.yml` uses those images.
+
+1. Enable workflows once under the repository's **Actions** tab (GitHub turns them off on forks by default).
+2. Pushing to `develop` builds the `:dev` images (*Docker Dev* workflow). Pushing a version tag such as `v1.0.0` (`git tag v1.0.0 && git push origin v1.0.0`) builds `:latest` (*Docker Release* workflow).
+3. Make the packages public under GitHub → **Packages** so servers can pull them without logging in, then run `docker compose up -d`.
+
+**Upgrading an existing install:** on startup the backend copies in any bundled addon or translation that your persistent volumes don't have yet. Each addon is seeded only once, so addons you uninstall stay uninstalled and marketplace updates are never overwritten. Volume, container and database names keep their `featherpanel_*` names on purpose, so existing installs upgrade in place without losing data.
 
 ---
 
