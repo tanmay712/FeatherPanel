@@ -1763,7 +1763,26 @@
             "ORVEX_NODE_UNREACHABLE": "The panel could not reach the OrveX node. Check that the node is running and its API port is open.",
             "INVALID_REGISTRATION_TOKEN": "This install command is invalid, expired or already used. Create a new one on the node page.",
             "INVALID_REGISTRATION": "The node sent invalid registration data.",
-            "REGISTRATION_FAILED": "The panel could not save the node registration."
+            "REGISTRATION_FAILED": "The panel could not save the node registration.",
+            "FREE_SERVERS_DISABLED": "Free servers are turned off.",
+            "FREE_SERVER_STACK_UNAVAILABLE": "This stack is not available for free servers.",
+            "FREE_SERVER_INVALID_NAME": "Give the server a name of up to 60 characters.",
+            "FREE_SERVER_STACK_MISCONFIGURED": "This stack is not set up correctly yet. Try another one or ask an administrator.",
+            "FREE_SERVER_LIMIT_REACHED": "You already have the maximum number of free servers.",
+            "FREE_SERVER_NO_CAPACITY": "There is no room for a free server right now. Try again later.",
+            "FREE_SERVER_CREATE_FAILED": "The server could not be created. Try again in a few minutes.",
+            "FREE_SERVER_NOT_FOUND": "Free server not found.",
+            "FREE_SERVER_NOT_STORED": "This server is not in storage.",
+            "FREE_SERVER_RESTORE_BLOCKED": "This server was suspended by staff. Contact support to get it back.",
+            "FREE_SERVER_RESTORE_FAILED": "The server could not be restored. Try again.",
+            "FREE_SERVER_SUSPENDED": "Restore the server before changing its stack.",
+            "FREE_SERVER_SAME_STACK": "The server already runs this stack.",
+            "FREE_SERVER_STACK_CHANGE_FAILED": "The stack could not be changed, so nothing was changed. Try again in a few minutes.",
+            "FREE_SERVER_SPELL_NOT_ALLOWED": "Free servers can only switch to another free server stack.",
+            "FREE_SERVERS_UNKNOWN_NODE": "One of the picked nodes no longer exists.",
+            "FREE_SERVERS_UNKNOWN_SPELL": "The spell picked for a stack no longer exists.",
+            "FREE_SERVERS_NOT_READY": "Pick at least one node and one stack before turning free servers on.",
+            "FREE_SERVERS_SAVE_FAILED": "Failed to save the free server settings."
         },
         "global": {}
     },
@@ -4102,7 +4121,8 @@
             "inactiveServers": "Inactive Servers",
             "observability": "Observability",
             "virtualServersVps": "Virtual Servers (VPS)",
-            "vpsNodes": "Nodes (VPS)"
+            "vpsNodes": "Nodes (VPS)",
+            "freeServers": "Free servers"
         }
     },
     "adminWingsBackups": {
@@ -4541,7 +4561,9 @@
                 "webspace_backup_completed": "Web hosting backup completed",
                 "webspace_backup_failed": "Web hosting backup failed",
                 "webspace_limit": "Web hosting near its limit",
-                "webspace_malware": "Malware found"
+                "webspace_malware": "Malware found",
+                "free_server_stopped": "Free server stopped",
+                "free_server_stored": "Free server moved to storage"
             },
             "bodies": {
                 "ticket_reply": "New reply on \"{ticket}\".",
@@ -4565,7 +4587,9 @@
                 "webspace_backup_completed": "A backup of {webspace} finished.",
                 "webspace_backup_failed": "A backup of {webspace} failed: {error}",
                 "webspace_limit": "{webspace} uses {percent}% of its {resource} limit.",
-                "webspace_malware": "The last scan of {webspace} found {files} infected file(s)."
+                "webspace_malware": "The last scan of {webspace} found {files} infected file(s).",
+                "free_server_stopped": "{server} was stopped after {days} days without a login. Start it again from the panel.",
+                "free_server_stored": "{server} moved to storage after {days} days without a login. Nothing was deleted: open it to restore it."
             },
             "metrics": {
                 "cpu": "CPU",
@@ -21267,5 +21291,218 @@
                 }
             }
         }
+    },
+    "freeServers": {
+        "create_button": "Create server",
+        "created": "{name} is being set up. It will be ready in a minute.",
+        "create_failed": "The server could not be created.",
+        "page": {
+            "title": "Create a server",
+            "description": "Free hosting for your bots, apps and databases.",
+            "back": "Back to servers"
+        },
+        "step1": {
+            "title": "What should it run?",
+            "subtitle": "Go with the language your code is written in. You can change it later in the server’s settings."
+        },
+        "groups": {
+            "runtime": "Runtimes",
+            "database": "Databases"
+        },
+        "stacks": {
+            "nodejs": {
+                "title": "Node.js",
+                "description": "Discord bots, APIs"
+            },
+            "python": {
+                "title": "Python",
+                "description": "Bots and scripts"
+            },
+            "bun": {
+                "title": "Bun",
+                "description": "Fast JS and TypeScript"
+            },
+            "java": {
+                "title": "Java",
+                "description": "JDA bots, JVM apps"
+            },
+            "csharp": {
+                "title": "C#",
+                "description": ".NET bots and apps"
+            },
+            "rust": {
+                "title": "Rust",
+                "description": "Compiled binaries"
+            },
+            "lua": {
+                "title": "Lua",
+                "description": "Small scripts"
+            },
+            "mongodb": {
+                "title": "MongoDB",
+                "description": "Document store"
+            },
+            "mariadb": {
+                "title": "MariaDB",
+                "description": "MySQL compatible"
+            },
+            "postgresql": {
+                "title": "PostgreSQL",
+                "description": "Relational SQL"
+            },
+            "redis": {
+                "title": "Redis",
+                "description": "Cache and queues"
+            }
+        },
+        "step2": {
+            "title": "Name it",
+            "name": "Name",
+            "name_placeholder": "My awesome bot",
+            "shuffle": "Pick a random name",
+            "name_help": "Anything you like. You can rename it later.",
+            "description": "Description",
+            "optional": "optional",
+            "description_placeholder": "What is it for?"
+        },
+        "summary": {
+            "label": "Summary",
+            "untitled": "Untitled server",
+            "no_stack": "No stack picked yet",
+            "memory": "Memory",
+            "disk": "Disk",
+            "cpu": "CPU",
+            "price": "Price",
+            "free": "Free",
+            "create": "Create server",
+            "creating": "Creating…"
+        },
+        "notes": {
+            "inactivity": "Log in at least once every {period} to keep it running. After that it’s stopped, and after {store} days it moves to storage. Nothing gets deleted.",
+            "period_week": "week",
+            "period_weeks": "{count} weeks",
+            "period_day": "day",
+            "period_days": "{count} days",
+            "ads": "Free servers are paid for by ads, so keep your adblocker off on the panel.",
+            "rules": "No selfbots, nukebots or spam tools. Those get the whole account banned."
+        },
+        "state": {
+            "disabled_title": "Free servers are not available",
+            "disabled_body": "Free servers are turned off on this panel right now.",
+            "no_stacks": "No stacks can be picked right now. Check back later.",
+            "limit_reached": "You already have {used} of {max} free servers. Delete one to create another.",
+            "view_servers": "View your servers",
+            "no_capacity": "There is no room for a free server right now. Try again later.",
+            "load_failed": "Could not load the free server options."
+        },
+        "stack_card": {
+            "title": "Stack",
+            "description": "Switch this free server to another runtime or database. It is reinstalled with the new stack; your files stay unless the new install replaces them.",
+            "current": "Current",
+            "none": "No other stacks are available right now.",
+            "confirm_title": "Switch to {stack}?",
+            "confirm_body": "The server is reinstalled with {stack}. Database stacks get a new password. Files stay in place unless the install replaces them.",
+            "confirm": "Switch stack",
+            "changed": "Switching to {stack}. The reinstall is running.",
+            "failed": "The stack could not be changed."
+        },
+        "stored": {
+            "badge": "In storage",
+            "title": "This server is in storage",
+            "body": "It was moved to storage because nobody logged in for a while. Nothing was deleted. Restore it to start it again.",
+            "body_subuser": "It was moved to storage because its owner did not log in for a while. Nothing was deleted; the owner can restore it.",
+            "staff": "This server was suspended by staff. Contact support to get it back.",
+            "restore": "Restore server",
+            "restoring": "Restoring…",
+            "restored": "Your server is back and starting.",
+            "restored_not_started": "Your server is back. Start it from the console.",
+            "restore_failed": "The server could not be restored."
+        }
+    },
+    "adminFreeServers": {
+        "title": "Free servers",
+        "subtitle": "Let users create small free servers for bots, apps and databases.",
+        "tabs": {
+            "settings": "Settings",
+            "servers": "Free servers"
+        },
+        "loadFailed": "Could not load the free server settings.",
+        "saved": "Free server settings saved.",
+        "saveFailed": "Could not save the free server settings.",
+        "installSpells": "Install bundled spells",
+        "installed": "Spells set up: {imported} imported, {reused} already there, {failed} failed.",
+        "installFailed": "Could not set up the bundled spells.",
+        "sections": {
+            "general": "General",
+            "resources": "Resources per server",
+            "nodes": "Nodes",
+            "stacks": "Stacks",
+            "inactivity": "Inactivity"
+        },
+        "fields": {
+            "enabled": "Free servers",
+            "max_per_user": "Free servers per user",
+            "show_ads_note": "Show the ads note",
+            "memory": "Memory",
+            "disk": "Disk",
+            "cpu": "CPU",
+            "swap": "Swap",
+            "io": "Block IO weight",
+            "database_limit": "Databases",
+            "backup_limit": "Backups",
+            "allocation_limit": "Ports (including the main one)",
+            "inactivity_enabled": "Stop and store inactive servers",
+            "stop_after_days": "Stop after no login for",
+            "store_after_days": "Move to storage after no login for"
+        },
+        "hints": {
+            "enabled": "Users get a Create server button on their servers page.",
+            "ads": "Only shows the note on the create page. Paste your ad code into the custom JavaScript setting (Settings > Other).",
+            "resources": "Every free server gets exactly these limits.",
+            "nodes": "Free servers go to the emptiest picked node that has room and a free port.",
+            "stacks": "Each stack uses the spell picked here. Stacks without a spell are not offered.",
+            "install": "Imports the bundled runtimes and databases into a \"Free servers\" realm and picks them below.",
+            "inactivity": "Based on the owner’s last login. Nothing is ever deleted.",
+            "store": "Stored servers are suspended with their files kept. The owner restores them with one click."
+        },
+        "noNodes": "Add a node first.",
+        "nodeStats": "{free} free ports · {used} of {total} MB memory used",
+        "maintenance": "Maintenance",
+        "notOffered": "Not offered",
+        "problems": {
+            "spell_missing": "The picked spell no longer exists.",
+            "variables_missing": "The spell has a required variable without a default value."
+        },
+        "daysSuffix": "days",
+        "search": "Search servers or owners",
+        "stageFilter": "Stage",
+        "allStages": "All stages",
+        "stages": {
+            "running": "Running",
+            "stopped": "Stopped",
+            "stored": "In storage"
+        },
+        "steps": {
+            "stop": "Stops on the next check",
+            "store": "Moves to storage on the next check",
+            "clear": "Owner is back: clears on the next check",
+            "reset": "Unsuspended by staff: resets on the next check"
+        },
+        "stopsAt": "Stops {time}",
+        "storesAt": "Moves to storage {time}",
+        "idleDays": "{count} days without login",
+        "columns": {
+            "server": "Server",
+            "stack": "Stack",
+            "lastLogin": "Owner activity",
+            "stage": "Stage"
+        },
+        "emptyTitle": "No free servers yet",
+        "emptyDescription": "Servers users create from the free tier show up here.",
+        "runNow": "Run check now",
+        "ran": "Inactivity check done: {applied} changed, {failed} failed.",
+        "runFailed": "Could not run the inactivity check.",
+        "confirmRunTitle": "Run the inactivity check now?",
+        "confirmRunDescription": "Free servers past their inactivity limits are stopped or moved to storage now, exactly like the hourly task does."
     }
 }

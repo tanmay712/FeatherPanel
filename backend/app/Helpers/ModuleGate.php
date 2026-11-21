@@ -71,6 +71,8 @@ class ModuleGate
         '/api/admin/subdomains' => self::GAME,
         '/api/admin/pterodactyl-importer' => self::GAME,
         '/api/admin/analytics/servers' => self::GAME,
+        '/api/user/free-servers' => self::GAME,
+        '/api/admin/free-servers' => self::GAME,
         '/api/user/webspaces' => self::WEB,
         '/api/admin/webspaces' => self::WEB,
         '/api/admin/web-nodes' => self::WEB,

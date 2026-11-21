@@ -48,6 +48,8 @@ export interface AppSettings {
     server_allow_user_auto_start?: string;
     server_allow_user_server_deletion: string;
     server_hide_ips: string;
+    /** Users can create free servers from the servers page (Admin > Free servers). */
+    free_servers_enabled?: string;
     smtp_enabled: string;
     status_page_enabled: string;
     maintenance_mode_enabled?: string;

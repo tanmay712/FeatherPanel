@@ -72,6 +72,8 @@ type InboxKind =
     | 'webspace_malware'
     | 'node_alert'
     | 'server_inactive'
+    | 'free_server_stopped'
+    | 'free_server_stored'
     | 'announcement';
 
 export interface InboxItem {
@@ -115,6 +117,8 @@ const KIND_ICONS: Record<InboxKind, { icon: ComponentType<LucideProps>; tone: st
     webspace_malware: { icon: ShieldAlert, tone: 'text-red-500 bg-red-500/10' },
     node_alert: { icon: ServerCrash, tone: 'text-red-500 bg-red-500/10' },
     server_inactive: { icon: Hourglass, tone: 'text-amber-500 bg-amber-500/10' },
+    free_server_stopped: { icon: Hourglass, tone: 'text-amber-500 bg-amber-500/10' },
+    free_server_stored: { icon: Archive, tone: 'text-orange-500 bg-orange-500/10' },
     announcement: { icon: Megaphone, tone: 'text-sky-500 bg-sky-500/10' },
 };
 
@@ -141,6 +145,8 @@ const KIND_TITLES: Record<InboxKind, string> = {
     webspace_malware: 'navbar.inbox.kinds.webspace_malware',
     node_alert: 'navbar.inbox.kinds.node_alert',
     server_inactive: 'navbar.inbox.kinds.server_inactive',
+    free_server_stopped: 'navbar.inbox.kinds.free_server_stopped',
+    free_server_stored: 'navbar.inbox.kinds.free_server_stored',
     announcement: 'navbar.inbox.kinds.announcement',
 };
 
@@ -167,6 +173,8 @@ const KIND_BODIES: Record<Exclude<InboxKind, 'announcement'>, string> = {
     webspace_malware: 'navbar.inbox.bodies.webspace_malware',
     node_alert: 'navbar.inbox.bodies.node_alert',
     server_inactive: 'navbar.inbox.bodies.server_inactive',
+    free_server_stopped: 'navbar.inbox.bodies.free_server_stopped',
+    free_server_stored: 'navbar.inbox.bodies.free_server_stored',
 };
 
 function isKnownKind(kind: string): kind is InboxKind {

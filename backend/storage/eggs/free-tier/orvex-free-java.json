@@ -1,0 +1,48 @@
+{
+    "_comment": "Bundled with OrveX Panel for free servers. Based on pelican-eggs/generic java/egg-pterodactyl-java-generic.json at eec3d4b153cc (MIT, see LICENSE-pelican-eggs.md). Changes: Java 21 is the default image, the Java 16 image tag is fixed, JARFILE defaults to app.jar; the server shows as running once the app starts.",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": null
+    },
+    "uuid": "07e0c563-7f87-4984-8ab0-4cfc5b5d6f02",
+    "name": "Java",
+    "exported_at": "2026-01-01T21:42:37+00:00",
+    "author": "sneaky@sneakyhub.com",
+    "description": "Creates a container that runs java.",
+    "features": [],
+    "docker_images": {
+        "Java 21": "ghcr.io/pelican-eggs/yolks:java_21",
+        "Java 17": "ghcr.io/pelican-eggs/yolks:java_17",
+        "Java 11": "ghcr.io/pelican-eggs/yolks:java_11",
+        "Java 8": "ghcr.io/pelican-eggs/yolks:java_8",
+        "Java 19": "ghcr.io/pelican-eggs/yolks:java_19",
+        "Java 16": "ghcr.io/pelican-eggs/yolks:java_16"
+    },
+    "file_denylist": [],
+    "startup": "echo Starting your app; java -Dterminal.jline=false -Dterminal.ansi=true -jar {{JARFILE}}",
+    "config": {
+        "files": "[]",
+        "startup": "{\n    \"done\": [\n        \"Starting your app\"\n    ]\n}",
+        "logs": "[]",
+        "stop": "^C"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/bash\n# Java Installation Script\n#\n# Server Files: /mnt/server\nPROJECT=java\n\ncd /mnt/server",
+            "container": "ghcr.io/pelican-eggs/yolks:debian",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "JAR FILE",
+            "description": "",
+            "env_variable": "JARFILE",
+            "default_value": "app.jar",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:50",
+            "field_type": "text"
+        }
+    ]
+}

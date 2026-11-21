@@ -988,6 +988,17 @@ class ServerUserController
             $server['node']['public_ip_v6']
         );
 
+        // Free servers: the stack and where the server is in the inactivity flow (stopped, in storage).
+        $freeServer = \App\Chat\FreeServer::findForServer((int) $server['id']);
+        $server['free_server'] = $freeServer === null ? null : [
+            'stack' => (string) $freeServer['stack'],
+            'stage' => $freeServer['stage'] !== null && $freeServer['stage'] !== '' ? (string) $freeServer['stage'] : null,
+            'stage_at' => $freeServer['stage_at'],
+            'restorable' => $freeServer['stage'] === \App\Chat\FreeServer::STAGE_STORED
+                && ((int) $freeServer['suspended'] === 0 || \App\Services\FreeServers\FreeServerInactivity::isStorageSuspension($freeServer)),
+            'is_owner' => (int) $server['owner_id'] === (int) $user['id'],
+        ];
+
         $retention = BackupFifoEviction::retentionMetaForServer($server);
         $server['panel_backup_retention_mode'] = $retention['panel_backup_retention_mode'];
         $server['backup_retention_mode_override'] = $retention['backup_retention_mode_override'];
@@ -1247,6 +1258,13 @@ class ServerUserController
         if (isset($data['spell_id'])) {
             $newSpellId = (int) $data['spell_id'];
             $isSpellChanging = ($newSpellId !== $oldSpellId && $newSpellId > 0);
+        }
+
+        // Free servers may only switch to another free server stack (spells mapped in the free
+        // servers settings), whatever the general spell change settings allow.
+        if ($isSpellChanging && \App\Chat\FreeServer::findForServer((int) $server['id']) !== null
+            && \App\Services\FreeServers\FreeServerPolicy::stackForSpell((int) $data['spell_id']) === null) {
+            return ApiResponse::error('Free servers can only switch to another free server stack', 'FREE_SERVER_SPELL_NOT_ALLOWED', 403);
         }
 
         // Check if egg/spell changes are allowed globally
@@ -1590,6 +1608,14 @@ class ServerUserController
             $updated = Server::updateServerById($server['id'], $updateData);
             if (!$updated) {
                 return ApiResponse::error('Failed to update server', 'UPDATE_FAILED', 500);
+            }
+        }
+
+        if ($spellChanged) {
+            $freeServer = \App\Chat\FreeServer::findForServer((int) $server['id']);
+            $freeStack = $freeServer !== null ? \App\Services\FreeServers\FreeServerPolicy::stackForSpell((int) $updateData['spell_id']) : null;
+            if ($freeStack !== null) {
+                \App\Chat\FreeServer::setStack((int) $freeServer['id'], $freeStack);
             }
         }
 

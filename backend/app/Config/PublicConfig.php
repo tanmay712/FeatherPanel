@@ -189,6 +189,7 @@ class PublicConfig extends ConfigFactory
             ConfigInterface::SERVER_AUTO_START_STAGGER_SECONDS => '5',
             ConfigInterface::SERVER_AUTO_START_INITIAL_DELAY_SECONDS => '15',
             ConfigInterface::SERVER_ALLOW_USER_AUTO_START => 'false',
+            ConfigInterface::FREE_SERVERS_ENABLED => 'false',
             ConfigInterface::SERVER_HIDE_IPS => 'false',
             ConfigInterface::FILE_TRASH_ENABLED => 'false',
             ConfigInterface::FILE_TRASH_MAX_SIZE_MB => '512',

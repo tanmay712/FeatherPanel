@@ -178,6 +178,22 @@ Configuration lives in `/etc/orvex-node/config.json` (templates in `templates.js
 
 ---
 
+## 🎁 Free servers
+
+Give every user a small free server for their bot, app or database. Turn it on in **Admin → Free servers**, pick your Wings nodes and click **Install bundled spells**. Users then get a **Create server** button on their servers page and dashboard.
+
+| Step | What users see |
+| --- | --- |
+| **01 What should it run?** | Runtimes: Node.js, Python, Bun, Java, C#, Rust and Lua. Databases: MongoDB, MariaDB, PostgreSQL and Redis. |
+| **02 Name it** | A name (with a random-name button), an optional description and a summary card: 512 MB memory, 1 GB disk, 35% CPU, **Free**. |
+
+- **Nothing gets deleted.** After 14 days without a login the server is stopped. After 30 days it moves to storage (suspended, with its files and port kept), and the owner gets it back with one click. Both limits can be changed, and the general inactive-server cleanup leaves free servers alone.
+- **You set the limits:** resources, databases, backups, ports and servers per user. You also pick the nodes (the emptiest one with room goes first, and another node is tried if one fails) and the spell behind each stack.
+- **Stacks can be changed later** from the server's **Settings**. Free servers can only switch to other free stacks.
+- **Ads:** the create page can show an "ads pay for free servers" note. No ad network is built in: paste your ad code into the custom JavaScript setting (Admin → Settings → Other).
+
+---
+
 ## 🧩 Everything included
 
 <table>
@@ -185,7 +201,7 @@ Configuration lives in `/etc/orvex-node/config.json` (templates in `templates.js
 <td width="33%" valign="top">
 
 ### 🎮 Game servers
-Wings nodes, file manager, console, schedules, databases, subusers and backups. **12 bundled spells**: Minecraft (Vanilla, Forge, BungeeCord, Pumpkin), Rust, CS:GO, TF2, Insurgency, Source games, discord.py, Mumble and TeamSpeak 3.
+Wings nodes, file manager, console, schedules, databases, subusers and backups, plus optional **free servers** for your users. **12 bundled spells**: Minecraft (Vanilla, Forge, BungeeCord, Pumpkin), Rust, CS:GO, TF2, Insurgency, Source games, discord.py, Mumble and TeamSpeak 3.
 
 </td>
 <td width="33%" valign="top">

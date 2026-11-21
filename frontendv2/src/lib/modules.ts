@@ -67,6 +67,7 @@ const MODULE_ROUTES: { prefix: string; module: PanelModule }[] = [
     { prefix: '/admin/subdomains', module: 'game' },
     { prefix: '/admin/pterodactyl-importer', module: 'game' },
     { prefix: '/admin/analytics/servers', module: 'game' },
+    { prefix: '/admin/free-servers', module: 'game' },
     { prefix: '/webspace/', module: 'web' },
     { prefix: '/dashboard/webspaces', module: 'web' },
     { prefix: '/webspaces', module: 'web' },

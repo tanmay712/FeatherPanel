@@ -163,6 +163,17 @@ export interface ServerRuntimeInfo {
     checked_at?: number;
 }
 
+/** Free server state of a server: its stack and where it is in the inactivity flow. */
+export interface ServerFreeServerInfo {
+    stack: string;
+    /** null while running, `stopped` after the first period without a login, `stored` after the second. */
+    stage: 'stopped' | 'stored' | null;
+    stage_at: string | null;
+    /** The owner can bring it back from storage. */
+    restorable: boolean;
+    is_owner: boolean;
+}
+
 export interface Server {
     id: number;
     uuid: string;
@@ -185,6 +196,8 @@ export interface Server {
     suspension_reason?: string | null;
     /** When set, the server is removed or suspended after this date. */
     expires_at?: string | null;
+    /** Set for servers created as free servers (server details only). */
+    free_server?: ServerFreeServerInfo | null;
     user_id: number;
     owner_id: number;
     node_id: number;

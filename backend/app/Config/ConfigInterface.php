@@ -320,6 +320,11 @@ interface ConfigInterface
     /** When true, server owners/subusers may toggle auto_start from server settings. */
     public const SERVER_ALLOW_USER_AUTO_START = 'server_allow_user_auto_start';
     public const SERVER_HIDE_IPS = 'server_hide_ips';
+    /**
+     * Public mirror of the free servers switch (the full policy is the free_servers_policy setting).
+     * Lets the panel show the Create server button without another request.
+     */
+    public const FREE_SERVERS_ENABLED = 'free_servers_enabled';
     /** When false, lifecycle hook UI and execution are disabled (default off until enabled by an administrator). */
     public const SERVER_LIFECYCLE_HOOKS_ENABLED = 'server_lifecycle_hooks_enabled';
     /**

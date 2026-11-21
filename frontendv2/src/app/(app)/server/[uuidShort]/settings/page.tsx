@@ -25,6 +25,7 @@ import { ServerPageTips } from '@/components/server/ServerPageTips';
 import { PageCard } from '@/components/featherui/PageCard';
 import { CrashAutoRestartSetting } from '@/components/server/ServerCrashCard';
 import { HideIpsToggle } from '@/components/preferences/HideIpsToggle';
+import { FreeServerStackCard } from '@/components/free-servers/FreeServerStackCard';
 import { Switch } from '@/components/ui/switch';
 import {
     Save,
@@ -478,6 +479,10 @@ export default function ServerSettingsPage() {
                             )}
                         </div>
                     </PageCard>
+
+                    {server?.free_server?.is_owner && (
+                        <FreeServerStackCard uuidShort={uuidShort} info={server.free_server} onChanged={fetchData} />
+                    )}
 
                     {canEditBackupPolicy && (
                         <PageCard

@@ -251,6 +251,8 @@ class WebPushNotifier
             'storage_disconnected' => 'Backup storage disconnected',
             'node_alert' => 'Node alert',
             'server_inactive' => 'Inactive server',
+            'free_server_stopped' => 'Free server stopped',
+            'free_server_stored' => 'Free server moved to storage',
             'webspace_installed' => 'Web hosting ready',
             'webspace_install_failed' => 'Web hosting install failed',
             'webspace_backup_completed' => 'Web hosting backup completed',

@@ -197,6 +197,12 @@ class ExternalNotifier
         if ($kind === UserNotification::KIND_WEBSPACE_MALWARE && isset($data['count'])) {
             $lines[] = 'Infected files: ' . $data['count'];
         }
+        if ($kind === UserNotification::KIND_FREE_SERVER_STOPPED && isset($data['days'])) {
+            $lines[] = 'Stopped after ' . $data['days'] . ' days without a login. Log in and start it again.';
+        }
+        if ($kind === UserNotification::KIND_FREE_SERVER_STORED && isset($data['days'])) {
+            $lines[] = 'Moved to storage after ' . $data['days'] . ' days without a login. Nothing was deleted: restore it from your servers.';
+        }
         if (!empty($data['vds_name'])) {
             $lines[] = 'VDS: ' . $data['vds_name'];
         }
