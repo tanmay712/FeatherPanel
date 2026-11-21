@@ -177,7 +177,7 @@ class ForgotPasswordController
             ForgotPassword::send([
                 'email' => $userInfo['email'],
                 'subject' => 'Reset Password Request',
-                'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
+                'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
                 'app_url' => $config->getSetting(ConfigInterface::APP_URL, 'https://featherpanel.mythical.systems'),
                 'first_name' => $userInfo['first_name'],
                 'last_name' => $userInfo['last_name'],

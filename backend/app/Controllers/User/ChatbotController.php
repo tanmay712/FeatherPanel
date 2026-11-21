@@ -472,7 +472,7 @@ class ChatbotController
 
         return [
             'response' => $result['response'],
-            'model' => $result['model'] ?? 'FeatherPanel AI',
+            'model' => $result['model'] ?? 'OrveX Panel AI',
             'conversation_id' => $conversation['id'],
             'user_message_id' => $userMessageId,
             'assistant_message_id' => $assistantMessageId,

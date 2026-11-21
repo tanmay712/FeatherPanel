@@ -17,10 +17,10 @@ See the LICENSE file or <https://www.gnu.org/licenses/>.
 
 import { Info, ShieldAlert } from 'lucide-react';
 import { PageCard } from '@/components/featherui/PageCard';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 
 export function TutorialVM() {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
 
     return (
         <PageCard title={t('admin.vdsNodes.tutorial.vm.title')} icon={Info} className='mt-6'>
@@ -133,9 +133,9 @@ qm set 9000 --serial0 socket --vga serial0`}</code>
                     <span className='text-foreground font-semibold'>
                         {t('ui.admin.vdsNodes.edit.tutorialVM.doNotRemoveTheCloudInitDrive')}
                     </span>{' '}
-                    - it is required for FeatherPanel to inject IP, user, password and SSH keys. Finally, right‑click
-                    the VM in the tree, choose <code>{t('ui.admin.vdsNodes.edit.tutorialVM.convertToTemplate')}</code>{' '}
-                    and confirm. This gives you a ready‑to‑use cloud-init template for that OS.
+                    - it is required for OrveX Panel to inject IP, user, password and SSH keys. Finally, right‑click the
+                    VM in the tree, choose <code>{t('ui.admin.vdsNodes.edit.tutorialVM.convertToTemplate')}</code> and
+                    confirm. This gives you a ready‑to‑use cloud-init template for that OS.
                 </p>
                 <p className='text-xs'>
                     {t('ui.admin.vdsNodes.edit.tutorialVM.importantBeforeConvertingStartTheVM')}
@@ -218,9 +218,9 @@ qm set 9001 --serial0 socket --vga serial0`}</code>
                     <span className='text-foreground font-semibold'>
                         {t('ui.admin.vdsNodes.edit.tutorialVM.doNotRemoveTheCloudInitDrive')}
                     </span>{' '}
-                    - it is required for FeatherPanel to inject IP, user, password and SSH keys. Finally, right‑click
-                    the VM in the tree, choose <code>{t('ui.admin.vdsNodes.edit.tutorialVM.convertToTemplate')}</code>{' '}
-                    and confirm. This gives you a ready‑to‑use cloud-init template for that OS.
+                    - it is required for OrveX Panel to inject IP, user, password and SSH keys. Finally, right‑click the
+                    VM in the tree, choose <code>{t('ui.admin.vdsNodes.edit.tutorialVM.convertToTemplate')}</code> and
+                    confirm. This gives you a ready‑to‑use cloud-init template for that OS.
                 </p>
                 <p className='text-xs'>
                     {t('ui.admin.vdsNodes.edit.tutorialVM.importantBeforeConvertingBootTheVM')}{' '}
@@ -232,7 +232,7 @@ qm set 9001 --serial0 socket --vga serial0`}</code>
                 <p className='font-medium'>{t('admin.vdsNodes.tutorial.vm.step4')}</p>
                 <p>
                     {t('ui.admin.vdsNodes.edit.tutorialVM.inYourPlansProductsUseTemplate')} <code>9000</code> for Debian
-                    13 and <code>9001</code> for Ubuntu 24.04. FeatherPanel will clone these templates, apply cloud-init
+                    13 and <code>9001</code> for Ubuntu 24.04. OrveX Panel will clone these templates, apply cloud-init
                     (IP, user, password / SSH keys) and the VNC Console button will open the Proxmox noVNC URL directly.
                     These steps are written for official Debian/Ubuntu cloud-init images, but the same pattern generally
                     works for other distros that ship proper cloud-init images and UEFI support.

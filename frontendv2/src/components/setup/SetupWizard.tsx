@@ -115,6 +115,7 @@ const STEP_KEYS: Partial<Record<StepId, string[]>> = {
         'module_game_enabled',
         'module_web_enabled',
         'module_vds_enabled',
+        'module_vps_enabled',
         'ticket_system_enabled',
         'knowledgebase_enabled',
         'status_page_enabled',
@@ -145,6 +146,12 @@ const MODULES = [
         key: 'module_vds_enabled',
         title: 'setup_wizard.modules.vds_title',
         body: 'setup_wizard.modules.vds_body',
+        defaultOn: true,
+    },
+    {
+        key: 'module_vps_enabled',
+        title: 'setup_wizard.modules.vps_title',
+        body: 'setup_wizard.modules.vps_body',
         defaultOn: true,
     },
     {
@@ -461,7 +468,7 @@ export function SetupWizard() {
 
     const isLast = step.id === 'done';
     const progress = Math.round((stepIndex / (STEPS.length - 1)) * 100);
-    const logoUrl = settings?.app_logo_dark?.trim() || settings?.app_logo_white?.trim() || '/logo.png';
+    const logoUrl = settings?.app_logo_dark?.trim() || settings?.app_logo_white?.trim() || '/branding/orvex-logo.png';
     const premiumInactive = usePremiumInactive();
 
     return (

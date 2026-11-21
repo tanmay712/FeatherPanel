@@ -143,7 +143,7 @@ export default function ServerFilesIDEPage({
     const { settings } = useSettings();
 
     const appName = settings?.app_name || 'Panel';
-    const appLogo = settings?.app_logo_dark || settings?.app_logo_white || '/assets/logo.png';
+    const appLogo = settings?.app_logo_dark || settings?.app_logo_white || '/branding/orvex-logo.png';
 
     const fullPath = useMemo(
         () => (currentFileName ? joinPath(currentFileDirectory || '/', currentFileName) : ''),

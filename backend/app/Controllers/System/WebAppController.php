@@ -58,9 +58,9 @@ class WebAppController
         $config = App::getInstance(true)->getConfig();
         $enabled = $config->getSetting(ConfigInterface::APP_PWA_ENABLED, 'false') === 'true';
 
-        $appName = trim((string) $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'));
+        $appName = trim((string) $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'));
         if ($appName === '') {
-            $appName = 'FeatherPanel';
+            $appName = 'OrveX Panel';
         }
 
         $shortName = trim((string) $config->getSetting(ConfigInterface::APP_PWA_SHORT_NAME, ''));
@@ -200,7 +200,7 @@ class WebAppController
     {
         $candidate = trim($primary) !== '' ? trim($primary) : trim($fallback);
         if ($candidate === '') {
-            $candidate = '/assets/logo.png';
+            $candidate = '/branding/orvex-logo.png';
         }
 
         if (str_starts_with($candidate, 'http://') || str_starts_with($candidate, 'https://')) {

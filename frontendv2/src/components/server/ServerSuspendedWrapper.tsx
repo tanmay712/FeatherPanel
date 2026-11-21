@@ -20,15 +20,28 @@ import { useServer } from '@/contexts/ServerContext';
 import { useTranslation } from '@/contexts/TranslationContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { SuspendedState } from '@/components/featherui/SuspendedState';
+import { FreeServerStoredState } from '@/components/free-servers/FreeServerStoredState';
 
 interface ServerSuspendedWrapperProps {
     children: ReactNode;
 }
 
 export function ServerSuspendedWrapper({ children }: ServerSuspendedWrapperProps) {
-    const { server } = useServer();
+    const { server, refreshServer } = useServer();
     const { t } = useTranslation();
     const { settings } = useSettings();
+
+    // A free server moved to storage after its owner stopped logging in: offer the restore.
+    if (server?.suspended === 1 && server.free_server?.stage === 'stored') {
+        return (
+            <FreeServerStoredState
+                uuidShort={server.uuidShort}
+                name={server.name}
+                info={server.free_server}
+                onRestored={refreshServer}
+            />
+        );
+    }
 
     if (server?.suspended === 1) {
         return (

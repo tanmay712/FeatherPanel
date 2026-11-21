@@ -17,8 +17,8 @@ import type { MetadataRoute } from 'next';
 import { settingsApi } from '@/lib/settings-api';
 
 function resolveIcon(primary?: string, fallback?: string): string {
-    const value = (primary || fallback || '/assets/logo.png').trim();
-    return value || '/assets/logo.png';
+    const value = (primary || fallback || '/branding/orvex-logo.png').trim();
+    return value || '/branding/orvex-logo.png';
 }
 
 function guessImageType(url: string): string {

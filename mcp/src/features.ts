@@ -67,7 +67,7 @@ export async function resolvePanelFeatures(
     return featuresFromSettings(settings);
   } catch (error) {
     console.error(
-      "FeatherPanel MCP: failed to load public settings; enabling all modules:",
+      "OrveX Panel MCP: failed to load public settings; enabling all modules:",
       error instanceof Error ? error.message : error,
     );
     return { ...DEFAULT_PANEL_FEATURES };

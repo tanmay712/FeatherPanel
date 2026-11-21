@@ -687,7 +687,7 @@ class UserDataExportService
         };
 
         try {
-            $write('-- FeatherPanel SQL Dump');
+            $write('-- OrveX Panel SQL Dump');
             $write('-- Database: ' . $dbName);
             $write('-- Generated: ' . gmdate('Y-m-d H:i:s') . ' UTC');
             $write('-- Host: ' . $host . ':' . $port);

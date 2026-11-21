@@ -15,7 +15,7 @@ See the LICENSE file or <https://www.gnu.org/licenses/>.
 
 'use client';
 
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 import { PageCard } from '@/components/featherui/PageCard';
 import { Button } from '@/components/featherui/Button';
 import { HeadlessSelect } from '@/components/ui/headless-select';
@@ -53,7 +53,7 @@ export function NetworkTab({
     onSave,
     saving,
 }: NetworkTabProps) {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
     const bridgeOptions = (bridges.length ? bridges : ['vmbr0']).map((b) => ({ id: b, name: b }));
 
     return (

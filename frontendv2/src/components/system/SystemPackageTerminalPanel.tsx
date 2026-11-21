@@ -50,12 +50,12 @@ export const SystemPackageTerminalPanel = forwardRef<SystemPackageTerminalPanelR
         }, []);
 
         const handleStarted = useCallback((packageId: string) => {
-            terminalRef.current?.writeln(`\u001b[33m[FeatherPanel] ${packageId} started...\u001b[0m`);
+            terminalRef.current?.writeln(`\u001b[33m[OrveX Panel] ${packageId} started...\u001b[0m`);
         }, []);
 
         const handleCompleted = useCallback(
             (packageId: string) => {
-                terminalRef.current?.writeln(`\u001b[32m[FeatherPanel] ${packageId} completed.\u001b[0m`);
+                terminalRef.current?.writeln(`\u001b[32m[OrveX Panel] ${packageId} completed.\u001b[0m`);
                 onCompleted?.(packageId);
             },
             [onCompleted],
@@ -63,7 +63,7 @@ export const SystemPackageTerminalPanel = forwardRef<SystemPackageTerminalPanelR
 
         const handleFailed = useCallback(
             (packageId: string, message: string) => {
-                terminalRef.current?.writeln(`\u001b[31m[FeatherPanel] ${packageId} failed: ${message}\u001b[0m`);
+                terminalRef.current?.writeln(`\u001b[31m[OrveX Panel] ${packageId} failed: ${message}\u001b[0m`);
                 onFailed?.(packageId, message);
             },
             [onFailed],

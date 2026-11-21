@@ -228,7 +228,7 @@ class SecurityPolicy
                 return;
             }
             $app = App::getInstance(true);
-            $appName = (string) $app->getConfig()->getSetting(\App\Config\ConfigInterface::APP_NAME, 'FeatherPanel');
+            $appName = (string) $app->getConfig()->getSetting(\App\Config\ConfigInterface::APP_NAME, 'OrveX Panel');
             $esc = static fn (string $s): string => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
             $body = '<h2>New sign-in to your account</h2>'
                 . '<p>Your ' . $esc($appName) . ' account was just signed in to from a new IP address.</p>'

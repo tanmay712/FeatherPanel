@@ -747,8 +747,8 @@ class UsersController
 
         Welcome::send([
             'email' => $data['email'],
-            'subject' => 'Welcome to ' . $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
-            'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
+            'subject' => 'Welcome to ' . $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
+            'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
             'app_url' => $config->getSetting(ConfigInterface::APP_URL, 'https://featherpanel.mythical.systems'),
             'first_name' => $data['first_name'],
             'last_name' => $data['last_name'],
@@ -1075,8 +1075,8 @@ class UsersController
             $abuseipdbReport = AbuseIPDBBanReporter::maybeReport($user, $banRequestBody, $banReasonForEmail);
             AccountBanned::send([
                 'email' => $user['email'],
-                'subject' => 'Your account has been suspended on ' . $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
-                'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
+                'subject' => 'Your account has been suspended on ' . $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
+                'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
                 'app_url' => $config->getSetting(ConfigInterface::APP_URL, 'https://featherpanel.mythical.systems'),
                 'first_name' => $user['first_name'],
                 'last_name' => $user['last_name'],
@@ -1091,8 +1091,8 @@ class UsersController
             self::unsuspendOwnedWebSpaces((int) $user['id']);
             AccountUnBanned::send([
                 'email' => $user['email'],
-                'subject' => 'Your account has been unsuspended on ' . $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
-                'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
+                'subject' => 'Your account has been unsuspended on ' . $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
+                'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
                 'app_url' => $config->getSetting(ConfigInterface::APP_URL, 'https://featherpanel.mythical.systems'),
                 'first_name' => $user['first_name'],
                 'last_name' => $user['last_name'],
@@ -2053,8 +2053,8 @@ class UsersController
         $config = $app->getConfig();
         AccountBanned::send([
             'email' => $user['email'],
-            'subject' => 'Your account has been suspended on ' . $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
-            'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
+            'subject' => 'Your account has been suspended on ' . $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
+            'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
             'app_url' => $config->getSetting(ConfigInterface::APP_URL, 'https://featherpanel.mythical.systems'),
             'first_name' => $user['first_name'],
             'last_name' => $user['last_name'],
@@ -2139,8 +2139,8 @@ class UsersController
         $config = $app->getConfig();
         AccountUnBanned::send([
             'email' => $user['email'],
-            'subject' => 'Your account has been unsuspended on ' . $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
-            'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
+            'subject' => 'Your account has been unsuspended on ' . $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
+            'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
             'app_url' => $config->getSetting(ConfigInterface::APP_URL, 'https://featherpanel.mythical.systems'),
             'first_name' => $user['first_name'],
             'last_name' => $user['last_name'],

@@ -21,6 +21,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { useTranslation } from '@/contexts/TranslationContext';
+import { useSettings } from '@/contexts/SettingsContext';
+import { isModuleEnabled } from '@/lib/modules';
 import { getApiErrorMessage } from '@/lib/api-errors';
 import { PageHeader } from '@/components/featherui/PageHeader';
 import { Button } from '@/components/featherui/Button';
@@ -247,6 +249,7 @@ function TypeBadge({ type }: { type: LocationType }) {
 
 export default function LocationsPage() {
     const { t } = useTranslation();
+    const { settings } = useSettings();
     const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [locations, setLocations] = useState<Location[]>([]);
@@ -462,7 +465,9 @@ export default function LocationsPage() {
 
     const handleViewNodes = (location: Location) => {
         if (location.type === 'vps') {
-            router.push(`/admin/vds-nodes?location_id=${location.id}`);
+            // VPS-type locations hold both VDS (Proxmox) and VPS (OrveX) nodes.
+            const nodesPage = isModuleEnabled(settings, 'vds') ? '/admin/vds-nodes' : '/admin/vps-nodes';
+            router.push(`${nodesPage}?location_id=${location.id}`);
             return;
         }
         if (location.type === 'web') {

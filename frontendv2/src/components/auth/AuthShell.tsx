@@ -46,8 +46,8 @@ export default function AuthShell({ children }: { children: ReactNode }) {
     const appName = settings?.app_name || 'Panel';
     const logoUrl =
         theme === 'dark'
-            ? settings?.app_logo_dark || settings?.app_logo_white || '/assets/logo.png'
-            : settings?.app_logo_white || settings?.app_logo_dark || '/assets/logo.png';
+            ? settings?.app_logo_dark || settings?.app_logo_white || '/branding/orvex-logo.png'
+            : settings?.app_logo_white || settings?.app_logo_dark || '/branding/orvex-logo.png';
 
     const showThemeCustomizer = settings?.auth_show_theme_customizer !== 'false';
     const footerStyle = parseAuthFooterStyle(settings?.auth_footer_style);

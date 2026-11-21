@@ -30,6 +30,7 @@ use App\Chat\VmInstance;
 use App\Routing\RouteCache;
 use App\Helpers\ApiResponse;
 use OpenApi\Attributes as OA;
+use App\Services\Vm\OrvexNodes;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -345,6 +346,11 @@ class DashboardController
             $serverCount = Server::getCount();
             $vmNodeCount = VmNode::getVmNodesCount();
             $vmInstanceCount = VmInstance::countAll();
+            // VDS = servers on Proxmox VE nodes, VPS = servers on OrveX nodes.
+            $vdsNodeCount = VmNode::getVmNodesCount(nodeTypes: [OrvexNodes::TYPE_PROXMOX]);
+            $vpsNodeCount = VmNode::getVmNodesCount(nodeTypes: [OrvexNodes::TYPE]);
+            $vdsInstanceCount = VmInstance::countAll(null, [OrvexNodes::TYPE_PROXMOX]);
+            $vpsInstanceCount = VmInstance::countAll(null, [OrvexNodes::TYPE]);
 
             $version = APP_VERSION;
             $upstream = APP_UPSTREAM;
@@ -403,6 +409,10 @@ class DashboardController
                     'servers' => $serverCount,
                     'vm_nodes' => $vmNodeCount,
                     'vm_instances' => $vmInstanceCount,
+                    'vds_nodes' => $vdsNodeCount,
+                    'vds_instances' => $vdsInstanceCount,
+                    'vps_nodes' => $vpsNodeCount,
+                    'vps_instances' => $vpsInstanceCount,
                 ],
                 'cron' => [
                     'recent' => $recentCrons,
@@ -525,7 +535,7 @@ class DashboardController
             $projectMeta = $this->fetchUpdateServerJson('/' . self::UPDATE_PROJECT_SLUG);
             if (is_array($projectMeta) && !isset($projectMeta['error'])) {
                 $versionInfo['project'] = [
-                    'name' => $projectMeta['name'] ?? 'FeatherPanel',
+                    'name' => $projectMeta['name'] ?? 'OrveX Panel',
                     'slug' => $projectMeta['slug'] ?? self::UPDATE_PROJECT_SLUG,
                     'description' => $projectMeta['description'] ?? '',
                     'github_url' => $projectMeta['github_url'] ?? null,
@@ -600,7 +610,7 @@ class DashboardController
                 'type' => $type,
                 'release_name' => $type === 'Development'
                     ? 'Development build'
-                    : 'FeatherPanel',
+                    : 'OrveX Panel',
                 'release_description' => '',
                 'description' => '',
                 'php_version' => $this->formatPhpVersionRange($minPhp, $maxPhp) ?? PHP_VERSION,

@@ -21,11 +21,12 @@ use App\App;
 use App\Chat\User;
 use App\Chat\Subuser;
 use App\Chat\VmSubuser;
-use App\Chat\WebSpaceSubuser;
-use App\WebSpaceSubuserPermissions;
 use App\Realtime\Mercure;
 use App\SubuserPermissions;
+use App\Chat\WebSpaceSubuser;
 use App\Chat\UserNotification;
+use App\Services\Vm\VmProducts;
+use App\WebSpaceSubuserPermissions;
 
 /**
  * Writes inbox notifications for the events users care about and nudges their open tabs.
@@ -262,11 +263,14 @@ class InboxNotifier
                     return !UserNotification::sentWithin((int) $user['id'], $groupKey, $cooldownSeconds);
                 }
             ));
+            // Servers on OrveX nodes are VPS (/vps/{id}), on Proxmox nodes VDS (/vds/{id}).
+            $isVps = VmProducts::productForNodeType(isset($vds['node_type']) ? (string) $vds['node_type'] : null) === VmProducts::VPS;
+            $label = $isVps ? 'VPS' : 'VDS';
             self::send(
                 $audience,
                 $kind,
-                array_merge(['vds_name' => mb_substr((string) ($vds['hostname'] ?? ('VDS #' . $vdsId)), 0, 120), 'vds' => (string) $vdsId], $extra),
-                '/vds/' . $vdsId,
+                array_merge(['vds_name' => mb_substr((string) ($vds['hostname'] ?? ($label . ' #' . $vdsId)), 0, 120), 'vds' => (string) $vdsId], $extra),
+                ($isVps ? '/vps/' : '/vds/') . $vdsId,
                 $groupKey
             );
         });

@@ -15,7 +15,7 @@ See the LICENSE file or <https://www.gnu.org/licenses/>.
 
 import type { AppSettings } from '@/types/settings';
 
-export const FEATHERPANEL_MARKETING_URL = 'https://featherpanel.com';
+export const FEATHERPANEL_MARKETING_URL = 'https://github.com/tanmay712/FeatherPanel';
 
 export function shouldShowPoweredBy(
     settings: Pick<AppSettings, 'branding_show_powered_by'> | null | undefined,

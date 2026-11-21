@@ -30,6 +30,7 @@ export interface AppSettings {
     module_game_enabled?: string;
     module_web_enabled?: string;
     module_vds_enabled?: string;
+    module_vps_enabled?: string;
     /** 'auto' (default), 'always' or 'hidden'. */
     pterodactyl_importer_visibility?: string;
     server_allow_allocation_select: string;
@@ -47,6 +48,8 @@ export interface AppSettings {
     server_allow_user_auto_start?: string;
     server_allow_user_server_deletion: string;
     server_hide_ips: string;
+    /** Users can create free servers from the servers page (Admin > Free servers). */
+    free_servers_enabled?: string;
     smtp_enabled: string;
     status_page_enabled: string;
     maintenance_mode_enabled?: string;

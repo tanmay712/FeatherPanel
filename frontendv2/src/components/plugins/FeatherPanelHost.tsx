@@ -240,7 +240,7 @@ function detectArea(pathname: string | null): string {
     if (pathname.startsWith('/admin')) return 'admin';
     if (pathname.startsWith('/server/')) return 'server';
     if (pathname.startsWith('/webspace/')) return 'webspace';
-    if (pathname.startsWith('/vds/')) return 'vds';
+    if (pathname.startsWith('/vds/') || pathname.startsWith('/vps/')) return 'vds';
     if (pathname.startsWith('/dashboard') || pathname.startsWith('/account')) return 'client';
     if (pathname.startsWith('/auth') || pathname.startsWith('/login')) return 'auth';
     return 'other';

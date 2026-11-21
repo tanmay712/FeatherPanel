@@ -90,7 +90,7 @@ function guidanceForMessage(
     m.includes("dns lookup failed")
   ) {
     const steps = [
-      "The Wings node could not resolve or reach the hostname in the URL - this is almost always a bad/dead download host, not a FeatherPanel outage.",
+      "The Wings node could not resolve or reach the hostname in the URL - this is almost always a bad/dead download host, not a OrveX Panel outage.",
       "Retry pull_file with a different direct file URL (CDN object URL, fill-data.papermc.io object URL, GitHub release asset, etc.).",
     ];
     if (url.includes("download.getbukkit.org")) {
@@ -270,7 +270,7 @@ export function formatToolError(
   const lines: string[] = [];
   lines.push("TOOL_ERROR (operational - read diagnosis and keep going)");
   lines.push(
-    "Do NOT tell the user FeatherPanel/Wings is broken unless the error explicitly says the node/daemon is unreachable or unauthorized.",
+    "Do NOT tell the user OrveX Panel/Wings is broken unless the error explicitly says the node/daemon is unreachable or unauthorized.",
   );
 
   const apiErr = asApiError(error);

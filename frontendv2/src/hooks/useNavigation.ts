@@ -34,6 +34,7 @@ import { useWebSpacePermissions } from '@/hooks/useWebSpacePermissions';
 import { useDeveloperMode } from '@/hooks/useDeveloperMode';
 import { applySidebarCustomization, parseSidebarNavigationConfig, type SidebarScope } from '@/lib/sidebarCustomization';
 import { WebSpaceSubuserPermissions } from '@/lib/webspace-permissions';
+import { parseVmInstancePath, vmInstanceBase } from '@/lib/vm-products';
 
 /**
  * Keep items the user may open. Children are checked too (they carry their own permission),
@@ -88,8 +89,11 @@ export function useNavigation() {
     const isServer = pathname.startsWith('/server/');
     const serverUuid = isServer ? pathname.split('/')[2] : null;
 
-    const isVds = pathname.startsWith('/vds/');
-    const vdsId = isVds ? pathname.split('/')[2] : null;
+    // Virtual servers: VDS (Proxmox nodes) under /vds/{id}, VPS (OrveX nodes) under /vps/{id}.
+    const vmRoute = parseVmInstancePath(pathname);
+    const isVds = vmRoute !== null;
+    const vdsId = vmRoute?.id ?? null;
+    const vmProduct = vmRoute?.product ?? 'vds';
 
     const isWebspace = pathname.startsWith('/webspace/');
     const webspaceUuid = isWebspace ? pathname.split('/')[2] : null;
@@ -152,13 +156,13 @@ export function useNavigation() {
                         }
                     }
 
-                    // Handle vds specific prefix and url cleaning
+                    // Handle vds specific prefix and url cleaning (VPS pages use the same plugin entries)
                     if (category === 'vds') {
                         if (vdsId) {
-                            prefix = `/vds/${vdsId}`;
+                            prefix = vmInstanceBase(vmProduct, vdsId);
                         }
-                        if (processedUrl.startsWith('/vds')) {
-                            processedUrl = processedUrl.replace('/vds', '');
+                        if (processedUrl.startsWith('/vds') || processedUrl.startsWith('/vps')) {
+                            processedUrl = processedUrl.slice(4);
                         }
                     }
 
@@ -179,8 +183,12 @@ export function useNavigation() {
                     if (category === 'server' && redirectUrl && redirectUrl.startsWith('/server')) {
                         redirectUrl = redirectUrl.replace('/server', '');
                     }
-                    if (category === 'vds' && redirectUrl && redirectUrl.startsWith('/vds')) {
-                        redirectUrl = redirectUrl.replace('/vds', '');
+                    if (
+                        category === 'vds' &&
+                        redirectUrl &&
+                        (redirectUrl.startsWith('/vds') || redirectUrl.startsWith('/vps'))
+                    ) {
+                        redirectUrl = redirectUrl.slice(4);
                     }
                     if (category === 'webspace' && redirectUrl && redirectUrl.startsWith('/webspace')) {
                         redirectUrl = redirectUrl.replace('/webspace', '');
@@ -251,7 +259,7 @@ export function useNavigation() {
                     };
                 });
         },
-        [pathname, serverSpellId],
+        [pathname, serverSpellId, vmProduct],
     );
 
     const navigationItems = useMemo(() => {
@@ -334,10 +342,10 @@ export function useNavigation() {
         }
 
         if (isVds && vdsId) {
-            let items = getVdsNavigationItems(t, vdsId, { vmType: vdsInstance?.vm_type });
+            let items = getVdsNavigationItems(t, vdsId, { vmType: vdsInstance?.vm_type, product: vmProduct });
             items = items.map((item) => ({
                 ...item,
-                isActive: checkActive(item.url, item.url === `/vds/${vdsId}`),
+                isActive: checkActive(item.url, item.url === vmInstanceBase(vmProduct, vdsId)),
             }));
 
             if (pluginRoutesReady && pluginRoutes?.vds) {
@@ -425,6 +433,7 @@ export function useNavigation() {
         isDeveloperModeEnabled,
         isVds,
         vdsId,
+        vmProduct,
         vdsInstance?.vm_type,
         hasVdsPermission,
         isWebspace,

@@ -7,7 +7,7 @@ export function registerKnowledgebaseTools(server: McpServer): void {
     "search_knowledgebase",
     {
       title: "Search knowledgebase",
-      description: "Search FeatherPanel knowledgebase articles.",
+      description: "Search OrveX Panel knowledgebase articles.",
       inputSchema: {
         search: z.string().optional(),
         page: z.number().int().positive().optional(),

@@ -29,8 +29,8 @@ export function OAuthConsentShell({ children, className }: { children: ReactNode
     const appName = settings?.app_name || 'Panel';
     const logo =
         theme === 'dark'
-            ? settings?.app_logo_dark || settings?.app_logo_white || '/assets/logo.png'
-            : settings?.app_logo_white || settings?.app_logo_dark || '/assets/logo.png';
+            ? settings?.app_logo_dark || settings?.app_logo_white || '/branding/orvex-logo.png'
+            : settings?.app_logo_white || settings?.app_logo_dark || '/branding/orvex-logo.png';
 
     return (
         <main

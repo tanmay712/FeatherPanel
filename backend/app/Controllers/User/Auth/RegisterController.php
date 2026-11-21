@@ -326,8 +326,8 @@ class RegisterController
 
         Welcome::send([
             'email' => $data['email'],
-            'subject' => 'Welcome to ' . $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
-            'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
+            'subject' => 'Welcome to ' . $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
+            'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
             'app_url' => $config->getSetting(ConfigInterface::APP_URL, 'https://featherpanel.mythical.systems'),
             'first_name' => $data['first_name'],
             'last_name' => $data['last_name'],
@@ -341,8 +341,8 @@ class RegisterController
         if ($requiresEmailVerification) {
             $verifyUrl = rtrim($config->getSetting(ConfigInterface::APP_URL, 'https://featherpanel.mythical.systems'), '/') . '/auth/verify-email?token=' . urlencode((string) $emailVerificationToken);
             VerifyEmail::send([
-                'subject' => 'Verify your email for ' . $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
-                'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
+                'subject' => 'Verify your email for ' . $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
+                'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
                 'app_url' => $config->getSetting(ConfigInterface::APP_URL, 'https://featherpanel.mythical.systems'),
                 'first_name' => $data['first_name'],
                 'last_name' => $data['last_name'],

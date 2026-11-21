@@ -102,7 +102,7 @@ export class FeatherPanelClient {
       const message =
         json?.error_message ||
         json?.message ||
-        `FeatherPanel API error (${response.status})`;
+        `OrveX Panel API error (${response.status})`;
       throw new FeatherPanelApiError(message, response.status, json);
     }
 

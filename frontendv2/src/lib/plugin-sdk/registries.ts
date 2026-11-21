@@ -71,7 +71,7 @@ class PluginModalRegistry {
 
     open(id: string, props: Record<string, unknown> = {}): void {
         if (!this.modals.has(id)) {
-            console.warn(`[FeatherPanel] Unknown modal: ${id}`);
+            console.warn(`[OrveX Panel] Unknown modal: ${id}`);
             return;
         }
         this.state = { open: true, id, props };
@@ -122,7 +122,7 @@ class PluginSearchRegistry {
                 const results = await provider.search(query);
                 out.push(...results);
             } catch (err) {
-                console.error(`[FeatherPanel] search provider ${provider.id} failed`, err);
+                console.error(`[OrveX Panel] search provider ${provider.id} failed`, err);
             }
         }
         return out;

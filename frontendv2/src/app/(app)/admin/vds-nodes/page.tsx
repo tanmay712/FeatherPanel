@@ -19,7 +19,7 @@ import { TipCard, TipGrid } from '@/components/featherui/TipCard';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmProduct, useVmTranslation } from '@/hooks/useVmProduct';
 import { PageHeader } from '@/components/featherui/PageHeader';
 import { Button } from '@/components/featherui/Button';
 import { Input } from '@/components/featherui/Input';
@@ -63,9 +63,14 @@ interface VmNode {
     timeout: number;
     addional_headers?: string | null;
     additional_params?: string | null;
+    node_type?: 'orvex' | 'proxmox';
+    registered_at?: string | null;
     created_at: string;
     updated_at: string;
 }
+
+/** An OrveX node that was created in the panel but has not run its install command yet. */
+const isPendingOrvex = (node: VmNode): boolean => node.node_type === 'orvex' && !node.registered_at;
 
 interface Location {
     id: number;
@@ -83,6 +88,7 @@ interface Pagination {
 }
 
 const VDS_NODES_LIST_FILTERS_KEY = 'featherpanel_admin_vds_nodes_filters_v1';
+const VPS_NODES_LIST_FILTERS_KEY = 'featherpanel_admin_vps_nodes_filters_v1';
 const VDS_NODES_LIST_FILTERS_DEFAULTS = {
     searchQuery: '',
     locationId: '',
@@ -92,15 +98,17 @@ const VDS_NODES_LIST_FILTERS_DEFAULTS = {
 
 type ConnectionStatus = 'unknown' | 'online' | 'offline';
 
+/** VDS nodes (Proxmox VE, /admin/vds-nodes) or VPS nodes (OrveX, /admin/vps-nodes). */
 export default function VdsNodesPage() {
-    const { t } = useTranslation();
+    const { t, product } = useVmTranslation();
+    const { routes, nodeType } = useVmProduct();
     const privacyMask = useIpMask();
     const router = useRouter();
     const searchParams = useSearchParams();
     const urlLocationId = searchParams.get('location_id') ?? '';
 
     const { filters, patchFilters, hydrated, resetFilters, isFiltered } = usePersistedListFilters(
-        VDS_NODES_LIST_FILTERS_KEY,
+        product === 'vps' ? VPS_NODES_LIST_FILTERS_KEY : VDS_NODES_LIST_FILTERS_KEY,
         VDS_NODES_LIST_FILTERS_DEFAULTS,
     );
     const { searchQuery, page, pageSize } = filters;
@@ -178,7 +186,9 @@ export default function VdsNodesPage() {
         async (nodesToCheck: VmNode[]) => {
             setIsCheckingConnections(true);
             try {
-                await Promise.all(nodesToCheck.map((node) => testConnection(node.id)));
+                await Promise.all(
+                    nodesToCheck.filter((node) => !isPendingOrvex(node)).map((node) => testConnection(node.id)),
+                );
             } catch (error) {
                 console.error('Error testing all VM node connections:', error);
                 toast.error(getApiErrorMessage(error, t, 'admin.vdsNodes.messages.connection_check_failed'));
@@ -202,6 +212,7 @@ export default function VdsNodesPage() {
                     limit: pageSize,
                     search: searchQueryDebounced || undefined,
                     location_id: locationIdFilter || undefined,
+                    node_type: nodeType,
                 },
             });
 
@@ -225,7 +236,7 @@ export default function VdsNodesPage() {
         } finally {
             setLoading(false);
         }
-    }, [page, pageSize, searchQueryDebounced, locationIdFilter, t, testAllConnections, hydrated]);
+    }, [page, pageSize, searchQueryDebounced, locationIdFilter, t, testAllConnections, hydrated, nodeType]);
 
     useEffect(() => {
         fetchVmNodes();
@@ -283,7 +294,7 @@ export default function VdsNodesPage() {
                         >
                             <RefreshCw className='h-4 w-4' />
                         </Button>
-                        <Button onClick={() => router.push('/admin/vds-nodes/create')}>
+                        <Button onClick={() => router.push(`${routes.adminNodes}/create`)}>
                             <Server className='mr-2 h-4 w-4' />
                             {t('admin.vdsNodes.form.create_short')}
                         </Button>
@@ -293,7 +304,7 @@ export default function VdsNodesPage() {
 
             <WidgetRenderer widgets={getWidgets('admin-vm-nodes', 'after-header')} />
 
-            <VdsCapacityOverview />
+            <VdsCapacityOverview nodeType={nodeType} />
 
             <div className='fp-surface flex flex-col items-center gap-4 rounded-xl border p-4 sm:flex-row'>
                 <div className='group relative w-full flex-1'>
@@ -326,7 +337,7 @@ export default function VdsNodesPage() {
                     title={t('emptyStates.vdsNodes.title')}
                     description={t('emptyStates.vdsNodes.description')}
                     action={
-                        <Button onClick={() => router.push('/admin/vds-nodes/create')}>
+                        <Button onClick={() => router.push(`${routes.adminNodes}/create`)}>
                             <Server className='mr-2 h-4 w-4' />
                             {t('admin.vdsNodes.form.create_short')}
                         </Button>
@@ -338,15 +349,31 @@ export default function VdsNodesPage() {
                 <ResourceTable>
                     {vmNodes.map((node) => {
                         const status = getConnectionStatus(node.id);
+                        const pending = isPendingOrvex(node);
                         const badges: ResourceBadge[] = [
+                            pending
+                                ? {
+                                      label: t('admin.vdsNodes.orvex.pending_badge'),
+                                      className: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
+                                  }
+                                : {
+                                      label: t(`admin.vdsNodes.connection.${status}`),
+                                      className:
+                                          status === 'online'
+                                              ? 'bg-green-500/10 text-green-500 border-green-500/20'
+                                              : status === 'offline'
+                                                ? 'bg-red-500/10 text-red-500 border-red-500/20'
+                                                : 'bg-muted text-muted-foreground',
+                                  },
                             {
-                                label: t(`admin.vdsNodes.connection.${status}`),
+                                label:
+                                    node.node_type === 'orvex'
+                                        ? t('admin.vdsNodes.orvex.type_badge_orvex')
+                                        : t('admin.vdsNodes.orvex.type_badge_proxmox'),
                                 className:
-                                    status === 'online'
-                                        ? 'bg-green-500/10 text-green-500 border-green-500/20'
-                                        : status === 'offline'
-                                          ? 'bg-red-500/10 text-red-500 border-red-500/20'
-                                          : 'bg-muted text-muted-foreground',
+                                    node.node_type === 'orvex'
+                                        ? 'bg-primary/10 text-primary border-primary/20'
+                                        : 'bg-muted text-muted-foreground',
                             },
                             {
                                 label: getLocationName(node.location_id),
@@ -358,7 +385,11 @@ export default function VdsNodesPage() {
                             <ResourceCard
                                 key={node.id}
                                 title={node.name}
-                                subtitle={privacyMask.text(`${node.scheme}://${node.fqdn}:${node.port}`)}
+                                subtitle={
+                                    pending
+                                        ? t('admin.vdsNodes.orvex.pending_subtitle')
+                                        : privacyMask.text(`${node.scheme}://${node.fqdn}:${node.port}`)
+                                }
                                 icon={Server}
                                 badges={badges}
                                 description={
@@ -368,18 +399,20 @@ export default function VdsNodesPage() {
                                 }
                                 actions={
                                     <div className='flex items-center gap-2'>
+                                        {!pending && (
+                                            <Button
+                                                size='sm'
+                                                variant='ghost'
+                                                onClick={() => testConnection(node.id)}
+                                                title={t('admin.vdsNodes.actions.test_connection')}
+                                            >
+                                                <HeartHandshakeIcon className='h-4 w-4' />
+                                            </Button>
+                                        )}
                                         <Button
                                             size='sm'
                                             variant='ghost'
-                                            onClick={() => testConnection(node.id)}
-                                            title={t('admin.vdsNodes.actions.test_connection')}
-                                        >
-                                            <HeartHandshakeIcon className='h-4 w-4' />
-                                        </Button>
-                                        <Button
-                                            size='sm'
-                                            variant='ghost'
-                                            onClick={() => router.push(`/admin/vds-nodes/${node.id}/edit`)}
+                                            onClick={() => router.push(`${routes.adminNodes}/${node.id}/edit`)}
                                             title={t('admin.vdsNodes.actions.edit')}
                                         >
                                             <Pencil className='h-4 w-4' />
@@ -466,12 +499,14 @@ export default function VdsNodesPage() {
                 </TipCard>
             </TipGrid>
 
-            <TipCard title={t('admin.vdsNodes.help.proxmox.title')} icon={Shield} className='mt-6'>
-                <div className='text-muted-foreground space-y-4 text-sm'>
-                    <p>{t('admin.vdsNodes.help.proxmox.p1')}</p>
-                    <p>{t('admin.vdsNodes.help.proxmox.p2')}</p>
-                </div>
-            </TipCard>
+            {product === 'vds' && (
+                <TipCard title={t('admin.vdsNodes.help.proxmox.title')} icon={Shield} className='mt-6'>
+                    <div className='text-muted-foreground space-y-4 text-sm'>
+                        <p>{t('admin.vdsNodes.help.proxmox.p1')}</p>
+                        <p>{t('admin.vdsNodes.help.proxmox.p2')}</p>
+                    </div>
+                </TipCard>
+            )}
 
             <WidgetRenderer widgets={getWidgets('admin-vm-nodes', 'bottom-of-page')} />
         </div>

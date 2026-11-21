@@ -71,7 +71,7 @@ class PluginThemesController
                 'id' => 'default',
                 'packId' => 'default',
                 'plugin' => null,
-                'pluginName' => 'FeatherPanel',
+                'pluginName' => 'OrveX Panel',
                 'name' => 'Default',
                 'preview' => null,
                 'tokens' => ['light' => new \stdClass(), 'dark' => new \stdClass()],

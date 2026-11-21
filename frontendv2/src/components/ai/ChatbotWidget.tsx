@@ -22,6 +22,7 @@ import { Button } from '@/components/featherui/Button';
 import { useTranslation } from '@/contexts/TranslationContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useVmInstance } from '@/contexts/VmInstanceContext';
+import { isVmInstancePath } from '@/lib/vm-products';
 import { useTheme } from '@/contexts/ThemeContext';
 
 const ChatbotContainer = lazy(() => import('./ChatbotContainer'));
@@ -33,7 +34,9 @@ function ChatbotOpenButton({ onClick }: { onClick: () => void }) {
     const customAvatar = settings?.chatbot_avatar_url?.trim();
     const logoUrl =
         customAvatar ||
-        (theme === 'dark' ? settings?.app_logo_dark || '/logo.png' : settings?.app_logo_white || '/logo.png');
+        (theme === 'dark'
+            ? settings?.app_logo_dark || '/branding/orvex-logo.png'
+            : settings?.app_logo_white || '/branding/orvex-logo.png');
     const assistantName = settings?.chatbot_display_name?.trim() || t('chatbot.title');
 
     return (
@@ -129,9 +132,15 @@ export default function ChatbotWidget() {
 
     const chatbotEnabled = settings?.chatbot_enabled === 'true';
     const isIDE = pathname?.includes('/files/ide');
-    const isVds = pathname?.startsWith('/vds/');
+    const isVds = isVmInstancePath(pathname);
     const isServer = pathname?.startsWith('/server/');
-    const dashboardChatbotRoutes = ['/dashboard', '/dashboard/servers', '/dashboard/vms', '/dashboard/knowledgebase'];
+    const dashboardChatbotRoutes = [
+        '/dashboard',
+        '/dashboard/servers',
+        '/dashboard/vms',
+        '/dashboard/vps',
+        '/dashboard/knowledgebase',
+    ];
     const isDashboardChatbotRoute =
         pathname === '/dashboard/knowledgebase' ||
         pathname?.startsWith('/dashboard/knowledgebase/') ||

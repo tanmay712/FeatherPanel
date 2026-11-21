@@ -75,6 +75,52 @@ while [ $attempt -lt $max_attempts ]; do
 	sleep 3
 done
 
+# OrveX Panel: seed the bundled addons and translations into the persistent
+# volumes. Docker only pre-populates a named volume the first time it is
+# created, so existing installs would otherwise never receive addons that were
+# bundled in a newer image. Each bundled addon is seeded at most once (tracked
+# in a marker file inside the volume): marketplace updates are never
+# overwritten and an addon the admin uninstalled is not brought back.
+BUNDLED_ADDONS="/opt/orvex/bundled-addons"
+TARGET_ADDONS="/var/www/html/storage/addons"
+SEEDED_MARKER="$TARGET_ADDONS/.orvex-bundled-seeded"
+if [ -d "$BUNDLED_ADDONS" ]; then
+	mkdir -p "$TARGET_ADDONS"
+	touch "$SEEDED_MARKER"
+	for src in "$BUNDLED_ADDONS"/*/; do
+		[ -d "$src" ] || continue
+		id="$(basename "$src")"
+		grep -qxF "$id" "$SEEDED_MARKER" && continue
+		if [ ! -e "$TARGET_ADDONS/$id" ]; then
+			echo "Installing bundled addon: $id"
+			cp -a "${src%/}" "$TARGET_ADDONS/$id"
+			chown -R www-data:www-data "$TARGET_ADDONS/$id" 2>/dev/null || true
+		fi
+		echo "$id" >>"$SEEDED_MARKER"
+	done
+fi
+
+BUNDLED_TRANSLATIONS="/opt/orvex/bundled-translations"
+TARGET_TRANSLATIONS="/var/www/html/public/translations"
+if [ -d "$BUNDLED_TRANSLATIONS" ]; then
+	mkdir -p "$TARGET_TRANSLATIONS"
+	for src in "$BUNDLED_TRANSLATIONS"/*.json; do
+		[ -f "$src" ] || continue
+		name="$(basename "$src")"
+		[ "$name" = "mapping.json" ] && continue
+		[ -e "$TARGET_TRANSLATIONS/$name" ] || cp -a "$src" "$TARGET_TRANSLATIONS/$name"
+	done
+	# Add bundled language names to mapping.json without touching existing entries.
+	# shellcheck disable=SC2016 # single quotes are intentional: this is PHP code, not shell
+	php -r '$bundled = json_decode((string) file_get_contents($argv[1]), true) ?: [];
+		$current = json_decode((string) @file_get_contents($argv[2]), true) ?: [];
+		$merged = $current + $bundled;
+		if ($merged !== $current) {
+			file_put_contents($argv[2], json_encode($merged, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n");
+		}' "$BUNDLED_TRANSLATIONS/mapping.json" "$TARGET_TRANSLATIONS/mapping.json" || true
+	chown -R www-data:www-data "$TARGET_TRANSLATIONS" 2>/dev/null || true
+fi
+
 # Make sure composer packages are installed
 echo "Installing composer packages..."
 COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --optimize-autoloader

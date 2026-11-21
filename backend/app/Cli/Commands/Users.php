@@ -133,7 +133,7 @@ class Users extends App implements CommandBuilder
     private static function showHeader(): void
     {
         self::$cliApp->send(self::$cliApp->color1 . '&l╔════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗');
-        self::$cliApp->send(self::$cliApp->color1 . '&l║                                    FeatherPanel User Management                                                 ║');
+        self::$cliApp->send(self::$cliApp->color1 . '&l║                                    OrveX Panel User Management                                                 ║');
         self::$cliApp->send(self::$cliApp->color1 . '&l╚════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝');
 
         $totalPages = max(1, ceil(self::$totalUsers / self::$pageSize));

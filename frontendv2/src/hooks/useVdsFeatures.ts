@@ -52,6 +52,8 @@ export interface VdsFeatures {
     schedules: { enabled: boolean; max: number; actions: string[]; allow_hourly: boolean; max_keep: number };
     reauth: { mode: 'off' | 'password' | '2fa_or_password'; actions: string[]; method: 'password' | '2fa' | null };
     bandwidth: { enabled: boolean };
+    /** Login and SSH access options (missing on older backends). */
+    access?: { node_type: 'orvex' | 'proxmox'; password_change: boolean; graphical_console: boolean };
 }
 
 const cache = new Map<number, VdsFeatures>();

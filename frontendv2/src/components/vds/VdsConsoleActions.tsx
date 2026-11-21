@@ -41,7 +41,7 @@ import {
 import { Dialog, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 import { cn } from '@/lib/utils';
 import type { VncConsoleHandle } from '@/components/vds/VncConsole';
 import type { VdsFeatures } from '@/hooks/useVdsFeatures';
@@ -73,7 +73,7 @@ export function VdsConsoleActions({
     canSettings,
     hostname,
 }: VdsConsoleActionsProps) {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
     const [pasteOpen, setPasteOpen] = useState(false);
     const [pasteText, setPasteText] = useState('');
     const [typing, setTyping] = useState<{ done: number; total: number } | null>(null);

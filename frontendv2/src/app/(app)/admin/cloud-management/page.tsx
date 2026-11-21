@@ -70,7 +70,7 @@ const NOT_GRANTED_SCOPES = [
     'Cannot change team billing methods, remove members, or manage invoices',
     'Cannot read Mythic account passwords / 2FA / session cookies',
     'Cannot access unrelated teams',
-    'Cannot wipe or take over the FeatherPanel database outside approved cloud scopes',
+    'Cannot wipe or take over the OrveX Panel database outside approved cloud scopes',
     'Connection can be revoked anytime from here and from Mythic team cloud connections',
 ] as const;
 

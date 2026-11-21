@@ -1,0 +1,3 @@
+#!/bin/sh
+# OrveX VPS Node command line (see `orvex-node --help`).
+PYTHONPATH=/opt/orvex-node/src/vps-node exec /usr/bin/python3 -m orvexnode "$@"

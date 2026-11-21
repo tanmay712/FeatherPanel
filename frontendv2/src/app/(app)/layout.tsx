@@ -73,7 +73,7 @@ export async function generateMetadata(): Promise<Metadata> {
     const title = settings?.app_seo_title || settings?.app_name || 'Panel';
     const description = settings?.app_seo_description || 'A powerful game server management panel.';
     const keywords = settings?.app_seo_keywords || 'game, server, management, panel, hosting';
-    const logo = settings?.app_logo_dark || settings?.app_logo_white || '/assets/logo.png';
+    const logo = settings?.app_logo_dark || settings?.app_logo_white || '/branding/orvex-logo.png';
     const indexingEnabled = settings?.app_seo_indexing === 'true';
     const pwaEnabled = settings?.app_pwa_enabled === 'true';
     const appName = settings?.app_name || 'Panel';

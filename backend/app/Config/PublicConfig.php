@@ -47,12 +47,12 @@ class PublicConfig extends ConfigFactory
         // Define settings configuration with defaults
         return [
             // App settings
-            ConfigInterface::APP_NAME => 'FeatherPanel',
+            ConfigInterface::APP_NAME => 'OrveX Panel',
             ConfigInterface::APP_URL => 'https://featherpanel.mythical.systems',
             ConfigInterface::APP_DEVELOPER_MODE => 'false',
             ConfigInterface::APP_TIMEZONE => 'UTC',
-            ConfigInterface::APP_LOGO_WHITE => 'https://github.com/featherpanel-com.png',
-            ConfigInterface::APP_LOGO_DARK => 'https://github.com/featherpanel-com.png',
+            ConfigInterface::APP_LOGO_WHITE => '/branding/orvex-logo.png',
+            ConfigInterface::APP_LOGO_DARK => '/branding/orvex-logo.png',
             ConfigInterface::APP_SSO_REDIRECT_PATH => '/',
             ConfigInterface::APP_SSO_TOKEN_LIFETIME_MINUTES => '5',
             // Appearance defaults (safe, non-sensitive)
@@ -97,7 +97,7 @@ class PublicConfig extends ConfigFactory
             ConfigInterface::APP_SUPPORT_URL => 'https://discord.mythical.systems',
 
             // SEO Settings
-            ConfigInterface::APP_SEO_TITLE => 'FeatherPanel',
+            ConfigInterface::APP_SEO_TITLE => 'OrveX Panel',
             ConfigInterface::APP_SEO_DESCRIPTION => 'A powerful game server management panel.',
             ConfigInterface::APP_SEO_KEYWORDS => 'game, server, management, panel, hosting',
             // By default, do NOT allow search engine indexing.
@@ -189,6 +189,7 @@ class PublicConfig extends ConfigFactory
             ConfigInterface::SERVER_AUTO_START_STAGGER_SECONDS => '5',
             ConfigInterface::SERVER_AUTO_START_INITIAL_DELAY_SECONDS => '15',
             ConfigInterface::SERVER_ALLOW_USER_AUTO_START => 'false',
+            ConfigInterface::FREE_SERVERS_ENABLED => 'false',
             ConfigInterface::SERVER_HIDE_IPS => 'false',
             ConfigInterface::FILE_TRASH_ENABLED => 'false',
             ConfigInterface::FILE_TRASH_MAX_SIZE_MB => '512',
@@ -231,6 +232,7 @@ class PublicConfig extends ConfigFactory
             ConfigInterface::MODULE_GAME_ENABLED => 'true',
             ConfigInterface::MODULE_WEB_ENABLED => 'true',
             ConfigInterface::MODULE_VDS_ENABLED => 'true',
+            ConfigInterface::MODULE_VPS_ENABLED => 'true',
             ConfigInterface::SETUP_COMPLETED => 'false',
             ConfigInterface::PTERODACTYL_IMPORTER_VISIBILITY => 'auto',
             ConfigInterface::KNOWLEDGEBASE_PUBLIC_ENABLED => 'true',

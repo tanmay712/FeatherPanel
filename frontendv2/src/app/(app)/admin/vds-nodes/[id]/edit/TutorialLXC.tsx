@@ -18,10 +18,10 @@ See the LICENSE file or <https://www.gnu.org/licenses/>.
 import { Info, ShieldAlert } from 'lucide-react';
 import { PageCard } from '@/components/featherui/PageCard';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 
 export function TutorialLXC() {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
 
     return (
         <PageCard title={t('admin.vdsNodes.tutorial.lxc.title')} icon={Info} className='mt-6'>
@@ -109,7 +109,7 @@ apt upgrade -y
                 <p className='font-medium'>{t('admin.vdsNodes.tutorial.lxc.step5')}</p>
                 <p>
                     {t('ui.admin.vdsNodes.edit.tutorialLXC.inTheTemplatesTabOfYour')} <code>LXC</code> as the Guest
-                    Type. FeatherPanel will now be able to clone this template when creating new LXC instances.
+                    Type. OrveX Panel will now be able to clone this template when creating new LXC instances.
                 </p>
             </div>
         </PageCard>

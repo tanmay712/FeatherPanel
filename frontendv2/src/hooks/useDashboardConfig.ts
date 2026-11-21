@@ -27,8 +27,9 @@ export const DASHBOARD_LAYOUT_STORAGE_KEY = 'featherpanel_dashboard_layout_v1';
 /**
  * 7: widget list with sizes replaces the fixed two columns of version 6.
  * 8: greeting hero (with what's new) on top, personal notes and quick links.
+ * 9: VPS servers (OrveX nodes) get their own widget and stat tile next to VDS.
  */
-const LAYOUT_VERSION = 8;
+const LAYOUT_VERSION = 9;
 
 export type DashboardWidgetId =
     | 'greeting'
@@ -36,6 +37,7 @@ export type DashboardWidgetId =
     | 'attention'
     | 'servers'
     | 'vds'
+    | 'vps'
     | 'webspaces'
     | 'usage'
     | 'status'
@@ -70,7 +72,7 @@ export type DashboardServerView = 'list' | 'grid' | 'detailed';
 export type DashboardServerSort = 'recent' | 'name' | 'status';
 export type DashboardServerGroup = 'none' | 'node' | 'folder';
 export type DashboardMeter = 'cpu' | 'ram' | 'disk';
-export type DashboardStatTileId = 'game' | 'vds' | 'web' | 'support';
+export type DashboardStatTileId = 'game' | 'vds' | 'vps' | 'web' | 'support';
 export type DashboardDensity = 'comfortable' | 'compact';
 
 export interface DashboardServerOptions {
@@ -108,7 +110,7 @@ export const NOTES_MAX_LENGTH = 4000;
 export const QUICK_LINKS_MAX = 12;
 
 export const SERVER_LIMIT_OPTIONS = [3, 6, 10, 20] as const;
-export const STAT_TILE_IDS: DashboardStatTileId[] = ['game', 'vds', 'web', 'support'];
+export const STAT_TILE_IDS: DashboardStatTileId[] = ['game', 'vds', 'vps', 'web', 'support'];
 export const METER_IDS: DashboardMeter[] = ['cpu', 'ram', 'disk'];
 
 /** Sizes each widget supports; the first is its default. */
@@ -118,6 +120,7 @@ export const WIDGET_SIZES: Record<DashboardWidgetId, DashboardWidgetSize[]> = {
     attention: ['full'],
     servers: ['medium', 'full'],
     vds: ['medium', 'full'],
+    vps: ['medium', 'full'],
     webspaces: ['medium', 'full'],
     usage: ['small', 'medium', 'full'],
     status: ['small', 'medium', 'full'],
@@ -171,6 +174,7 @@ export const DEFAULT_WIDGETS: DashboardWidgetPlacement[] = [
     place('usage'),
     place('trends'),
     place('vds'),
+    place('vps'),
     place('webspaces'),
     place('quick_actions'),
     place('activity'),
@@ -264,6 +268,21 @@ function migrateV7(config: DashboardConfig): DashboardConfig {
     return { ...config, widgets: [place('greeting'), ...widgets] };
 }
 
+/** VPS servers used to be listed with VDS: give them their own widget and tile right after VDS. */
+function migrateV9(config: DashboardConfig): DashboardConfig {
+    let widgets = config.widgets;
+    const vdsAt = widgets.findIndex((w) => w.id === 'vds');
+    if (vdsAt >= 0 && !widgets.some((w) => w.id === 'vps')) {
+        widgets = [...widgets.slice(0, vdsAt + 1), place('vps', widgets[vdsAt]!.size), ...widgets.slice(vdsAt + 1)];
+    }
+    let statTiles = config.statTiles;
+    const tileAt = statTiles.indexOf('vds');
+    if (tileAt >= 0 && !statTiles.includes('vps')) {
+        statTiles = [...statTiles.slice(0, tileAt + 1), 'vps', ...statTiles.slice(tileAt + 1)];
+    }
+    return { ...config, widgets, statTiles };
+}
+
 /** Version 6 had a main column, a side column and a hidden list; carry the user's choices over. */
 function migrateV6(parsed: Record<string, unknown>): DashboardConfig {
     const config = defaultDashboardConfig();
@@ -299,7 +318,7 @@ export function parseDashboardConfig(raw: string | null): DashboardConfig {
     try {
         const parsed = JSON.parse(raw) as Record<string, unknown>;
         const version = typeof parsed.layoutVersion === 'number' ? parsed.layoutVersion : 1;
-        if (version < 7) return migrateV7(migrateV6(parsed));
+        if (version < 7) return migrateV9(migrateV7(migrateV6(parsed)));
 
         const base = defaultDashboardConfig();
         const s = (parsed.servers ?? {}) as Record<string, unknown>;
@@ -332,7 +351,8 @@ export function parseDashboardConfig(raw: string | null): DashboardConfig {
             notes: typeof parsed.notes === 'string' ? parsed.notes.slice(0, NOTES_MAX_LENGTH) : '',
             quickLinks: parseQuickLinks(parsed.quickLinks),
         };
-        return version < LAYOUT_VERSION ? migrateV7(config) : config;
+        const upToV8 = version < 8 ? migrateV7(config) : config;
+        return version < 9 ? migrateV9(upToV8) : upToV8;
     } catch {
         return defaultDashboardConfig();
     }

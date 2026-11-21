@@ -278,7 +278,7 @@ export default function ConsolePage() {
     useEffect(() => {
         if (isDeveloperModeEnabled === true) {
             fetchSystemInfo();
-            addTerminalLine('info', 'FeatherPanel Console - Type "help" for available commands');
+            addTerminalLine('info', 'OrveX Panel Console - Type "help" for available commands');
         }
     }, [isDeveloperModeEnabled, fetchSystemInfo, addTerminalLine]);
 

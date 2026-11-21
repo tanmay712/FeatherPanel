@@ -109,7 +109,7 @@ class WebPushNotifier
             }
 
             $config = App::getInstance(true)->getConfig();
-            $appName = (string) $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel');
+            $appName = (string) $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel');
             $base = rtrim((string) $config->getSetting(ConfigInterface::APP_URL, ''), '/');
             $url = $link !== '' ? ($base !== '' ? $base . $link : $link) : ($base !== '' ? $base . '/dashboard' : '/dashboard');
             $title = self::titleFor($kind, $appName);
@@ -142,7 +142,7 @@ class WebPushNotifier
             return 'No push subscriptions on this account';
         }
         $config = App::getInstance(true)->getConfig();
-        $appName = (string) $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel');
+        $appName = (string) $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel');
         $base = rtrim((string) $config->getSetting(ConfigInterface::APP_URL, ''), '/');
 
         self::sendToSubscriptions($subs, [
@@ -251,6 +251,8 @@ class WebPushNotifier
             'storage_disconnected' => 'Backup storage disconnected',
             'node_alert' => 'Node alert',
             'server_inactive' => 'Inactive server',
+            'free_server_stopped' => 'Free server stopped',
+            'free_server_stored' => 'Free server moved to storage',
             'webspace_installed' => 'Web hosting ready',
             'webspace_install_failed' => 'Web hosting install failed',
             'webspace_backup_completed' => 'Web hosting backup completed',

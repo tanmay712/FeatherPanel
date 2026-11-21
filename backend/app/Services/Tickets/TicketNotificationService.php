@@ -125,7 +125,7 @@ class TicketNotificationService
             'first_name' => (string) $owner['first_name'],
             'last_name' => (string) $owner['last_name'],
             'username' => (string) $owner['username'],
-            'app_name' => (string) $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
+            'app_name' => (string) $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
             'app_url' => $appUrl,
             'app_support_url' => (string) $config->getSetting(ConfigInterface::APP_SUPPORT_URL, 'https://discord.mythical.systems'),
             'enabled' => (string) $config->getSetting(ConfigInterface::SMTP_ENABLED, 'false'),

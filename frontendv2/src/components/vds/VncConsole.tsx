@@ -17,7 +17,7 @@ See the LICENSE file or <https://www.gnu.org/licenses/>.
 
 import { useEffect, useImperativeHandle, useRef, useState, type Ref } from 'react';
 import { Loader2 } from 'lucide-react';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 import { cn } from '@/lib/utils';
 import type RFB from '@novnc/novnc';
 import { XK_SHIFT_L, normalizeTypedText, strokeFor } from '@/lib/vnc/usKeymap';
@@ -101,7 +101,7 @@ export function VncConsole({
     onStatusChange,
     handleRef,
 }: VncConsoleProps) {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
     const containerRef = useRef<HTMLDivElement>(null);
     const rfbRef = useRef<RFB | null>(null);
     const typingRunRef = useRef(0);

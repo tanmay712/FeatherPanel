@@ -16,7 +16,7 @@ See the LICENSE file or <https://www.gnu.org/licenses/>.
 import type { LucideIcon } from 'lucide-react';
 
 /** Admin-toggleable panel modules. */
-export type PanelModule = 'game' | 'web' | 'vds';
+export type PanelModule = 'game' | 'web' | 'vds' | 'vps';
 
 export interface NavigationItem {
     id: string;

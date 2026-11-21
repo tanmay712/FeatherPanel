@@ -1,0 +1,6 @@
+allowBuilds:
+  vue-demi: true
+minimumReleaseAgeExclude:
+  - '@vue/language-core@3.3.4'
+  - vue-tsc@3.3.4
+  - axios@1.18.0

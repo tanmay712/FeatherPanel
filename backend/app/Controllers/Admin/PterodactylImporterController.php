@@ -147,7 +147,7 @@ class PterodactylImporterController
     #[OA\Post(
         path: '/api/admin/pterodactyl-importer/import-egg',
         summary: 'Import Pterodactyl egg as spell',
-        description: 'Import a Pterodactyl egg (with variables) as a FeatherPanel spell. Maps nest_id to realm_id and converts egg_variables to spell_variables.',
+        description: 'Import a Pterodactyl egg (with variables) as an OrveX Panel spell. Maps nest_id to realm_id and converts egg_variables to spell_variables.',
         tags: ['Admin - Pterodactyl Importer'],
         requestBody: new OA\RequestBody(
             required: true,
@@ -203,7 +203,7 @@ class PterodactylImporterController
                     new OA\Property(
                         property: 'nest_to_realm_mapping',
                         type: 'object',
-                        description: 'Mapping of Pterodactyl nest_id to FeatherPanel realm_id. If not provided, will use realm_id from egg data or default to realm_id=1.',
+                        description: 'Mapping of Pterodactyl nest_id to OrveX Panel realm_id. If not provided, will use realm_id from egg data or default to realm_id=1.',
                         additionalProperties: new OA\AdditionalProperties(type: 'integer')
                     ),
                 ],
@@ -380,7 +380,7 @@ class PterodactylImporterController
     #[OA\Post(
         path: '/api/admin/pterodactyl-importer/import-node',
         summary: 'Import Pterodactyl node',
-        description: 'Import a Pterodactyl node as a FeatherPanel node. Maps location_id and generates new daemon tokens.',
+        description: 'Import a Pterodactyl node as an OrveX Panel node. Maps location_id and generates new daemon tokens.',
         tags: ['Admin - Pterodactyl Importer'],
         requestBody: new OA\RequestBody(
             required: true,
@@ -414,7 +414,7 @@ class PterodactylImporterController
                     new OA\Property(
                         property: 'location_to_location_mapping',
                         type: 'object',
-                        description: 'Mapping of Pterodactyl location_id to FeatherPanel location_id. If not provided, will use location_id from node data.',
+                        description: 'Mapping of Pterodactyl location_id to OrveX Panel location_id. If not provided, will use location_id from node data.',
                         additionalProperties: new OA\AdditionalProperties(type: 'integer')
                     ),
                     new OA\Property(
@@ -596,7 +596,7 @@ class PterodactylImporterController
     #[OA\Post(
         path: '/api/admin/pterodactyl-importer/import-allocation',
         summary: 'Import Pterodactyl allocation',
-        description: 'Import a Pterodactyl allocation as a FeatherPanel allocation. Maps node_id and allows unknown/non-existent server_id (will be set to null).',
+        description: 'Import a Pterodactyl allocation as an OrveX Panel allocation. Maps node_id and allows unknown/non-existent server_id (will be set to null).',
         tags: ['Admin - Pterodactyl Importer'],
         requestBody: new OA\RequestBody(
             required: true,
@@ -619,13 +619,13 @@ class PterodactylImporterController
                     new OA\Property(
                         property: 'node_to_node_mapping',
                         type: 'object',
-                        description: 'Mapping of Pterodactyl node_id to FeatherPanel node_id. If not provided, will use node_id from allocation data.',
+                        description: 'Mapping of Pterodactyl node_id to OrveX Panel node_id. If not provided, will use node_id from allocation data.',
                         additionalProperties: new OA\AdditionalProperties(type: 'integer')
                     ),
                     new OA\Property(
                         property: 'server_to_server_mapping',
                         type: 'object',
-                        description: 'Mapping of Pterodactyl server_id to FeatherPanel server_id. If not provided, server_id will be used as-is (no existence checks).',
+                        description: 'Mapping of Pterodactyl server_id to OrveX Panel server_id. If not provided, server_id will be used as-is (no existence checks).',
                         additionalProperties: new OA\AdditionalProperties(type: 'integer')
                     ),
                 ],
@@ -771,7 +771,7 @@ class PterodactylImporterController
     #[OA\Post(
         path: '/api/admin/pterodactyl-importer/import-user',
         summary: 'Import Pterodactyl user',
-        description: 'Import a Pterodactyl user as a FeatherPanel user. Maps fields and preserves bcrypt passwords. ID 1 is reserved for the main user and will be skipped.',
+        description: 'Import a Pterodactyl user as an OrveX Panel user. Maps fields and preserves bcrypt passwords. ID 1 is reserved for the main user and will be skipped.',
         tags: ['Admin - Pterodactyl Importer'],
         requestBody: new OA\RequestBody(
             required: true,
@@ -788,7 +788,7 @@ class PterodactylImporterController
                             new OA\Property(property: 'email', type: 'string', format: 'email', description: 'Email address'),
                             new OA\Property(property: 'name_first', type: 'string', nullable: true, description: 'First name (Pterodactyl field)'),
                             new OA\Property(property: 'name_last', type: 'string', nullable: true, description: 'Last name (Pterodactyl field)'),
-                            new OA\Property(property: 'password', type: 'string', description: 'Bcrypt hashed password (compatible with FeatherPanel)'),
+                            new OA\Property(property: 'password', type: 'string', description: 'Bcrypt hashed password (compatible with OrveX Panel)'),
                             new OA\Property(property: 'remember_token', type: 'string', nullable: true, description: 'Remember token'),
                             new OA\Property(property: 'external_id', type: 'string', nullable: true, description: 'External ID'),
                             new OA\Property(property: 'root_admin', type: 'boolean', description: 'Root admin flag'),
@@ -977,7 +977,7 @@ class PterodactylImporterController
     #[OA\Post(
         path: '/api/admin/pterodactyl-importer/import-ssh-key',
         summary: 'Import Pterodactyl SSH key',
-        description: 'Import a Pterodactyl SSH key as a FeatherPanel SSH key. Maps user_id and preserves fingerprint.',
+        description: 'Import a Pterodactyl SSH key as an OrveX Panel SSH key. Maps user_id and preserves fingerprint.',
         tags: ['Admin - Pterodactyl Importer'],
         requestBody: new OA\RequestBody(
             required: true,
@@ -998,7 +998,7 @@ class PterodactylImporterController
                     new OA\Property(
                         property: 'user_to_user_mapping',
                         type: 'object',
-                        description: 'Mapping of Pterodactyl user_id to FeatherPanel user_id. If not provided, will use user_id from SSH key data.',
+                        description: 'Mapping of Pterodactyl user_id to OrveX Panel user_id. If not provided, will use user_id from SSH key data.',
                         additionalProperties: new OA\AdditionalProperties(type: 'integer')
                     ),
                 ],
@@ -1146,7 +1146,7 @@ class PterodactylImporterController
     #[OA\Post(
         path: '/api/admin/pterodactyl-importer/import-server',
         summary: 'Import Pterodactyl server',
-        description: 'Import a Pterodactyl server as a FeatherPanel server. Maps nest_id to realms_id, egg_id to spell_id, and preserves server variables. Skips Wings API calls.',
+        description: 'Import a Pterodactyl server as an OrveX Panel server. Maps nest_id to realms_id, egg_id to spell_id, and preserves server variables. Skips Wings API calls.',
         tags: ['Admin - Pterodactyl Importer'],
         requestBody: new OA\RequestBody(
             required: true,
@@ -1202,43 +1202,43 @@ class PterodactylImporterController
                     new OA\Property(
                         property: 'nest_to_realm_mapping',
                         type: 'object',
-                        description: 'Mapping of Pterodactyl nest_id to FeatherPanel realm_id',
+                        description: 'Mapping of Pterodactyl nest_id to OrveX Panel realm_id',
                         additionalProperties: new OA\AdditionalProperties(type: 'integer')
                     ),
                     new OA\Property(
                         property: 'egg_to_spell_mapping',
                         type: 'object',
-                        description: 'Mapping of Pterodactyl egg_id to FeatherPanel spell_id',
+                        description: 'Mapping of Pterodactyl egg_id to OrveX Panel spell_id',
                         additionalProperties: new OA\AdditionalProperties(type: 'integer')
                     ),
                     new OA\Property(
                         property: 'node_to_node_mapping',
                         type: 'object',
-                        description: 'Mapping of Pterodactyl node_id to FeatherPanel node_id',
+                        description: 'Mapping of Pterodactyl node_id to OrveX Panel node_id',
                         additionalProperties: new OA\AdditionalProperties(type: 'integer')
                     ),
                     new OA\Property(
                         property: 'user_to_user_mapping',
                         type: 'object',
-                        description: 'Mapping of Pterodactyl user_id to FeatherPanel user_id',
+                        description: 'Mapping of Pterodactyl user_id to OrveX Panel user_id',
                         additionalProperties: new OA\AdditionalProperties(type: 'integer')
                     ),
                     new OA\Property(
                         property: 'allocation_to_allocation_mapping',
                         type: 'object',
-                        description: 'Mapping of Pterodactyl allocation_id to FeatherPanel allocation_id',
+                        description: 'Mapping of Pterodactyl allocation_id to OrveX Panel allocation_id',
                         additionalProperties: new OA\AdditionalProperties(type: 'integer')
                     ),
                     new OA\Property(
                         property: 'variable_to_variable_mapping',
                         type: 'object',
-                        description: 'Mapping of Pterodactyl egg_variable_id to FeatherPanel spell_variable_id',
+                        description: 'Mapping of Pterodactyl egg_variable_id to OrveX Panel spell_variable_id',
                         additionalProperties: new OA\AdditionalProperties(type: 'integer')
                     ),
                     new OA\Property(
                         property: 'server_to_server_mapping',
                         type: 'object',
-                        description: 'Mapping of Pterodactyl server_id to FeatherPanel server_id (for parent_id)',
+                        description: 'Mapping of Pterodactyl server_id to OrveX Panel server_id (for parent_id)',
                         additionalProperties: new OA\AdditionalProperties(type: 'integer')
                     ),
                 ],
@@ -1629,7 +1629,7 @@ class PterodactylImporterController
     #[OA\Post(
         path: '/api/admin/pterodactyl-importer/import-server-database',
         summary: 'Import Pterodactyl server database',
-        description: 'Import a Pterodactyl server database as a FeatherPanel server database. Maps server_id and database_host_id.',
+        description: 'Import a Pterodactyl server database as an OrveX Panel server database. Maps server_id and database_host_id.',
         tags: ['Admin - Pterodactyl Importer'],
         requestBody: new OA\RequestBody(
             required: true,
@@ -1655,13 +1655,13 @@ class PterodactylImporterController
                     new OA\Property(
                         property: 'server_to_server_mapping',
                         type: 'object',
-                        description: 'Mapping of Pterodactyl server_id to FeatherPanel server_id',
+                        description: 'Mapping of Pterodactyl server_id to OrveX Panel server_id',
                         additionalProperties: new OA\AdditionalProperties(type: 'integer')
                     ),
                     new OA\Property(
                         property: 'database_host_to_database_host_mapping',
                         type: 'object',
-                        description: 'Mapping of Pterodactyl database_host_id to FeatherPanel database_host_id',
+                        description: 'Mapping of Pterodactyl database_host_id to OrveX Panel database_host_id',
                         additionalProperties: new OA\AdditionalProperties(type: 'integer')
                     ),
                 ],
@@ -1814,7 +1814,7 @@ class PterodactylImporterController
     #[OA\Post(
         path: '/api/admin/pterodactyl-importer/import-backup',
         summary: 'Import Pterodactyl backup',
-        description: 'Import a backup from Pterodactyl to FeatherPanel. Maps server_id using provided mapping and preserves original backup ID, UUID, and metadata.',
+        description: 'Import a backup from Pterodactyl to OrveX Panel. Maps server_id using provided mapping and preserves original backup ID, UUID, and metadata.',
         tags: ['Admin - Pterodactyl Importer'],
         requestBody: new OA\RequestBody(
             required: true,
@@ -1822,7 +1822,7 @@ class PterodactylImporterController
                 required: ['backup', 'server_to_server_mapping'],
                 properties: [
                     new OA\Property(property: 'backup', type: 'object', description: 'Pterodactyl backup data'),
-                    new OA\Property(property: 'server_to_server_mapping', type: 'object', description: 'Mapping of Pterodactyl server IDs to FeatherPanel server IDs'),
+                    new OA\Property(property: 'server_to_server_mapping', type: 'object', description: 'Mapping of Pterodactyl server IDs to OrveX Panel server IDs'),
                 ]
             )
         ),
@@ -1973,7 +1973,7 @@ class PterodactylImporterController
     #[OA\Post(
         path: '/api/admin/pterodactyl-importer/import-subuser',
         summary: 'Import Pterodactyl subuser',
-        description: 'Import a subuser from Pterodactyl to FeatherPanel. Maps user_id and server_id using provided mappings and preserves original subuser ID and permissions.',
+        description: 'Import a subuser from Pterodactyl to OrveX Panel. Maps user_id and server_id using provided mappings and preserves original subuser ID and permissions.',
         tags: ['Admin - Pterodactyl Importer'],
         requestBody: new OA\RequestBody(
             required: true,
@@ -1981,8 +1981,8 @@ class PterodactylImporterController
                 required: ['subuser', 'user_to_user_mapping', 'server_to_server_mapping'],
                 properties: [
                     new OA\Property(property: 'subuser', type: 'object', description: 'Pterodactyl subuser data'),
-                    new OA\Property(property: 'user_to_user_mapping', type: 'object', description: 'Mapping of Pterodactyl user IDs to FeatherPanel user IDs'),
-                    new OA\Property(property: 'server_to_server_mapping', type: 'object', description: 'Mapping of Pterodactyl server IDs to FeatherPanel server IDs'),
+                    new OA\Property(property: 'user_to_user_mapping', type: 'object', description: 'Mapping of Pterodactyl user IDs to OrveX Panel user IDs'),
+                    new OA\Property(property: 'server_to_server_mapping', type: 'object', description: 'Mapping of Pterodactyl server IDs to OrveX Panel server IDs'),
                 ]
             )
         ),
@@ -2142,7 +2142,7 @@ class PterodactylImporterController
     #[OA\Post(
         path: '/api/admin/pterodactyl-importer/import-schedule',
         summary: 'Import Pterodactyl schedule',
-        description: 'Import a schedule from Pterodactyl to FeatherPanel. Maps server_id using provided mapping and preserves original schedule ID, cron settings, and timestamps. Calculates next_run_at if not provided.',
+        description: 'Import a schedule from Pterodactyl to OrveX Panel. Maps server_id using provided mapping and preserves original schedule ID, cron settings, and timestamps. Calculates next_run_at if not provided.',
         tags: ['Admin - Pterodactyl Importer'],
         requestBody: new OA\RequestBody(
             required: true,
@@ -2150,7 +2150,7 @@ class PterodactylImporterController
                 required: ['schedule', 'server_to_server_mapping'],
                 properties: [
                     new OA\Property(property: 'schedule', type: 'object', description: 'Pterodactyl schedule data'),
-                    new OA\Property(property: 'server_to_server_mapping', type: 'object', description: 'Mapping of Pterodactyl server IDs to FeatherPanel server IDs'),
+                    new OA\Property(property: 'server_to_server_mapping', type: 'object', description: 'Mapping of Pterodactyl server IDs to OrveX Panel server IDs'),
                 ]
             )
         ),
@@ -2312,7 +2312,7 @@ class PterodactylImporterController
     #[OA\Post(
         path: '/api/admin/pterodactyl-importer/import-task',
         summary: 'Import Pterodactyl task',
-        description: 'Import a task from Pterodactyl to FeatherPanel. Maps schedule_id using provided mapping and preserves original task ID, sequence, action, payload, and other settings.',
+        description: 'Import a task from Pterodactyl to OrveX Panel. Maps schedule_id using provided mapping and preserves original task ID, sequence, action, payload, and other settings.',
         tags: ['Admin - Pterodactyl Importer'],
         requestBody: new OA\RequestBody(
             required: true,
@@ -2320,7 +2320,7 @@ class PterodactylImporterController
                 required: ['task', 'schedule_to_schedule_mapping'],
                 properties: [
                     new OA\Property(property: 'task', type: 'object', description: 'Pterodactyl task data'),
-                    new OA\Property(property: 'schedule_to_schedule_mapping', type: 'object', description: 'Mapping of Pterodactyl schedule IDs to FeatherPanel schedule IDs'),
+                    new OA\Property(property: 'schedule_to_schedule_mapping', type: 'object', description: 'Mapping of Pterodactyl schedule IDs to OrveX Panel schedule IDs'),
                 ]
             )
         ),

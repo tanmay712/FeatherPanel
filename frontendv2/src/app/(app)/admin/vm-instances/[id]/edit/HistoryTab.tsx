@@ -17,7 +17,7 @@ See the LICENSE file or <https://www.gnu.org/licenses/>.
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 import { PageCard } from '@/components/featherui/PageCard';
 import { History, Loader2 } from 'lucide-react';
 
@@ -54,7 +54,7 @@ function formatDate(iso: string): string {
 }
 
 export function HistoryTab({ instanceId }: HistoryTabProps) {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
     const [activities, setActivities] = useState<VmActivity[]>([]);
     const [loading, setLoading] = useState(true);
 

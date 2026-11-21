@@ -126,7 +126,7 @@ export function VersionInfoWidget({ version, loading }: VersionInfoWidgetProps) 
           ? {
                 version: settingsVersion,
                 type: 'Stable',
-                release_name: 'FeatherPanel',
+                release_name: 'OrveX Panel',
             }
           : null;
     const latest = version?.latest;

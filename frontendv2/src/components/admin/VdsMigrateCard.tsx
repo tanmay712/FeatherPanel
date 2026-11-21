@@ -19,7 +19,7 @@ import { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { ArrowRightLeft, Loader2 } from 'lucide-react';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 import { Button } from '@/components/featherui/Button';
 import { getApiErrorMessage } from '@/lib/api-errors';
 import type { CapacityResponse } from '@/components/admin/VdsCapacityOverview';
@@ -36,7 +36,7 @@ export function VdsMigrateCard({
     pveNode: string;
     onMigrated: () => void;
 }) {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
     const [targets, setTargets] = useState<string[] | null>(null);
     const [target, setTarget] = useState('');
     const [busy, setBusy] = useState(false);
@@ -44,7 +44,8 @@ export function VdsMigrateCard({
 
     useEffect(() => {
         axios
-            .get('/api/admin/vm-capacity')
+            // Migration moves a VDS between the nodes of a Proxmox cluster.
+            .get('/api/admin/vm-capacity', { params: { node_type: 'proxmox' } })
             .then(({ data }) => {
                 const cap = data?.data as CapacityResponse | undefined;
                 if (!cap?.migration_enabled) return;

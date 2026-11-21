@@ -45,3 +45,6 @@ phpunit.xml
 # Development tools
 .php-cs-fixer.cache
 .php-cs-fixer.dist.php
+
+# OrveX Panel: bundled addon frontend dependencies (built output is committed)
+storage/addons/*/Frontend/App/node_modules

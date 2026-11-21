@@ -15,7 +15,7 @@ See the LICENSE file or <https://www.gnu.org/licenses/>.
 
 'use client';
 
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 import { PageCard } from '@/components/featherui/PageCard';
 import { Button } from '@/components/featherui/Button';
 import { Input } from '@/components/featherui/Input';
@@ -61,7 +61,7 @@ export function DetailsTab({
     dnsSearchDomain = '',
     setDnsSearchDomain,
 }: DetailsTabProps) {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
 
     return (
         <form onSubmit={onSave} data-fp-save-shortcut>

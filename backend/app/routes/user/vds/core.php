@@ -312,6 +312,24 @@ return function (RouteCollection $routes): void {
         Rate::perMinute(5)
     );
 
+    // Change the login password (root for containers, cloud-init user for KVM).
+    App::getInstance(true)->registerVmInstanceRoute(
+        $routes,
+        'user-vm-instance-password',
+        '/api/user/vm-instances/{id}/password',
+        function (Request $request, array $args) {
+            $id = (int) ($args['id'] ?? 0);
+            if ($id <= 0) {
+                return ApiResponse::error('Invalid VM instance ID', 'INVALID_ID', 400);
+            }
+
+            return (new VmUserInstanceController())->changePassword($request, $id);
+        },
+        'id',
+        ['POST'],
+        Rate::perMinute(5)
+    );
+
     App::getInstance(true)->registerAuthRoute(
         $routes,
         'user-vm-instance-reinstall-status',

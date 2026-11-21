@@ -1,0 +1,29 @@
+{
+  "dashboard": {},
+  "client": {
+    "/pterodactylpanelapi/api-keys": {
+      "name": "Pterodactyl API Keys",
+      "icon": "🦎",
+      "lucideIcon": "key",
+      "showBadge": false,
+      "redirect": "/pterodactylpanelapi/api-keys",
+      "component": "/pterodactylpanelapi/dist/client.html",
+      "description": "Manage your personal Pterodactyl-compatible client API keys",
+      "category": "client"
+    }
+  },
+  "admin": {
+    "/pterodactylpanelapi/api-keys": {
+      "name": "Pterodactyl API Keys",
+      "icon": "🦎",
+      "showBadge": false,
+      "redirect": "/pterodactylpanelapi/api-keys",
+      "component": "/pterodactylpanelapi/dist/admin.html",
+      "lucideIcon": "key",
+      "description": "Manage API keys for the Pterodactyl-compatible Application API",
+      "category": "admin",
+      "permission": "admin.plugin.api_keys"
+    }
+  },
+  "server": {}
+}

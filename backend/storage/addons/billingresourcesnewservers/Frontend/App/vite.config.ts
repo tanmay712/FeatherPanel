@@ -1,0 +1,25 @@
+import path from "node:path";
+import tailwindcss from "@tailwindcss/vite";
+import vue from "@vitejs/plugin-vue";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [vue(), tailwindcss()],
+  resolve: {
+    alias: {
+      "@": path.resolve(import.meta.dirname, "./src"),
+    },
+  },
+  base: "./",
+  build: {
+    outDir: "../Components/billingresourcesnewservers/dist/",
+    emptyOutDir: true,
+    rollupOptions: {
+      input: {
+        admin: "./admin.html",
+        client: "./client.html",
+        "user-permissions": "./user-permissions.html",
+      },
+    },
+  },
+});

@@ -119,6 +119,50 @@ final class VmInstanceUtil
     }
 
     /**
+     * OrveX VPS Nodes (see vps-node/ in this repository) are the panel's own node
+     * system: they run KVM + LXC through Incus and serve the API the panel uses, so
+     * every VDS feature works on them. They have node_type "orvex" (nodes added by
+     * hand are recognised by the "@orvex" realm of their API user). See OrvexNodes.
+     *
+     * @param array<string, mixed> $vmNode
+     */
+    public static function isOrvexNode(array $vmNode): bool
+    {
+        return OrvexNodes::isOrvex($vmNode);
+    }
+
+    /**
+     * Give an OrveX node the login password of a guest that is about to be cloned.
+     * Proxmox container configs have no password field, so this is how LXC guests
+     * on OrveX nodes get the password chosen in the panel. Best effort: on failure the
+     * guest is still created and the password can be set later from the panel.
+     *
+     * @param array<string, mixed> $vmNode
+     */
+    public static function registerOrvexCredentials(
+        array $vmNode,
+        Proxmox $client,
+        string $pveNode,
+        int $vmid,
+        ?string $username,
+        ?string $password,
+    ): void {
+        if (!self::isOrvexNode($vmNode) || $vmid <= 0 || $password === null || $password === '' || $pveNode === '') {
+            return;
+        }
+        $result = $client->apiPost('/api2/json/nodes/' . rawurlencode($pveNode) . '/orvex/credentials', [
+            'vmid' => $vmid,
+            'username' => ($username !== null && $username !== '') ? $username : 'root',
+            'password' => $password,
+        ]);
+        if (!$result['ok']) {
+            App::getInstance(true)->getLogger()->warning(
+                'OrveX node: could not register guest credentials for VMID ' . $vmid . ': ' . ($result['error'] ?? 'unknown error')
+            );
+        }
+    }
+
+    /**
      * @param array<string, mixed> $instance
      *
      * @return array<int, array<string, mixed>>
@@ -384,6 +428,13 @@ final class VmInstanceUtil
                     'http_status' => 400,
                 ];
             }
+        } elseif (self::isOrvexNode($vmNode)) {
+            // OrveX nodes also apply a root password to containers (optional).
+            $rawPassword = isset($requestData['ci_password']) && is_string($requestData['ci_password']) ? trim($requestData['ci_password']) : '';
+            if ($rawPassword !== '') {
+                $ciUser = 'root';
+                $ciPassword = $rawPassword;
+            }
         }
 
         try {
@@ -539,6 +590,8 @@ final class VmInstanceUtil
             return ['ok' => false, 'error' => 'Failed to create reinstall task in DB', 'code' => 'DB_ERROR', 'http_status' => 500];
         }
 
+        self::registerOrvexCredentials($vmNode, $client, (string) $node, (int) $newVmid, $ciUser, $ciPassword);
+
         return [
             'ok' => true,
             'reinstall_id' => $reinstallId,
@@ -580,7 +633,7 @@ final class VmInstanceUtil
             $getConfig = $client->getVmConfig($node, $newVmid, 'lxc');
             $currentConfig = $getConfig['ok'] && is_array($getConfig['config'] ?? null) ? (array) $getConfig['config'] : [];
             $networkConfig = self::buildNetworkConfig('lxc', $networkAssignments, $currentConfig);
-            $descParts = ['FeatherPanel Managed VM (Reinstalled)'];
+            $descParts = ['OrveX Panel Managed VM (Reinstalled)'];
             if (!empty($ipAddress)) {
                 $descParts[] = 'IP: ' . $ipAddress;
             }
@@ -637,7 +690,7 @@ final class VmInstanceUtil
             $curCfg = $client->getVmConfig($node, $newVmid, 'qemu');
             $currentConfig = $curCfg['ok'] && is_array($curCfg['config'] ?? null) ? (array) $curCfg['config'] : [];
             $networkConfig = self::buildNetworkConfig('qemu', $networkAssignments, $currentConfig);
-            $descParts = ['FeatherPanel Managed VM (Reinstalled)'];
+            $descParts = ['OrveX Panel Managed VM (Reinstalled)'];
             if (!empty($ipAddress)) {
                 $descParts[] = 'IP: ' . $ipAddress;
             }
@@ -1274,7 +1327,7 @@ final class VmInstanceUtil
                 'ciuser' => $meta['ci_user'] ?? 'debian',
                 'cipassword' => $meta['ci_password'] ?? bin2hex(random_bytes(6)),
                 'tags' => 'FeatherPanel-Managed',
-                'description' => "FeatherPanel Managed VM | IP: {$primaryIpAddress} | Hostname: $hostname | User: {$task['user_uuid']} | Created: " . date('Y-m-d H:i:s'),
+                'description' => "OrveX Panel Managed VM | IP: {$primaryIpAddress} | Hostname: $hostname | User: {$task['user_uuid']} | Created: " . date('Y-m-d H:i:s'),
             ] + $networkConfig['config']);
         } else {
             $networkConfig = self::buildNetworkConfig('lxc', $networkAssignments, []);
@@ -1284,7 +1337,7 @@ final class VmInstanceUtil
                 'nameserver' => '1.1.1.1 8.8.8.8',
                 'onboot' => $onBoot ? 1 : 0,
                 'tags' => 'FeatherPanel-Managed',
-                'description' => "FeatherPanel Managed VM | IP: {$primaryIpAddress} | Hostname: $hostname | User: {$task['user_uuid']} | Created: " . date('Y-m-d H:i:s'),
+                'description' => "OrveX Panel Managed VM | IP: {$primaryIpAddress} | Hostname: $hostname | User: {$task['user_uuid']} | Created: " . date('Y-m-d H:i:s'),
             ] + $networkConfig['config']);
 
             $requestedDiskGb = (int) ($meta['disk'] ?? 0);

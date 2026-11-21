@@ -47,6 +47,7 @@ import {
 } from '@/components/dashboard/DashboardResourceRows';
 import { formatUptime } from '@/components/dashboard/DashboardWidgets';
 import { BulkServerActions } from '@/components/servers/BulkServerActions';
+import { CreateFreeServerButton } from '@/components/free-servers/CreateFreeServerButton';
 import { ResourceTrendStrip } from '@/components/dashboard/ResourceTrends';
 
 const RECENT_SERVERS_KEY = 'featherpanel_recent_servers_v1';
@@ -424,6 +425,7 @@ export function DashboardServersSection({
                     </Link>
                 </div>
                 <div className='flex flex-wrap items-center gap-1.5'>
+                    {scope === 'mine' && <CreateFreeServerButton variant='toolbar' />}
                     <ToolbarButton
                         icon={CheckSquare}
                         active={selecting}

@@ -18,13 +18,17 @@ import type { NavigationItem, PanelModule } from '@/types/navigation';
 
 export type { PanelModule };
 
-export const PANEL_MODULES: PanelModule[] = ['game', 'web', 'vds'];
+export const PANEL_MODULES: PanelModule[] = ['game', 'web', 'vds', 'vps'];
 
-/** Public setting that switches each module on or off. Missing values mean enabled (backward compatible). */
+/**
+ * Public setting that switches each module on or off. Missing values mean enabled (backward compatible).
+ * VDS (virtual servers on Proxmox VE nodes) and VPS (virtual servers on OrveX nodes) are separate modules.
+ */
 export const MODULE_SETTING_KEYS = {
     game: 'module_game_enabled',
     web: 'module_web_enabled',
     vds: 'module_vds_enabled',
+    vps: 'module_vps_enabled',
 } as const satisfies Record<PanelModule, keyof AppSettings>;
 
 /** Short label shown as the module badge in sidebars, palette and dashboard. */
@@ -32,6 +36,7 @@ export const MODULE_BADGES: Record<PanelModule, string> = {
     game: 'GAME',
     web: 'WEB',
     vds: 'VDS',
+    vps: 'VPS',
 };
 
 export function isModuleEnabled(settings: AppSettings | null | undefined, module: PanelModule): boolean {
@@ -44,6 +49,7 @@ export function getModuleStates(settings: AppSettings | null | undefined): Recor
         game: isModuleEnabled(settings, 'game'),
         web: isModuleEnabled(settings, 'web'),
         vds: isModuleEnabled(settings, 'vds'),
+        vps: isModuleEnabled(settings, 'vps'),
     };
 }
 
@@ -61,6 +67,7 @@ const MODULE_ROUTES: { prefix: string; module: PanelModule }[] = [
     { prefix: '/admin/subdomains', module: 'game' },
     { prefix: '/admin/pterodactyl-importer', module: 'game' },
     { prefix: '/admin/analytics/servers', module: 'game' },
+    { prefix: '/admin/free-servers', module: 'game' },
     { prefix: '/webspace/', module: 'web' },
     { prefix: '/dashboard/webspaces', module: 'web' },
     { prefix: '/webspaces', module: 'web' },
@@ -76,6 +83,10 @@ const MODULE_ROUTES: { prefix: string; module: PanelModule }[] = [
     { prefix: '/admin/vds-nodes', module: 'vds' },
     { prefix: '/admin/vm-templates', module: 'vds' },
     { prefix: '/admin/analytics/vds', module: 'vds' },
+    { prefix: '/vps/', module: 'vps' },
+    { prefix: '/dashboard/vps', module: 'vps' },
+    { prefix: '/admin/vps-servers', module: 'vps' },
+    { prefix: '/admin/vps-nodes', module: 'vps' },
 ];
 
 export function getModuleForPath(pathname: string): PanelModule | null {

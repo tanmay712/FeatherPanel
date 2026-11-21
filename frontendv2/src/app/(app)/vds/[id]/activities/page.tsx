@@ -18,7 +18,8 @@ See the LICENSE file or <https://www.gnu.org/licenses/>.
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter, usePathname } from 'next/navigation';
 import axios from 'axios';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
+import { vmInstanceBase } from '@/lib/vm-products';
 import { useDateFormatOptions, useHideServerIps } from '@/contexts/PreferencesContext';
 import { HIDDEN_IP_PLACEHOLDER, maskIpsInText } from '@/lib/ip-mask';
 import { formatDateTimeInTz, formatRelativeTime } from '@/lib/dateUtils';
@@ -118,7 +119,7 @@ export default function VdsActivitiesPage() {
     const { id } = useParams() as { id: string };
     const router = useRouter();
     const pathname = usePathname();
-    const { t } = useTranslation();
+    const { t, product } = useVmTranslation();
     const dateOpts = useDateFormatOptions();
     const hideIps = useHideServerIps();
     const { instance, loading: instanceLoading, hasPermission } = useVmInstance();
@@ -231,7 +232,7 @@ export default function VdsActivitiesPage() {
         if (!instanceLoading) {
             if (!hasPermission('activity.read')) {
                 toast.error(t('vds.activities.permission_denied'));
-                router.push(`/vds/${id}`);
+                router.push(vmInstanceBase(product, id));
                 return;
             }
             fetchActivities(1);

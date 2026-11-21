@@ -53,7 +53,8 @@ class OverviewAnalytics
         $modules = [
             ModuleGate::GAME => ModuleGate::isEnabled(ModuleGate::GAME),
             ModuleGate::WEB => ModuleGate::isEnabled(ModuleGate::WEB),
-            ModuleGate::VDS => ModuleGate::isEnabled(ModuleGate::VDS),
+            // One block for all virtual servers: VDS (Proxmox nodes) and VPS (OrveX nodes).
+            ModuleGate::VDS => ModuleGate::isEnabled(ModuleGate::VDS) || ModuleGate::isEnabled(ModuleGate::VPS),
         ];
 
         $series = [

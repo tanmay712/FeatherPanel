@@ -89,7 +89,7 @@ self.addEventListener('fetch', (event) => {
 });
 
 self.addEventListener('push', (event) => {
-    let data = { title: 'FeatherPanel', body: '', url: '/dashboard', tag: 'fp-push' };
+    let data = { title: 'OrveX Panel', body: '', url: '/dashboard', tag: 'fp-push' };
     try {
         if (event.data) {
             const parsed = event.data.json();
@@ -106,7 +106,7 @@ self.addEventListener('push', (event) => {
         }
     }
 
-    const title = typeof data.title === 'string' && data.title ? data.title : 'FeatherPanel';
+    const title = typeof data.title === 'string' && data.title ? data.title : 'OrveX Panel';
     const options = {
         body: typeof data.body === 'string' ? data.body : '',
         tag: typeof data.tag === 'string' && data.tag ? data.tag : 'fp-push',

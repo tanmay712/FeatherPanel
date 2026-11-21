@@ -434,12 +434,12 @@ class FeatherQuilldConfigBuilder
     private static function resolvePanelAppName(): string
     {
         try {
-            $name = App::getInstance(true)->getConfig()->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel');
+            $name = App::getInstance(true)->getConfig()->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel');
             $name = is_string($name) ? trim($name) : '';
 
-            return $name !== '' ? $name : 'FeatherPanel';
+            return $name !== '' ? $name : 'OrveX Panel';
         } catch (\Throwable) {
-            return 'FeatherPanel';
+            return 'OrveX Panel';
         }
     }
 

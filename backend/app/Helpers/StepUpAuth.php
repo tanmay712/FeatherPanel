@@ -275,7 +275,7 @@ class StepUpAuth
             'last_name' => $user['last_name'] ?? '',
             'email' => $user['email'],
             'username' => $user['username'] ?? '',
-            'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
+            'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
             'app_url' => $config->getSetting(ConfigInterface::APP_URL, ''),
             'app_support_url' => $config->getSetting(ConfigInterface::APP_SUPPORT_URL, ''),
             'login_code' => $code,

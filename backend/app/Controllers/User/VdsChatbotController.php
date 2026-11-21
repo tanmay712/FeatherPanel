@@ -472,7 +472,7 @@ class VdsChatbotController
 
         return [
             'response' => $result['response'],
-            'model' => $result['model'] ?? 'FeatherPanel VDS AI',
+            'model' => $result['model'] ?? 'OrveX Panel VDS AI',
             'conversation_id' => $conversation['id'],
             'user_message_id' => $userMessageId,
             'assistant_message_id' => $assistantMessageId,

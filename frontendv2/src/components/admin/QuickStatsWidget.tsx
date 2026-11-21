@@ -33,6 +33,8 @@ const STAT_GRID: Record<number, string> = {
     4: 'grid-cols-2 lg:grid-cols-4',
     5: 'grid-cols-2 sm:grid-cols-3 2xl:grid-cols-5',
     6: 'grid-cols-2 sm:grid-cols-3 2xl:grid-cols-6',
+    7: 'grid-cols-2 sm:grid-cols-4 2xl:grid-cols-7',
+    8: 'grid-cols-2 sm:grid-cols-4 2xl:grid-cols-8',
 };
 
 type StatTone = 'sky' | 'violet' | 'emerald' | 'amber' | 'rose' | 'indigo';
@@ -64,6 +66,10 @@ interface QuickStatsWidgetProps {
         spells: number;
         vm_nodes: number;
         vm_instances: number;
+        vds_nodes?: number;
+        vds_instances?: number;
+        vps_nodes?: number;
+        vps_instances?: number;
     };
     loading?: boolean;
 }
@@ -102,19 +108,34 @@ export function QuickStatsWidget({ stats, loading }: QuickStatsWidgetProps) {
             icon: Sparkles as LucideIcon,
             tone: 'amber' as StatTone,
         },
+        // VDS servers run on Proxmox VE nodes, VPS servers on OrveX nodes.
         {
             name: t('admin.stats.total_vm_nodes'),
-            value: stats?.vm_nodes,
+            value: stats?.vds_nodes ?? stats?.vm_nodes,
             href: '/admin/vds-nodes',
             icon: Cpu as LucideIcon,
             tone: 'rose' as StatTone,
         },
         {
             name: t('admin.stats.total_vm_instances'),
-            value: stats?.vm_instances,
+            value: stats?.vds_instances ?? stats?.vm_instances,
             href: '/admin/vm-instances',
             icon: Boxes as LucideIcon,
             tone: 'indigo' as StatTone,
+        },
+        {
+            name: t('admin.stats.total_vps_nodes'),
+            value: stats?.vps_nodes,
+            href: '/admin/vps-nodes',
+            icon: Cpu as LucideIcon,
+            tone: 'amber' as StatTone,
+        },
+        {
+            name: t('admin.stats.total_vps_instances'),
+            value: stats?.vps_instances,
+            href: '/admin/vps-servers',
+            icon: Boxes as LucideIcon,
+            tone: 'emerald' as StatTone,
         },
     ];
     const items = allItems

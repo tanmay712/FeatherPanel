@@ -47,7 +47,7 @@ services:
       retries: 10
 
   backend:
-    #image: ghcr.io/mythicalltd/featherpanel-backend:dev
+    #image: ghcr.io/tanmay712/orvexpanel-backend:dev
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -69,6 +69,9 @@ services:
       - FEATHERPANEL_VERSION_CHANNEL=development
       - DOCKER_UPDATER_URL=http://host.docker.internal:9418/update
       - DOCKER_UPDATER_TOKEN=${DOCKER_UPDATER_TOKEN:-}
+      # Installer source for the OrveX VPS Node install command shown in the panel
+      - ORVEX_REPO=${ORVEX_REPO:-tanmay712/FeatherPanel}
+      - ORVEX_BRANCH=${ORVEX_BRANCH:-develop}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
@@ -102,7 +105,7 @@ services:
       - featherpanel_network
 
   frontendv2:
-    #image: ghcr.io/mythicalltd/featherpanel-frontendv2:dev
+    #image: ghcr.io/tanmay712/orvexpanel-frontendv2:dev
     build:
       context: ./frontendv2
       dockerfile: Dockerfile

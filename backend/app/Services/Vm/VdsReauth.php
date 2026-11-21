@@ -96,7 +96,7 @@ class VdsReauth
 
     private static function actions(): array
     {
-        $raw = App::getInstance(true)->getConfig()->getSetting(ConfigInterface::VDS_REAUTH_ACTIONS, 'reinstall,rollback,restore');
+        $raw = App::getInstance(true)->getConfig()->getSetting(ConfigInterface::VDS_REAUTH_ACTIONS, 'reinstall,rollback,restore,password');
 
         return array_values(array_filter(array_map('trim', explode(',', strtolower($raw)))));
     }

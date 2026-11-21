@@ -144,7 +144,8 @@ class TranslationsController
                     continue;
                 }
 
-                if (preg_match('/^([a-z]{2}(?:-[a-z]{2})?)\.json$/i', $file, $matches)) {
+                // Accept ISO 3166 (e.g. pt-br) and UN M.49 numeric regions (e.g. es-419).
+                if (preg_match('/^([a-z]{2}(?:[-_](?:[a-z]{2}|[0-9]{3}))?)\.json$/i', $file, $matches)) {
                     $code = $this->normalizeLanguageCode($matches[1]);
 
                     // Filter by enabled languages if setting exists

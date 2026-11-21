@@ -17,7 +17,7 @@ See the LICENSE file or <https://www.gnu.org/licenses/>.
 
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 import { PageCard } from '@/components/featherui/PageCard';
 import { Button } from '@/components/featherui/Button';
 import { Input } from '@/components/featherui/Input';
@@ -74,7 +74,7 @@ interface IpPoolTabProps {
 }
 
 export function IpPoolTab({ nodeId, nodeName }: IpPoolTabProps) {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
     const [loading, setLoading] = useState(true);
     const [ips, setIps] = useState<VmIp[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
@@ -243,7 +243,9 @@ export function IpPoolTab({ nodeId, nodeName }: IpPoolTabProps) {
             toast.error(t('admin.vdsNodes.ips.bulk_empty'));
             return;
         }
-        const invalid = entries.find((ip) => !ipRegex.test(ip));
+        // Ranges (10.77.0.2-10.77.0.254 or 10.77.0.2-254) are expanded by the backend in one request.
+        const rangeRegex = /^(\d{1,3}\.){3}\d{1,3}-((\d{1,3}\.){3})?\d{1,3}$/;
+        const invalid = entries.find((ip) => !ipRegex.test(ip) && !rangeRegex.test(ip));
         if (invalid) {
             toast.error(t('admin.vdsNodes.ips.bulk_invalid_ip', { ip: invalid }));
             return;
@@ -266,14 +268,19 @@ export function IpPoolTab({ nodeId, nodeName }: IpPoolTabProps) {
         try {
             for (const ip of entries) {
                 try {
-                    await axios.put(`/api/admin/vm-nodes/${nodeId}/ips`, {
+                    const { data } = await axios.put(`/api/admin/vm-nodes/${nodeId}/ips`, {
                         ip,
                         cidr: createForm.cidr !== '' ? parseInt(createForm.cidr, 10) : null,
                         gateway: createForm.gateway || null,
                         notes: createForm.notes || null,
                         ...metaPayload(createForm),
                     });
-                    success++;
+                    if (rangeRegex.test(ip)) {
+                        success += Number(data?.data?.created ?? 0);
+                        failed += Number(data?.data?.skipped ?? 0);
+                    } else {
+                        success++;
+                    }
                 } catch {
                     failed++;
                 }
@@ -696,7 +703,7 @@ export function IpPoolTab({ nodeId, nodeName }: IpPoolTabProps) {
                         <div className='space-y-2'>
                             <Label className='text-sm font-semibold'>{t('admin.vdsNodes.ips.bulk_list')}</Label>
                             <Textarea
-                                placeholder={'10.0.0.10\n10.0.0.11\n10.0.0.12'}
+                                placeholder={'10.0.0.10\n10.0.0.11\n10.77.0.2-10.77.0.254'}
                                 value={bulkIpsInput}
                                 className='min-h-[120px] font-mono'
                                 onChange={(e) => setBulkIpsInput(e.target.value)}

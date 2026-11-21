@@ -19,7 +19,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmProduct, useVmTranslation } from '@/hooks/useVmProduct';
 import { PageHeader } from '@/components/featherui/PageHeader';
 import { Button } from '@/components/featherui/Button';
 import { Input } from '@/components/featherui/Input';
@@ -102,7 +102,9 @@ const totalSteps = 4;
 type VmChoiceKind = 'node' | 'pveNode' | 'storage' | 'bridge' | 'retention';
 
 export default function VmInstancesCreatePage() {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
+    // VDS servers go on Proxmox nodes, VPS servers on OrveX nodes.
+    const { routes, nodeType } = useVmProduct();
     const privacyMask = useIpMask();
     const router = useRouter();
 
@@ -201,7 +203,7 @@ export default function VmInstancesCreatePage() {
         try {
             const [locRes, nodeRes] = await Promise.all([
                 axios.get('/api/admin/locations', { params: { type: 'vps', page: 1, limit: 1 } }),
-                axios.get('/api/admin/vm-nodes', { params: { page: 1, limit: 1 } }),
+                axios.get('/api/admin/vm-nodes', { params: { page: 1, limit: 1, node_type: nodeType } }),
             ]);
             const vpsLocations = Number(locRes.data?.data?.pagination?.total_records ?? 0);
             const vdsNodes = Number(nodeRes.data?.data?.pagination?.total_records ?? 0);
@@ -211,17 +213,25 @@ export default function VmInstancesCreatePage() {
             console.error('VDS infrastructure prerequisite check failed:', e);
             setInfraGate({ status: 'error' });
         }
-    }, []);
+    }, [nodeType]);
 
     useEffect(() => {
         axios
-            .get('/api/admin/vm-nodes', { params: { limit: 100 } })
-            .then((res) => setNodes(res.data.data?.vm_nodes ?? []))
+            .get('/api/admin/vm-nodes', { params: { limit: 100, node_type: nodeType } })
+            .then((res) =>
+                setNodes(
+                    // OrveX nodes that have not connected yet cannot host servers.
+                    (res.data.data?.vm_nodes ?? []).filter(
+                        (node: { node_type?: string; registered_at?: string | null }) =>
+                            !(node.node_type === 'orvex' && !node.registered_at),
+                    ),
+                ),
+            )
             .catch((error) => toast.error(getApiErrorMessage(error, t, 'admin.vmInstances.errors.fetch_failed')))
             .finally(() => setLoadingPlans(false));
         // Auto-placement: preselect the node recommended by the capacity overview.
         axios
-            .get('/api/admin/vm-capacity')
+            .get('/api/admin/vm-capacity', { params: { node_type: nodeType } })
             .then((res) => {
                 const rec = res.data?.data?.recommended_node_id;
                 if (typeof rec === 'number') {
@@ -232,7 +242,7 @@ export default function VmInstancesCreatePage() {
             .catch(() => {
                 // Without capacity info the admin simply picks a node.
             });
-    }, [t]);
+    }, [t, nodeType]);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -708,7 +718,7 @@ export default function VmInstancesCreatePage() {
             }
 
             toast.success(t('admin.vmInstances.create_success'), { id: toastId });
-            router.push('/admin/vm-instances');
+            router.push(routes.adminServers);
         } catch (err) {
             toast.error(getApiErrorMessage(err, t, 'admin.vmInstances.errors.fetch_failed'), { id: toastId });
             setSubmitting(false);
@@ -734,7 +744,7 @@ export default function VmInstancesCreatePage() {
                     toast.success(t('admin.vmInstances.create_success'), {
                         id: toastId,
                     });
-                    router.push('/admin/vm-instances');
+                    router.push(routes.adminServers);
                     return;
                 }
 
@@ -778,7 +788,7 @@ export default function VmInstancesCreatePage() {
                 description={t('admin.vmInstances.create_desc')}
                 icon={Server}
                 actions={
-                    <Button variant='outline' onClick={() => router.push('/admin/vm-instances')}>
+                    <Button variant='outline' onClick={() => router.push(routes.adminServers)}>
                         <X className='mr-2 h-4 w-4' />
                         {t('admin.servers.form.cancel') ?? t('common.cancel')}
                     </Button>
@@ -824,7 +834,11 @@ export default function VmInstancesCreatePage() {
                             </Button>
                             <Button asChild className='h-10 min-w-[8.5rem] rounded-xl px-5'>
                                 <Link
-                                    href={infraGate.vpsLocations === 0 ? '/admin/locations' : '/admin/vds-nodes/create'}
+                                    href={
+                                        infraGate.vpsLocations === 0
+                                            ? '/admin/locations'
+                                            : `${routes.adminNodes}/create`
+                                    }
                                     className='inline-flex items-center justify-center gap-2'
                                 >
                                     {infraGate.vpsLocations === 0 ? (

@@ -1752,7 +1752,37 @@
             "DNS_PROVIDER_UNKNOWN": "Unknown DNS provider",
             "DNS_TOKEN_INVALID": "Enter a valid API token (no spaces, at most 512 characters)",
             "DNS_ZONE_NOT_FOUND": "No DNS zone for this domain was found with this token. Check that the token can see the zone",
-            "DOMAIN_NOT_IN_WEBSPACE": "This domain does not belong to this WebSpace"
+            "DOMAIN_NOT_IN_WEBSPACE": "This domain does not belong to this WebSpace",
+            "NOT_SUPPORTED": "This action is not supported for this server.",
+            "PASSWORD_CHANGE_FAILED": "The server's node could not change the password. Try again in a moment.",
+            "INVALID_IP_RANGE": "Invalid IP range. Use a.b.c.d-a.b.c.e or a.b.c.d-e (IPv4, at most 1024 addresses).",
+            "INVALID_NODE_TYPE": "Choose either an OrveX node or a Proxmox VE node.",
+            "NOT_ORVEX_NODE": "This action is only available for OrveX nodes.",
+            "ORVEX_TOKEN_FAILED": "Could not create an install command. Try again.",
+            "ORVEX_NODE_PENDING": "This OrveX node has not connected yet. Run its install command on the server first.",
+            "ORVEX_NODE_UNREACHABLE": "The panel could not reach the OrveX node. Check that the node is running and its API port is open.",
+            "INVALID_REGISTRATION_TOKEN": "This install command is invalid, expired or already used. Create a new one on the node page.",
+            "INVALID_REGISTRATION": "The node sent invalid registration data.",
+            "REGISTRATION_FAILED": "The panel could not save the node registration.",
+            "FREE_SERVERS_DISABLED": "Free servers are turned off.",
+            "FREE_SERVER_STACK_UNAVAILABLE": "This stack is not available for free servers.",
+            "FREE_SERVER_INVALID_NAME": "Give the server a name of up to 60 characters.",
+            "FREE_SERVER_STACK_MISCONFIGURED": "This stack is not set up correctly yet. Try another one or ask an administrator.",
+            "FREE_SERVER_LIMIT_REACHED": "You already have the maximum number of free servers.",
+            "FREE_SERVER_NO_CAPACITY": "There is no room for a free server right now. Try again later.",
+            "FREE_SERVER_CREATE_FAILED": "The server could not be created. Try again in a few minutes.",
+            "FREE_SERVER_NOT_FOUND": "Free server not found.",
+            "FREE_SERVER_NOT_STORED": "This server is not in storage.",
+            "FREE_SERVER_RESTORE_BLOCKED": "This server was suspended by staff. Contact support to get it back.",
+            "FREE_SERVER_RESTORE_FAILED": "The server could not be restored. Try again.",
+            "FREE_SERVER_SUSPENDED": "Restore the server before changing its stack.",
+            "FREE_SERVER_SAME_STACK": "The server already runs this stack.",
+            "FREE_SERVER_STACK_CHANGE_FAILED": "The stack could not be changed, so nothing was changed. Try again in a few minutes.",
+            "FREE_SERVER_SPELL_NOT_ALLOWED": "Free servers can only switch to another free server stack.",
+            "FREE_SERVERS_UNKNOWN_NODE": "One of the picked nodes no longer exists.",
+            "FREE_SERVERS_UNKNOWN_SPELL": "The spell picked for a stack no longer exists.",
+            "FREE_SERVERS_NOT_READY": "Pick at least one node and one stack before turning free servers on.",
+            "FREE_SERVERS_SAVE_FAILED": "Failed to save the free server settings."
         },
         "global": {}
     },
@@ -1940,7 +1970,7 @@
     "branding": {
         "running_on": "Running on {name} {version}",
         "copyright": "{company}",
-        "powered_by": "Powered by FeatherPanel"
+        "powered_by": "Powered by OrveX Panel"
     },
     "links": {
         "aria_label": "Panel links",
@@ -2111,17 +2141,19 @@
             },
             "stats": {
                 "game": "Game servers",
-                "vds": "Virtual servers",
+                "vds": "VDS servers",
                 "web": "Web hosting",
                 "support": "Support tickets",
                 "running": "{count} running",
                 "new_replies": "{count} with new replies",
-                "no_new_replies": "No new replies"
+                "no_new_replies": "No new replies",
+                "vps": "VPS servers"
             },
             "sections": {
                 "game": "Game servers",
-                "vds": "Virtual servers",
-                "web": "Web hosting"
+                "vds": "VDS servers",
+                "web": "Web hosting",
+                "vps": "VPS servers"
             },
             "no_resources_hint": "Services added to your account will show up here.",
             "meters": {
@@ -2205,13 +2237,14 @@
                 "clock": "Clock",
                 "players": "Players online",
                 "heatmap": "Resource heatmap",
-                "trends": "Resource trends"
+                "trends": "Resource trends",
+                "vps": "VPS"
             },
             "descriptions": {
                 "stats": "Counts of your servers, VDS, web spaces and tickets.",
                 "attention": "Suspensions, failed installs, expiring services, full disks and new replies.",
                 "servers": "Your game servers with status, usage and power controls.",
-                "vds": "Your virtual servers.",
+                "vds": "Your VDS servers.",
                 "webspaces": "Your websites and hosting.",
                 "usage": "CPU, memory and disk used across everything, against what you are allowed.",
                 "status": "How many servers are running, offline or installing.",
@@ -2234,7 +2267,8 @@
                 "clock": "The time and date in your time zone.",
                 "players": "Who is playing on your running game servers.",
                 "heatmap": "Every server as a tile coloured by how busy it is.",
-                "trends": "Total CPU, RAM and disk across your servers over the last 24 hours."
+                "trends": "Total CPU, RAM and disk across your servers over the last 24 hours.",
+                "vps": "Your VPS servers."
             },
             "usage": {
                 "title": "Resource usage",
@@ -3978,7 +4012,7 @@
             "security": "Security",
             "settings": "Settings",
             "system": "System",
-            "myfeatherpanel": "MyFeatherPanel",
+            "myfeatherpanel": "My OrveX Panel",
             "developer": "Developer",
             "feathercloud": "FeatherCloud",
             "tickets": "Tickets",
@@ -4038,7 +4072,7 @@
             "cloudManagement": "Cloud Management",
             "cloudConnections": "Cloud Connections",
             "featherpanelPremium": "FeatherPanel Premium",
-            "myFeatherPanel": "MyFeatherPanel",
+            "myFeatherPanel": "My OrveX Panel",
             "reportIssue": "Report an Issue",
             "suggestFeature": "Suggest a New Thing",
             "knowledgebase": "Knowledge Base",
@@ -4085,7 +4119,10 @@
             "boot": "Boot",
             "vdsIsos": "VDS ISO Library",
             "inactiveServers": "Inactive Servers",
-            "observability": "Observability"
+            "observability": "Observability",
+            "virtualServersVps": "Virtual Servers (VPS)",
+            "vpsNodes": "Nodes (VPS)",
+            "freeServers": "Free servers"
         }
     },
     "adminWingsBackups": {
@@ -4276,7 +4313,7 @@
             "node_needs_updates_one": "{count} node needs updates"
         },
         "panel": {
-            "title": "FeatherPanel",
+            "title": "OrveX Panel",
             "current": "Current Version",
             "latest": "Latest Version",
             "up_to_date": "Panel is up to date",
@@ -4343,7 +4380,7 @@
         },
         "integrity": {
             "title": "System Integrity & Infrastructure Health",
-            "description": "FeatherPanel checks Wings nodes and marketplace plugins for newer versions so you can keep them current.",
+            "description": "OrveX Panel checks Wings nodes and marketplace plugins for newer versions so you can keep them current.",
             "note": "Updates are non-destructive and preserve all your configurations.",
             "view_docs": "View Documentation"
         },
@@ -4360,8 +4397,8 @@
         "column_version": "Version",
         "column_status": "Status",
         "hero": {
-            "available_title": "FeatherPanel {version} is available",
-            "latest_title": "FeatherPanel is up to date",
+            "available_title": "OrveX Panel {version} is available",
+            "latest_title": "OrveX Panel is up to date",
             "channel": "Channel",
             "php": "PHP",
             "running": "running {version}",
@@ -4467,7 +4504,7 @@
         "copyEmail": "Copy email",
         "showEmail": "Show email",
         "hideEmail": "Hide email",
-        "poweredBy": "powered by featherpanel",
+        "poweredBy": "powered by orvex panel",
         "localStorageMenu": "Browser storage",
         "localStorageDefaultAppName": "Hosting panel",
         "localStorageTitle": "{appName} browser storage",
@@ -4524,7 +4561,9 @@
                 "webspace_backup_completed": "Web hosting backup completed",
                 "webspace_backup_failed": "Web hosting backup failed",
                 "webspace_limit": "Web hosting near its limit",
-                "webspace_malware": "Malware found"
+                "webspace_malware": "Malware found",
+                "free_server_stopped": "Free server stopped",
+                "free_server_stored": "Free server moved to storage"
             },
             "bodies": {
                 "ticket_reply": "New reply on \"{ticket}\".",
@@ -4548,7 +4587,9 @@
                 "webspace_backup_completed": "A backup of {webspace} finished.",
                 "webspace_backup_failed": "A backup of {webspace} failed: {error}",
                 "webspace_limit": "{webspace} uses {percent}% of its {resource} limit.",
-                "webspace_malware": "The last scan of {webspace} found {files} infected file(s)."
+                "webspace_malware": "The last scan of {webspace} found {files} infected file(s).",
+                "free_server_stopped": "{server} was stopped after {days} days without a login. Start it again from the panel.",
+                "free_server_stored": "{server} moved to storage after {days} days without a login. Nothing was deleted: open it to restore it."
             },
             "metrics": {
                 "cpu": "CPU",
@@ -8043,8 +8084,8 @@
                 "flag_none": "None",
                 "type": "Location Type",
                 "type_description": "Each location serves one infrastructure type only. The type is permanent and cannot be changed after creation.",
-                "webhosting_alpha_title": "FeatherPanel WebHosting is still in ALPHA",
-                "webhosting_alpha_description": "Bugs, outages, or data loss may occur. To the extent permitted by applicable law, FeatherPanel and its developers are not liable for damages, losses, or issues arising from use of this alpha feature. Please report problems so we can fix them. Thank you for supporting FeatherPanel!",
+                "webhosting_alpha_title": "OrveX Panel WebHosting is still in ALPHA",
+                "webhosting_alpha_description": "Bugs, outages, or data loss may occur. To the extent permitted by applicable law, OrveX Panel and its developers are not liable for damages, losses, or issues arising from use of this alpha feature. Please report problems so we can fix them. Thank you for supporting OrveX Panel!",
                 "webhosting_alpha_consent": "I understand the alpha risks and agree to the notice above.",
                 "webhosting_alpha_required": "Please agree to the WebHosting alpha notice before creating this location.",
                 "type_immutable_notice": "Location type is permanent and was set when this location was created.",
@@ -8101,7 +8142,7 @@
         },
         "vdsNodes": {
             "title": "Nodes (VDS)",
-            "description": "Connect and manage Proxmox nodes for VPS / VDS virtualization.",
+            "description": "Connect and manage Proxmox VE nodes for VDS servers.",
             "viewAndManage": "View and manage VDS nodes in the location: {location}.",
             "search_placeholder": "Search VDS nodes by name or FQDN...",
             "tabs": {
@@ -8146,7 +8187,7 @@
                 "field_description": "Description (optional)",
                 "field_lxc_root_password": "Default LXC root password",
                 "field_lxc_root_password_placeholder": "e.g. P@ssw0rd (shown to users after deploy)",
-                "field_lxc_root_password_help": "Informational only. FeatherPanel does not change the root password on the container; this value is just displayed to users as the default root password for LXC instances created from this template.",
+                "field_lxc_root_password_help": "Informational only. OrveX Panel does not change the root password on the container; this value is just displayed to users as the default root password for LXC instances created from this template.",
                 "security_recommendation": "Security Recommendation",
                 "lxc_security_warning": "LXC is not recommended for public hosting due to security risks.",
                 "create_success": "Template added successfully.",
@@ -8154,7 +8195,7 @@
                 "delete_success": "Template deleted.",
                 "delete_failed": "Failed to delete template.",
                 "delete_confirm_title": "Delete template?",
-                "delete_confirm_desc": "This only removes the template from FeatherPanel. The VM on Proxmox is not affected."
+                "delete_confirm_desc": "This only removes the template from OrveX Panel. The VM on Proxmox is not affected."
             },
             "info": {
                 "version_title": "Proxmox VE Version",
@@ -8183,7 +8224,7 @@
             },
             "form": {
                 "create_title": "Create VDS Node",
-                "create_description": "Connect a new Proxmox hypervisor to FeatherPanel using a PVE API token.",
+                "create_description": "Connect an existing Proxmox VE host or cluster with an API token.",
                 "create_short": "Create VDS Node",
                 "edit_title": "Edit VDS Node",
                 "edit_description": "Update Proxmox connection details, location and network settings.",
@@ -8289,7 +8330,7 @@
                 "success": "Connected {count} node(s) returned in {ms}ms.",
                 "failed": "Connection failed.",
                 "token_setup_reminder_title": "Token setup reminder",
-                "token_setup_reminder_description": "Use a Proxmox API token created for the intended account, and verify the permissions match the actions FeatherPanel will perform on this node.",
+                "token_setup_reminder_description": "Use a Proxmox API token created for the intended account, and verify the permissions match the actions OrveX Panel will perform on this node.",
                 "vnc_upstream_title": "VNC console upstream",
                 "vnc_upstream_description": "Where async-runner opens the Proxmox VNC WebSocket when “Proxy VNC via panel” is enabled. Leave empty to reuse the API hostname above.",
                 "vnc_upstream_hint_title": "Needed behind Cloudflare / Access",
@@ -8443,11 +8484,11 @@
             "help": {
                 "what": {
                     "title": "What are VDS Nodes?",
-                    "description": "VDS nodes in FeatherPanel map to your Proxmox hypervisors and allow you to provision and manage virtual machines."
+                    "description": "VDS nodes in OrveX Panel map to your Proxmox hypervisors and allow you to provision and manage virtual machines."
                 },
                 "utility": {
                     "title": "How are they used?",
-                    "connect": "Connect Proxmox clusters to FeatherPanel using API tokens.",
+                    "connect": "Connect Proxmox clusters to OrveX Panel using API tokens.",
                     "monitor": "Monitor basic connectivity to each hypervisor from the panel.",
                     "mapLocations": "Bind each VDS node to a VPS location so customers know where their VMs live."
                 },
@@ -8457,7 +8498,7 @@
                 },
                 "proxmox": {
                     "title": "Proxmox Integration",
-                    "p1": "FeatherPanel talks to Proxmox using PVE API tokens over HTTPS, so your credentials never need to be entered directly on each node.",
+                    "p1": "OrveX Panel talks to Proxmox using PVE API tokens over HTTPS, so your credentials never need to be entered directly on each node.",
                     "p2": "Use the connection test action to quickly verify that your token, host, and SSL configuration are valid."
                 }
             },
@@ -8499,7 +8540,7 @@
                 "single": "Single",
                 "bulk": "Bulk",
                 "bulk_list": "IP list",
-                "bulk_help": "One IP per line, or comma/space separated. CIDR/gateway/notes apply to all.",
+                "bulk_help": "One IP per line, or comma/space separated. CIDR/gateway/notes apply to all. Ranges such as 10.77.0.2-10.77.0.254 add every address in between (up to 1024).",
                 "bulk_empty": "Add at least one IP (one per line, comma, or space separated).",
                 "bulk_invalid_ip": "Invalid IP in list: {ip}",
                 "bulk_created_one": "Created {count} IP.",
@@ -8543,7 +8584,7 @@
                     "step1": "1. Download latest cloud images on your Proxmox node",
                     "step2": "2. Create a Debian 13 cloud-init template (example VMID 9000)",
                     "step3": "3. Create an Ubuntu 24.04 cloud-init template (example VMID 9001)",
-                    "step4": "4. Hook into FeatherPanel",
+                    "step4": "4. Hook into OrveX Panel",
                     "step5": "5. Avoid disk resize timeouts (recommended)",
                     "best_practice_title": "Best Practice: Why use VMs?"
                 },
@@ -8552,10 +8593,79 @@
                     "security_warning": "Security Warning",
                     "step1": "1. Download a Container Template",
                     "step2": "2. Create the Container",
-                    "step3": "3. Prepare for FeatherPanel (before converting to template)",
+                    "step3": "3. Prepare for OrveX Panel (before converting to template)",
                     "step4": "4. Convert to Template",
-                    "step5": "5. Hook into FeatherPanel"
+                    "step5": "5. Hook into OrveX Panel"
                 }
+            },
+            "type": {
+                "orvex_title": "OrveX Node",
+                "orvex_description": "Your own VPS node: KVM virtual machines and LXC containers on any Debian or Ubuntu server, set up with one command. No Proxmox needed.",
+                "proxmox_title": "Proxmox VE",
+                "proxmox_description": "Connect an existing Proxmox VE host or cluster with an API token.",
+                "recommended": "Recommended",
+                "name_placeholder": "e.g. Frankfurt 1",
+                "how_title": "How it works",
+                "how_step1": "Create the node here. It only needs a name and a location.",
+                "how_step2": "The panel shows one install command. Run it as root on your server.",
+                "how_step3": "The server installs the OrveX agent and connects itself. Templates, storage and the shared IPv4 pool are set up automatically.",
+                "feature_kvm_lxc": "KVM virtual machines and LXC containers",
+                "feature_ipv4": "Dedicated IPv4 and shared IPv4 (NAT with SSH and port forwards)",
+                "feature_auto": "Stats, console, backups, snapshots, password changes and SSH details for your users",
+                "requirements": "Server: Debian 11-13 or Ubuntu 20.04-24.04 (amd64 or arm64) with root access. KVM needs hardware virtualization (a dedicated server or nested virtualization); LXC works everywhere."
+            },
+            "orvex": {
+                "tab": "Connect",
+                "edit_description": "OrveX VPS Node: KVM + LXC hosting that connects itself to the panel.",
+                "created": "OrveX node created. Run the install command on your server.",
+                "create_submit": "Create node and show the install command",
+                "title_pending": "Connect your server",
+                "desc_pending": "Run this command as root on the server that should host the VPS (Debian 11-13 or Ubuntu 20.04-24.04). It installs everything and connects the node to this panel by itself.",
+                "panel_url_label": "Panel address the server connects to",
+                "panel_url_help": "Filled in with the address you are using now. Change it if the server reaches the panel under another address.",
+                "panel_url_invalid": "Enter the panel address, for example https://panel.example.com",
+                "warn_http": "This panel does not use HTTPS, so the node sends its API key unencrypted. Use a domain with HTTPS for production.",
+                "warn_local": "The server cannot reach the panel at a local address. Enter the public address of the panel.",
+                "step_install": "New server: install and connect",
+                "step_register": "Agent already installed? Connect it with",
+                "repair_command": "Run on the node to connect it again",
+                "copy_command": "Copy command",
+                "token_hidden": "The token is hidden here and included when you copy.",
+                "expires": "The command works once and expires in about {hours} hours.",
+                "expires_soon": "The command works once and expires in less than an hour.",
+                "new_token": "New command",
+                "new_token_done": "New install command created. Older commands no longer work.",
+                "waiting": "Waiting for the server to connect...",
+                "waiting_help": "This page updates by itself. The installer takes about 5 to 15 minutes; templates and the shared IPv4 pool are added the moment the node connects.",
+                "connected_toast": "The node is connected to the panel",
+                "title_connected": "Connected",
+                "connected_since": "Connected since {date}",
+                "endpoint": "Panel reaches the node at",
+                "agent_version": "Agent version",
+                "kvm": "KVM virtual machines",
+                "kvm_yes": "Available",
+                "kvm_no": "Not available (no /dev/kvm): LXC containers only",
+                "public_ip": "Public IPv4",
+                "shared_ip": "Shared IPv4 network",
+                "shared_ip_value": "{subnet} via {gateway}, SSH from port {ssh}",
+                "templates": "Templates offered",
+                "host": "Server",
+                "cpus": "{count} CPUs",
+                "memory": "{gb} GB RAM",
+                "storage": "Storage pool",
+                "fingerprint": "TLS fingerprint",
+                "sync": "Sync from node",
+                "sync_done": "Node synced: {count} new template(s)",
+                "sync_failed": "Could not sync the node",
+                "repair": "Re-pair node",
+                "repair_help": "Use this after reinstalling the server, changing its address or rotating its API key. The node keeps its servers.",
+                "retry": "Try again",
+                "load_failed": "Could not load the node connection",
+                "pending_badge": "Waiting for connection",
+                "pending_subtitle": "Run the install command on your server",
+                "type_badge_orvex": "OrveX",
+                "type_badge_proxmox": "Proxmox",
+                "templates_description": "Templates come from the OrveX node and were added automatically. Use Sync from node to add new ones."
             }
         },
         "vmPlans": {
@@ -8655,12 +8765,12 @@
                     "description": "Templates are pre-built VM images (e.g. Ubuntu 22.04, Debian 12) that Proxmox clones when creating a new VM. For QEMU/KVM plans, creating an instance always uses a template the panel clones that VM and applies the plan's CPU, RAM and disk. LXC can use different flows.",
                     "how_to_setup": "How to set up templates",
                     "step1": "On your Proxmox host: create a VM, install the OS, clean it (e.g. remove machine-id, cloud-init if needed), then in the Proxmox UI right‑click the VM → Convert to template.",
-                    "step2": "In FeatherPanel: go to VM Nodes (VDS Nodes), open the node that runs that Proxmox host, and open the Templates tab. Add a template: give it a name and the Template VMID (the VMID of the template VM in Proxmox). Once registered, that template appears when creating a VM instance from a plan on this node."
+                    "step2": "In OrveX Panel: go to VM Nodes (VDS Nodes), open the node that runs that Proxmox host, and open the Templates tab. Add a template: give it a name and the Template VMID (the VMID of the template VM in Proxmox). Once registered, that template appears when creating a VM instance from a plan on this node."
                 }
             }
         },
         "vmInstances": {
-            "description": "Manage all VDS/VPS instances in your system.",
+            "description": "Manage all VDS instances in your system.",
             "create": "Create VDS Instance",
             "create_desc": "Provision a new VPS from a node, template, and resources.",
             "errors": {
@@ -8711,7 +8821,7 @@
             "create_ip_and_assign": "Create IP and assign",
             "initiating_creation": "Initiating VM creation…",
             "network_multi_hint": "Add or remove IPs (Proxmox net0, net1, …). Select IP from pool for each interface.",
-            "network_multi_qemu_hint": "Add or remove IPs for this VM. FeatherPanel will keep virtual NICs and cloud-init ipconfig entries aligned automatically.",
+            "network_multi_qemu_hint": "Add or remove IPs for this VM. OrveX Panel will keep virtual NICs and cloud-init ipconfig entries aligned automatically.",
             "add_ip": "Add IP",
             "primary_ip": "Primary",
             "secondary_ip": "Secondary",
@@ -8751,7 +8861,7 @@
             "reinstall_lxc_help": "Enter a new root password for the reinstalled LXC container.",
             "reinstall_lxc_password": "Root password",
             "lxc_root_password_label": "Default LXC root password",
-            "lxc_root_password_help": "This is the informational root password stored on the LXC template. FeatherPanel does not change the password on the container; this is for you to show the default credentials to users.",
+            "lxc_root_password_help": "This is the informational root password stored on the LXC template. OrveX Panel does not change the password on the container; this is for you to show the default credentials to users.",
             "lxc_root_password_show": "Show password",
             "lxc_root_password_hide": "Hide password",
             "lxc_root_password_copied": "Root password copied to clipboard.",
@@ -9010,13 +9120,13 @@
                 "daemon_type": "Daemon type",
                 "daemon_type_featherwings": "FeatherWings (recommended)",
                 "daemon_type_wings_rs": "Calagopus / wings-rs (performance)",
-                "daemon_type_recommended_title": "FeatherWings is recommended for FeatherPanel",
+                "daemon_type_recommended_title": "FeatherWings is recommended for OrveX Panel",
                 "daemon_type_recommended_body": "Choose FeatherWings if you want panel features such as trash, firewall, FastDL, proxy, import, share, modules, and self-update.",
                 "daemon_type_performance_title": "Calagopus is for peak performance only",
-                "daemon_type_performance_body": "Calagopus (wings-rs) is generally recommended only when raw performance is the priority. It has fewer features and does not support the full FeatherPanel feature set.",
+                "daemon_type_performance_body": "Calagopus (wings-rs) is generally recommended only when raw performance is the priority. It has fewer features and does not support the full OrveX Panel feature set.",
                 "daemon_type_last_warning_title": "Last warning",
-                "daemon_type_last_warning_body": "If you choose Calagopus, you will not have all FeatherPanel features. You also cannot change the daemon type for this node later.",
-                "daemon_type_confirm_checkbox": "I hereby confirm by clicking this checkbox that my choice of daemon is not changeable and I will not be able to change my daemon or use all FeatherPanel features with my choice.",
+                "daemon_type_last_warning_body": "If you choose Calagopus, you will not have all OrveX Panel features. You also cannot change the daemon type for this node later.",
+                "daemon_type_confirm_checkbox": "I hereby confirm by clicking this checkbox that my choice of daemon is not changeable and I will not be able to change my daemon or use all OrveX Panel features with my choice.",
                 "daemon_type_confirm_required": "You must confirm the Calagopus daemon choice before creating this node.",
                 "daemon_type_immutable_help": "Daemon type is set when the node is created and cannot be changed.",
                 "daemon_type_immutable": "Daemon type cannot be changed after the node is created.",
@@ -9148,7 +9258,7 @@
                 },
                 "wings": {
                     "title": "About Wings (the daemon)",
-                    "p1": "Wings is the daemon FeatherPanel uses to talk to your Docker host. It schedules and runs containers so game servers start and stop where you put them.",
+                    "p1": "Wings is the daemon OrveX Panel uses to talk to your Docker host. It schedules and runs containers so game servers start and stop where you put them.",
                     "p2": "Locations group regions; nodes are the machines Wings runs on. Together they give you health checks, resource limits, and a clear place to deploy each server."
                 }
             },
@@ -10287,7 +10397,9 @@
                 "vds_title": "VDS instance",
                 "vds_description": "Create a virtual machine on your VDS infrastructure.",
                 "web_title": "Webspace",
-                "web_description": "Host a website on a web node."
+                "web_description": "Host a website on a web node.",
+                "vps_title": "VPS server",
+                "vps_description": "Create a KVM virtual machine or LXC container on one of your OrveX nodes."
             },
             "customize": "Customize",
             "stop_customizing": "Stop Customizing",
@@ -10309,16 +10421,16 @@
             },
             "update_banner": {
                 "title": "Update {version} available",
-                "message": "A newer FeatherPanel build is ready. Review release notes and update when convenient.",
+                "message": "A newer OrveX Panel build is ready. Review release notes and update when convenient.",
                 "action": "View updates"
             },
             "eula": {
                 "title": "End User License Agreement",
-                "subtitle": "Terms and conditions for using FeatherPanel"
+                "subtitle": "Terms and conditions for using OrveX Panel"
             }
         },
         "welcome": {
-            "running_version": "Running FeatherPanel {version}",
+            "running_version": "Running OrveX Panel {version}",
             "welcome_back": "Welcome back, ",
             "subtitle": "Here’s what’s happening across your panel.",
             "subtitle_update": "Update {version} is available • Review release notes when ready",
@@ -10337,7 +10449,9 @@
             "total_nodes": "Total Nodes",
             "total_spells": "Total Spells",
             "total_vm_nodes": "Total VDS Nodes",
-            "total_vm_instances": "Total VM Instances"
+            "total_vm_instances": "Total VDS Instances",
+            "total_vps_nodes": "Total VPS Nodes",
+            "total_vps_instances": "Total VPS Servers"
         },
         "activity": {
             "title": "Recent Activity",
@@ -10411,7 +10525,7 @@
             "dismiss": "Hide for 30 days"
         },
         "cloud_hub": {
-            "title": "MyFeatherPanel",
+            "title": "My OrveX Panel",
             "description": "Cloud services, marketplace, and community",
             "premium": "FeatherPanel Premium",
             "premium_desc": "Optional donation to support the project",
@@ -10502,8 +10616,8 @@
                 "removed": "Removed"
             },
             "update_instructions": {
-                "title": "Update FeatherPanel",
-                "description": "To update your FeatherPanel installation, please log in to your server via SSH and run one of the following commands:",
+                "title": "Update OrveX Panel",
+                "description": "To update your OrveX Panel installation, please log in to your server via SSH and run one of the following commands:",
                 "ssh_method": "Using SSH:",
                 "curl_method": "Using cURL:",
                 "follow_process": "Follow the update process on your server after running the command.",
@@ -11016,7 +11130,7 @@
         },
         "marketplace": {
             "title": "FeatherCloud Marketplace",
-            "subtitle": "Browse and install extensions, spells, and translations to enhance your FeatherPanel experience",
+            "subtitle": "Browse and install extensions, spells, and translations to enhance your OrveX Panel experience",
             "index": {
                 "plugins": {
                     "title": "Plugins",
@@ -11025,7 +11139,7 @@
                 },
                 "spells": {
                     "title": "Spells",
-                    "description": "Server templates to run specific games and applications on FeatherPanel",
+                    "description": "Server templates to run specific games and applications on OrveX Panel",
                     "available": "Available"
                 },
                 "translations": {
@@ -11046,7 +11160,7 @@
                 },
                 "about": {
                     "title": "About the Marketplace",
-                    "description": "Browse official and community plugins and spells for FeatherPanel. Install what you need from here."
+                    "description": "Browse official and community plugins and spells for OrveX Panel. Install what you need from here."
                 },
                 "browse": "Browse",
                 "tips": {
@@ -11069,7 +11183,7 @@
                 "marketplace": "Marketplace",
                 "refresh": "Refresh",
                 "loading_error": "Failed to load Mythic store",
-                "credentials_error": "Mythic Cloud is not linked. Connect under MyFeatherPanel → Cloud Connections.",
+                "credentials_error": "Mythic Cloud is not linked. Connect under My OrveX Panel → Cloud Connections.",
                 "not_linked": {
                     "title": "Not linked",
                     "action": "Open Cloud Connections"
@@ -11311,7 +11425,7 @@
                 "install_success": "Successfully installed {identifier}",
                 "pterodactyl_banner": {
                     "title": "Pterodactyl Game Eggs Store",
-                    "description": "FeatherPanel uses the official Pterodactyl eggs repository. Browse and install game server configurations that are verified and maintained by the Pterodactyl community.",
+                    "description": "OrveX Panel uses the official Pterodactyl eggs repository. Browse and install game server configurations that are verified and maintained by the Pterodactyl community.",
                     "powered_by": "Powered by Pterodactyl Official Eggs",
                     "view_github": "Browse Eggs",
                     "learn_more": "Learn More"
@@ -11392,7 +11506,7 @@
                     "install_title": "Install Spells",
                     "install_desc": "Select a realm and install spells with one click. Verified spells are marked with a checkmark for your safety.",
                     "security_title": "Security & Liability",
-                    "security_desc": "Installing third-party spells can be risky. FeatherPanel and its team are not liable for what you install."
+                    "security_desc": "Installing third-party spells can be risky. OrveX Panel and its team are not liable for what you install."
                 }
             }
         },
@@ -11402,7 +11516,7 @@
                 "open_cloud_connections": "Open Cloud Connections",
                 "checking_connection": "Checking connection",
                 "checking_link": "Checking Mythic Cloud link…",
-                "credentials_error": "Mythic Cloud is not linked. Connect under MyFeatherPanel → Cloud Connections first.",
+                "credentials_error": "Mythic Cloud is not linked. Connect under My OrveX Panel → Cloud Connections first.",
                 "not_linked_short": "Mythic Cloud is not linked.",
                 "member_uuid_required": "Link your Mythic account or ask your team owner to invite a matching email."
             },
@@ -11548,16 +11662,16 @@
             },
             "customize": {
                 "card_title": "Premium thank-you extras",
-                "description": "These settings apply across the panel for all users. Clearing a field restores the FeatherPanel default.",
+                "description": "These settings apply across the panel for all users. Clearing a field restores the OrveX Panel default.",
                 "ai_name": "AI assistant name",
-                "ai_name_placeholder": "FeatherPanel AI",
+                "ai_name_placeholder": "OrveX Panel AI",
                 "ai_name_help": "Shown in the chat header and assistant bubbles. Leave empty for the default name.",
                 "ai_avatar": "AI assistant picture",
                 "ai_avatar_help": "Upload an image or paste a URL. Leave empty to use your panel logo.",
-                "show_powered_by": "Show \"Powered by FeatherPanel\"",
-                "show_powered_by_help": "Turn off to hide FeatherPanel branding in the sidebar and related surfaces.",
+                "show_powered_by": "Show \"Powered by OrveX Panel\"",
+                "show_powered_by_help": "Turn off to hide OrveX Panel branding in the sidebar and related surfaces.",
                 "show_version": "Show panel version",
-                "show_version_help": "Turn off to hide the FeatherPanel version badge in the sidebar.",
+                "show_version_help": "Turn off to hide the OrveX Panel version badge in the sidebar.",
                 "save": "Save changes"
             },
             "sidebar": {
@@ -11678,7 +11792,7 @@
                 "title": "Security & Benefits",
                 "identification": {
                     "title": "Instance Identification",
-                    "description": "Your credentials uniquely identify your FeatherPanel instance to its owner."
+                    "description": "Your credentials uniquely identify your OrveX Panel instance to its owner."
                 },
                 "privacy": {
                     "title": "Security & Privacy",
@@ -11736,7 +11850,7 @@
                 "missing_params": "Missing OAuth return parameters (public_identity_key, private_key, mythic_user_id, team_uuid). Try connecting again.",
                 "whats_next": "What's next?",
                 "next_step1": "Open Panel Marketplace for purchased products",
-                "next_step2": "Report issues or suggest features under MyFeatherPanel",
+                "next_step2": "Report issues or suggest features under My OrveX Panel",
                 "next_step3": "Browse and import Mythic eggs",
                 "error_desc": "Try connecting again from Cloud Connections.",
                 "go_to_cloud": "Back to Cloud Connections",
@@ -11876,7 +11990,7 @@
                 "badges": {},
                 "tabs": {
                     "servers": "Servers",
-                    "vds": "VDS",
+                    "vds": "VDS & VPS",
                     "activities": "Activities",
                     "potential_alts": "Potential Alts",
                     "mails": "Mails",
@@ -11936,7 +12050,7 @@
                     "viewAll": "View all servers"
                 },
                 "vds": {
-                    "title": "Owned VDS",
+                    "title": "Owned VDS & VPS",
                     "viewAll": "View all VDS",
                     "hostname": "Hostname",
                     "status": "Status",
@@ -12398,18 +12512,18 @@
                 "button": "Update Docker Deployment",
                 "in_progress_button": "System Update Ongoing",
                 "updating": "Updating Docker Deployment...",
-                "confirm": "This will pull the latest FeatherPanel Docker images and recreate containers. Continue?",
+                "confirm": "This will pull the latest OrveX Panel Docker images and recreate containers. Continue?",
                 "success": "Docker update has been triggered successfully.",
                 "failed": "Failed to trigger Docker update.",
                 "confirm_modal": {
-                    "title": "Update FeatherPanel",
-                    "description": "This will pull the latest FeatherPanel Docker images and recreate containers. Do you want to continue?",
+                    "title": "Update OrveX Panel",
+                    "description": "This will pull the latest OrveX Panel Docker images and recreate containers. Do you want to continue?",
                     "confirm": "Update to Latest",
                     "cancel": "Cancel"
                 },
                 "progress_modal": {
                     "title": "System update ongoing",
-                    "description": "Please wait for FeatherPanel to update. Do not close this tab. Containers are restarting, so your browser may show a connection error; that usually means the update has started. This page will refresh periodically until the panel responds again."
+                    "description": "Please wait for OrveX Panel to update. Do not close this tab. Containers are restarting, so your browser may show a connection error; that usually means the update has started. This page will refresh periodically until the panel responds again."
                 }
             },
             "fields": {
@@ -12952,6 +13066,10 @@
                 "vds_schedules_max_keep": {
                     "label": "Schedule snapshot keep",
                     "description": "Maximum automatic snapshots a snapshot schedule may keep (still limited by the VDS snapshot limit)."
+                },
+                "module_vps_enabled": {
+                    "label": "VPS (OrveX nodes)",
+                    "description": "VPS servers on your own OrveX nodes. When off, it is hidden everywhere and its API refuses requests."
                 }
             },
             "category_select": "Settings category",
@@ -13511,7 +13629,7 @@
             "import_tab_preset": "Bundled preset",
             "import_tab_url": "From URL",
             "import_tab_paste": "Paste text",
-            "import_preset_body": "Import the FeatherPanel disposable-domain preset from the bundled file. Large lists run in batches; existing domains stay unchanged.",
+            "import_preset_body": "Import the OrveX Panel disposable-domain preset from the bundled file. Large lists run in batches; existing domains stay unchanged.",
             "import_preset": "Import preset list",
             "import_help": "Adds thousands of disposable / throwaway domains from the bundled file into the database. Existing domains are skipped. You can remove entries anytime.",
             "import_confirm": "Import the bundled disposable-domain preset ({file})? This may take a minute.",
@@ -13566,7 +13684,7 @@
         },
         "pterodactyl_importer": {
             "title": "Pterodactyl Importer",
-            "description": "Import servers, users, and nodes from Pterodactyl into FeatherPanel. Follow the steps below.",
+            "description": "Import servers, users, and nodes from Pterodactyl into OrveX Panel. Follow the steps below.",
             "toasts": {
                 "failed_load_key": "Failed to load API key details",
                 "failed_fetch_keys": "Failed to fetch API keys",
@@ -13654,7 +13772,7 @@
             },
             "create_key": {
                 "title": "Create New API Key",
-                "description": "Create a new API key for the Pterodactyl Migration Agent. This key will be used to authenticate the migration agent with your FeatherPanel instance.",
+                "description": "Create a new API key for the Pterodactyl Migration Agent. This key will be used to authenticate the migration agent with your OrveX Panel instance.",
                 "name_label": "API Key Name",
                 "placeholder": "e.g., Pterodactyl Migration Agent",
                 "help_text": "Choose a descriptive name to identify this API key.",
@@ -13757,11 +13875,11 @@
                 },
                 "migrations": {
                     "title": "Migrations",
-                    "description": "Execute database schema updates when upgrading FeatherPanel or installing plugins. Always verify output logs."
+                    "description": "Execute database schema updates when upgrading OrveX Panel or installing plugins. Always verify output logs."
                 },
                 "safety": {
                     "title": "Safety & Backups",
-                    "description": "Always backup your database before running migrations or major operations. FeatherPanel is not responsible for data loss due to unsafe operations."
+                    "description": "Always backup your database before running migrations or major operations. OrveX Panel is not responsible for data loss due to unsafe operations."
                 }
             }
         },
@@ -13838,7 +13956,7 @@
         "dev": {
             "plugins": {
                 "title": "Plugin Manager",
-                "description": "Create and manage FeatherPanel plugins",
+                "description": "Create and manage OrveX Panel plugins",
                 "search_placeholder": "Search plugins by name, identifier, description, or author...",
                 "loading": "Loading plugins...",
                 "no_results": "No plugins found matching your search",
@@ -14193,7 +14311,7 @@
                     "title": "Install From URL",
                     "url_label": "Plugin URL",
                     "url_placeholder": "https://example.com/plugin.fpa",
-                    "url_description": "Enter the direct URL to a FeatherPanel plugin file (.fpa).",
+                    "url_description": "Enter the direct URL to an OrveX Panel plugin file (.fpa).",
                     "security_warning_title": "Security Warning",
                     "warning": "Warning: It is unsafe to install plugins from URLs that are not from the official repository."
                 },
@@ -14236,7 +14354,7 @@
                 },
                 "security": {
                     "title": "Security & Liability",
-                    "description": "Installing third‑party plugins can be risky (panel corruption or system compromise). FeatherPanel and its team are not liable for what you install or develop."
+                    "description": "Installing third‑party plugins can be risky (panel corruption or system compromise). OrveX Panel and its team are not liable for what you install or develop."
                 },
                 "reminder": {}
             },
@@ -14554,7 +14672,7 @@
             "help": {
                 "cross_compatible": {
                     "title": "Cross-compatible spells",
-                    "description": "Realms and spells are fully cross-compatible. We maintain a spells repository that works with both FeatherPanel and Pterodactyl, so you can fetch and use the same spells in either panel. You can also bring your own spells - import them here or host them in your own repo."
+                    "description": "Realms and spells are fully cross-compatible. We maintain a spells repository that works with both OrveX Panel and Pterodactyl, so you can fetch and use the same spells in either panel. You can also bring your own spells - import them here or host them in your own repo."
                 },
                 "what_are_spells": {
                     "title": "What are Spells (eggs)?",
@@ -14570,7 +14688,7 @@
                 },
                 "sources": {
                     "title": "Sources & compatibility",
-                    "description": "Use our cross-compatible spells repo (FeatherPanel ↔ Pterodactyl) or bring your own JSON-defined spells. Import locally or host them in your own repository."
+                    "description": "Use our cross-compatible spells repo (OrveX Panel ↔ Pterodactyl) or bring your own JSON-defined spells. Import locally or host them in your own repository."
                 }
             }
         },
@@ -14641,7 +14759,7 @@
             "title": "Mail",
             "description": "Built-in mail is provisioned automatically when you install Mailserver on a web node. Customers get mailboxes, DNS records, and webmail from the WebSpace email page.",
             "autoTitle": "Most setups need zero configuration here",
-            "autoHint": "Install the Mailserver package on a web node (Admin → Web node → Package manager). FeatherPanel registers the mail host, MX/SPF/DKIM/DMARC hints, and optional node webmail automatically.",
+            "autoHint": "Install the Mailserver package on a web node (Admin → Web node → Package manager). OrveX Panel registers the mail host, MX/SPF/DKIM/DMARC hints, and optional node webmail automatically.",
             "builtinSection": "Active on your nodes",
             "builtinHint": "Mail hosts registered from FeatherQuilld Mailserver packages on your web nodes.",
             "setupSection": "Finish mail setup",
@@ -15389,7 +15507,7 @@
             "help": {
                 "what": {
                     "title": "What are Web Nodes?",
-                    "description": "Web nodes are machines that run FeatherQuilld, the daemon that manages web hosting accounts for FeatherPanel."
+                    "description": "Web nodes are machines that run FeatherQuilld, the daemon that manages web hosting accounts for OrveX Panel."
                 },
                 "utility": {
                     "title": "What can Web Nodes do?",
@@ -15946,7 +16064,7 @@
             },
             "pterodactyl_importer": {
                 "t1_title": "Moving from Pterodactyl",
-                "t1_body": "The importer copies users, nodes, nests and servers from a Pterodactyl database into FeatherPanel.",
+                "t1_body": "The importer copies users, nodes, nests and servers from a Pterodactyl database into OrveX Panel.",
                 "t2_title": "Before you start",
                 "t2_body": "Run it on a fresh panel and keep a backup of both databases. Server files stay on your nodes."
             },
@@ -18571,6 +18689,40 @@
             "action_suspend": "When the limit is reached, the VDS is suspended until the next month.",
             "throttled_now": "Your network speed is currently limited because the monthly traffic limit was reached.",
             "history": "Previous months"
+        },
+        "access": {
+            "ssh_title": "Connect over SSH",
+            "ssh_description": "Use these details with any SSH client (Terminal, PuTTY, Termius).",
+            "host": "Host",
+            "port": "Port",
+            "username": "Username",
+            "network_type": "Network",
+            "shared_ipv4": "Shared IPv4 (NAT)",
+            "dedicated_ipv4": "Dedicated IPv4",
+            "private_ip": "Private IP",
+            "password_hint": "Log in with the access password or an SSH key. You can set a new password at any time.",
+            "no_ip": "No IP address is assigned to this server yet.",
+            "forwards_title": "Forwarded ports",
+            "forwards_description": "This server shares the IPv4 address {ip}. These public ports reach it:",
+            "forward_same_ports": "forwarded to the same ports inside the server",
+            "public_endpoint": "Public",
+            "private_endpoint": "Inside the server",
+            "protocol": "Protocol",
+            "purpose": "Used for",
+            "forward_ssh": "SSH",
+            "forward_services": "Your services",
+            "forward_note": "Run your services (web, game, bots) on the listed port numbers inside the server; they are reachable on the same port of the public IP.",
+            "change_password": "Change password",
+            "change_password_title": "Change login password",
+            "change_password_description": "Sets a new password for the user {user}. Store it somewhere safe.",
+            "new_password": "New password",
+            "confirm_password": "Confirm password",
+            "generate": "Generate a strong password",
+            "password_too_short": "Use at least 8 characters.",
+            "password_mismatch": "The passwords do not match.",
+            "changed_now": "Password changed.",
+            "changed_next_boot": "Password saved. It is applied when the server starts next time.",
+            "change_failed": "Could not change the password."
         }
     },
     "chatbot": {
@@ -18855,7 +19007,7 @@
                 }
             },
             "featherpanelAiAgent": {
-                "youAreAHelpfulAssistantFor": "You are a helpful assistant for FeatherPanel...",
+                "youAreAHelpfulAssistantFor": "You are a helpful assistant for OrveX Panel...",
                 "userIsAnAdminWithFull": "User is an admin with full access...",
                 "reset": "Reset",
                 "tryAgain": "Try Again"
@@ -19007,14 +19159,14 @@
                         "network": "Network:",
                         "set": "Set",
                         "static": "Static",
-                        "featherPanelWillOverrideTheseSettingsDuring": "(FeatherPanel will override these settings during cloning).",
+                        "featherPanelWillOverrideTheseSettingsDuring": "(OrveX Panel will override these settings during cloning).",
                         "confirm": "Confirm:",
                         "reviewSettingsAndClick": "Review settings and click",
                         "finish": "Finish",
                         "beforeYouConvertThisCTTo": "Before you convert this CT to a template, start it once and configure SSH so deployed clients can actually connect. Open",
                         "passwordAuthenticationYes": "PasswordAuthentication yes",
                         "permitRootLoginYes": "PermitRootLogin yes",
-                        "onceSSHSettingsAreCorrectEnsure": "Once SSH settings are correct, ensure the container also has the needed tools for FeatherPanel. Run:",
+                        "onceSSHSettingsAreCorrectEnsure": "Once SSH settings are correct, ensure the container also has the needed tools for OrveX Panel. Run:",
                         "stopTheContainerRightClickIt": "Stop the container. Right-click it in the Proxmox tree and select",
                         "convertToTemplate": "Convert to template",
                         "inTheTemplatesTabOfYour": "In the Templates tab of your VDS Node, add a new template using the VMID of the LXC template you just created. Ensure you select"
@@ -19060,8 +19212,8 @@
                         "importantBeforeConvertingBootTheVM": "Important before converting: boot the VM once and verify",
                         "inYourPlansProductsUseTemplate": "In your plans / products, use template ID",
                         "ifCreatesFailWith": "If creates fail with",
-                        "thisIsACommonFixFor": "This is a common fix for intermittent resize timeouts under load and is safe for directory / NFS / qcow2-backed storages used by FeatherPanel provisioning.",
-                        "vMsQEMUKVMProvideTheStrongest": "VMs (QEMU/KVM) provide the strongest isolation and best compatibility with modern workloads like Docker and complex networking. FeatherPanel developers and security experts recommend VMs over LXC for all commercial hosting applications to prevent container escapes and resource abuse."
+                        "thisIsACommonFixFor": "This is a common fix for intermittent resize timeouts under load and is safe for directory / NFS / qcow2-backed storages used by OrveX Panel provisioning.",
+                        "vMsQEMUKVMProvideTheStrongest": "VMs (QEMU/KVM) provide the strongest isolation and best compatibility with modern workloads like Docker and complex networking. OrveX Panel developers and security experts recommend VMs over LXC for all commercial hosting applications to prevent container escapes and resource abuse."
                     }
                 },
                 "create": {
@@ -19714,7 +19866,7 @@
             "game_body": "Wings nodes, game servers, spells and realms.",
             "web_title": "Web hosting",
             "web_body": "Web nodes, webspaces, domains and mail hosting.",
-            "vds_title": "Virtual servers",
+            "vds_title": "VDS (Proxmox)",
             "vds_body": "Proxmox nodes and VDS instances.",
             "tickets_title": "Support tickets",
             "tickets_body": "Ticket system for users to contact staff.",
@@ -19722,7 +19874,9 @@
             "knowledgebase_body": "Help articles and guides for your users.",
             "status_page_title": "Status page",
             "status_page_body": "Public page showing node and service health.",
-            "note": "Turning a module off hides it for everyone. Existing data is kept."
+            "note": "Turning a module off hides it for everyone. Existing data is kept.",
+            "vps_title": "VPS (OrveX nodes)",
+            "vps_body": "Your own OrveX nodes and VPS servers (KVM + LXC), set up with one command."
         },
         "security": {
             "registration_title": "Allow registration",
@@ -19777,7 +19931,7 @@
         "progress_label": "Setup progress",
         "keyboard_hint": "Tip: press Enter to continue, Alt + ← to go back, Alt + → to continue.",
         "hero": {
-            "title": "Welcome to FeatherPanel",
+            "title": "Welcome to OrveX Panel",
             "body": "Let's get your panel ready. A few quick steps and you are good to go.",
             "chip_time": "About 5 minutes",
             "chip_later": "Change anything later",
@@ -21068,5 +21222,287 @@
         "title": "Two-factor authentication will soon be required",
         "description": "Set up 2FA before {date} to keep access to your account.",
         "action": "Set up 2FA"
+    },
+    "vps": {
+        "text": {
+            "admin": {
+                "vdsNodes": {
+                    "description": "Add and manage your own OrveX nodes for VPS servers.",
+                    "form": {
+                        "create_description": "Add your own OrveX node: KVM virtual machines and LXC containers on any Debian or Ubuntu server, set up with one command."
+                    },
+                    "messages": {
+                        "connection_failed": "Failed to test the connection to the node"
+                    },
+                    "help": {
+                        "what": {
+                            "description": "VPS nodes are your own Debian or Ubuntu servers running the OrveX node agent. They host the KVM virtual machines and LXC containers of your users."
+                        },
+                        "utility": {
+                            "connect": "Add a node, run the install command on the server, and it connects to the panel by itself."
+                        }
+                    },
+                    "ips": {
+                        "col_pve_node": "Host",
+                        "filter_pve_all": "All hosts",
+                        "help": {
+                            "what_are_ips_text": "The IP pool lists the IP addresses on this node that can be assigned to VPS servers when they are created."
+                        },
+                        "primary_proxmox_help": "The node's own IP, do not assign it to servers"
+                    },
+                    "templates": {
+                        "empty_desc": "Templates are added automatically when the node connects. Use Sync from node to add them again.",
+                        "create_desc_select": "Select one of the node's template images; the name and VMID are filled in for you.",
+                        "field_select_vm": "Select a template image from the node",
+                        "loading_vms": "Loading template images from the node…",
+                        "no_vms": "No template images found on this node. Use Sync from node to set them up again.",
+                        "select_vm_first": "Select a template image from the node first"
+                    }
+                },
+                "vdsCapacity": {
+                    "unreachable": "Node unreachable"
+                },
+                "vmInstances": {
+                    "help": {
+                        "resources": {
+                            "description": "Each VPS has configurable CPU, memory, disk and network resources, managed by the OrveX agent on its node."
+                        }
+                    },
+                    "node_help": "OrveX node where the server will be created.",
+                    "proxmox_node": "Host",
+                    "proxmox_node_help": "Host on the node where the server is created. An OrveX node is a single host.",
+                    "select_proxmox_node": "Select a host.",
+                    "network_multi_hint": "Add or remove IPs (net0, net1, …). Select an IP from the pool for each interface."
+                }
+            },
+            "emptyStates": {
+                "vdsNodes": {
+                    "description": "VPS nodes are your own servers running the OrveX node agent. Add one to start creating VPS servers."
+                },
+                "vmInstances": {
+                    "description": "VPS servers are KVM virtual machines or LXC containers on your OrveX nodes. Create one and assign it to a user."
+                }
+            },
+            "vds": {
+                "console": {
+                    "actions": {
+                        "paste_description": "The text is typed key by key into the server (up to {max} characters). The console has no shared clipboard."
+                    }
+                }
+            }
+        }
+    },
+    "freeServers": {
+        "create_button": "Create server",
+        "created": "{name} is being set up. It will be ready in a minute.",
+        "create_failed": "The server could not be created.",
+        "page": {
+            "title": "Create a server",
+            "description": "Free hosting for your bots, apps and databases.",
+            "back": "Back to servers"
+        },
+        "step1": {
+            "title": "What should it run?",
+            "subtitle": "Go with the language your code is written in. You can change it later in the server’s settings."
+        },
+        "groups": {
+            "runtime": "Runtimes",
+            "database": "Databases"
+        },
+        "stacks": {
+            "nodejs": {
+                "title": "Node.js",
+                "description": "Discord bots, APIs"
+            },
+            "python": {
+                "title": "Python",
+                "description": "Bots and scripts"
+            },
+            "bun": {
+                "title": "Bun",
+                "description": "Fast JS and TypeScript"
+            },
+            "java": {
+                "title": "Java",
+                "description": "JDA bots, JVM apps"
+            },
+            "csharp": {
+                "title": "C#",
+                "description": ".NET bots and apps"
+            },
+            "rust": {
+                "title": "Rust",
+                "description": "Compiled binaries"
+            },
+            "lua": {
+                "title": "Lua",
+                "description": "Small scripts"
+            },
+            "mongodb": {
+                "title": "MongoDB",
+                "description": "Document store"
+            },
+            "mariadb": {
+                "title": "MariaDB",
+                "description": "MySQL compatible"
+            },
+            "postgresql": {
+                "title": "PostgreSQL",
+                "description": "Relational SQL"
+            },
+            "redis": {
+                "title": "Redis",
+                "description": "Cache and queues"
+            }
+        },
+        "step2": {
+            "title": "Name it",
+            "name": "Name",
+            "name_placeholder": "My awesome bot",
+            "shuffle": "Pick a random name",
+            "name_help": "Anything you like. You can rename it later.",
+            "description": "Description",
+            "optional": "optional",
+            "description_placeholder": "What is it for?"
+        },
+        "summary": {
+            "label": "Summary",
+            "untitled": "Untitled server",
+            "no_stack": "No stack picked yet",
+            "memory": "Memory",
+            "disk": "Disk",
+            "cpu": "CPU",
+            "price": "Price",
+            "free": "Free",
+            "create": "Create server",
+            "creating": "Creating…"
+        },
+        "notes": {
+            "inactivity": "Log in at least once every {period} to keep it running. After that it’s stopped, and after {store} days it moves to storage. Nothing gets deleted.",
+            "period_week": "week",
+            "period_weeks": "{count} weeks",
+            "period_day": "day",
+            "period_days": "{count} days",
+            "ads": "Free servers are paid for by ads, so keep your adblocker off on the panel.",
+            "rules": "No selfbots, nukebots or spam tools. Those get the whole account banned."
+        },
+        "state": {
+            "disabled_title": "Free servers are not available",
+            "disabled_body": "Free servers are turned off on this panel right now.",
+            "no_stacks": "No stacks can be picked right now. Check back later.",
+            "limit_reached": "You already have {used} of {max} free servers. Delete one to create another.",
+            "view_servers": "View your servers",
+            "no_capacity": "There is no room for a free server right now. Try again later.",
+            "load_failed": "Could not load the free server options."
+        },
+        "stack_card": {
+            "title": "Stack",
+            "description": "Switch this free server to another runtime or database. It is reinstalled with the new stack; your files stay unless the new install replaces them.",
+            "current": "Current",
+            "none": "No other stacks are available right now.",
+            "confirm_title": "Switch to {stack}?",
+            "confirm_body": "The server is reinstalled with {stack}. Database stacks get a new password. Files stay in place unless the install replaces them.",
+            "confirm": "Switch stack",
+            "changed": "Switching to {stack}. The reinstall is running.",
+            "failed": "The stack could not be changed."
+        },
+        "stored": {
+            "badge": "In storage",
+            "title": "This server is in storage",
+            "body": "It was moved to storage because nobody logged in for a while. Nothing was deleted. Restore it to start it again.",
+            "body_subuser": "It was moved to storage because its owner did not log in for a while. Nothing was deleted; the owner can restore it.",
+            "staff": "This server was suspended by staff. Contact support to get it back.",
+            "restore": "Restore server",
+            "restoring": "Restoring…",
+            "restored": "Your server is back and starting.",
+            "restored_not_started": "Your server is back. Start it from the console.",
+            "restore_failed": "The server could not be restored."
+        }
+    },
+    "adminFreeServers": {
+        "title": "Free servers",
+        "subtitle": "Let users create small free servers for bots, apps and databases.",
+        "tabs": {
+            "settings": "Settings",
+            "servers": "Free servers"
+        },
+        "loadFailed": "Could not load the free server settings.",
+        "saved": "Free server settings saved.",
+        "saveFailed": "Could not save the free server settings.",
+        "installSpells": "Install bundled spells",
+        "installed": "Spells set up: {imported} imported, {reused} already there, {failed} failed.",
+        "installFailed": "Could not set up the bundled spells.",
+        "sections": {
+            "general": "General",
+            "resources": "Resources per server",
+            "nodes": "Nodes",
+            "stacks": "Stacks",
+            "inactivity": "Inactivity"
+        },
+        "fields": {
+            "enabled": "Free servers",
+            "max_per_user": "Free servers per user",
+            "show_ads_note": "Show the ads note",
+            "memory": "Memory",
+            "disk": "Disk",
+            "cpu": "CPU",
+            "swap": "Swap",
+            "io": "Block IO weight",
+            "database_limit": "Databases",
+            "backup_limit": "Backups",
+            "allocation_limit": "Ports (including the main one)",
+            "inactivity_enabled": "Stop and store inactive servers",
+            "stop_after_days": "Stop after no login for",
+            "store_after_days": "Move to storage after no login for"
+        },
+        "hints": {
+            "enabled": "Users get a Create server button on their servers page.",
+            "ads": "Only shows the note on the create page. Paste your ad code into the custom JavaScript setting (Settings > Other).",
+            "resources": "Every free server gets exactly these limits.",
+            "nodes": "Free servers go to the emptiest picked node that has room and a free port.",
+            "stacks": "Each stack uses the spell picked here. Stacks without a spell are not offered.",
+            "install": "Imports the bundled runtimes and databases into a \"Free servers\" realm and picks them below.",
+            "inactivity": "Based on the owner’s last login. Nothing is ever deleted.",
+            "store": "Stored servers are suspended with their files kept. The owner restores them with one click."
+        },
+        "noNodes": "Add a node first.",
+        "nodeStats": "{free} free ports · {used} of {total} MB memory used",
+        "maintenance": "Maintenance",
+        "notOffered": "Not offered",
+        "problems": {
+            "spell_missing": "The picked spell no longer exists.",
+            "variables_missing": "The spell has a required variable without a default value."
+        },
+        "daysSuffix": "days",
+        "search": "Search servers or owners",
+        "stageFilter": "Stage",
+        "allStages": "All stages",
+        "stages": {
+            "running": "Running",
+            "stopped": "Stopped",
+            "stored": "In storage"
+        },
+        "steps": {
+            "stop": "Stops on the next check",
+            "store": "Moves to storage on the next check",
+            "clear": "Owner is back: clears on the next check",
+            "reset": "Unsuspended by staff: resets on the next check"
+        },
+        "stopsAt": "Stops {time}",
+        "storesAt": "Moves to storage {time}",
+        "idleDays": "{count} days without login",
+        "columns": {
+            "server": "Server",
+            "stack": "Stack",
+            "lastLogin": "Owner activity",
+            "stage": "Stage"
+        },
+        "emptyTitle": "No free servers yet",
+        "emptyDescription": "Servers users create from the free tier show up here.",
+        "runNow": "Run check now",
+        "ran": "Inactivity check done: {applied} changed, {failed} failed.",
+        "runFailed": "Could not run the inactivity check.",
+        "confirmRunTitle": "Run the inactivity check now?",
+        "confirmRunDescription": "Free servers past their inactivity limits are stopped or moved to storage now, exactly like the hourly task does."
     }
 }

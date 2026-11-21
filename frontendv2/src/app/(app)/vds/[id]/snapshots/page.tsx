@@ -21,7 +21,7 @@ import { useParams, useRouter } from 'next/navigation';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { Camera, Calendar, Loader2, MemoryStick, Plus, RefreshCw, RotateCcw, Trash2 } from 'lucide-react';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 import { useDateFormatOptions } from '@/contexts/PreferencesContext';
 import { useVmInstance } from '@/contexts/VmInstanceContext';
 import { formatDateTimeInTz } from '@/lib/dateUtils';
@@ -52,7 +52,7 @@ const NAME_PATTERN = /^[a-zA-Z][a-zA-Z0-9_-]{1,39}$/;
 export default function VdsSnapshotsPage() {
     const { id } = useParams() as { id: string };
     const router = useRouter();
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
     const withReauth = useVdsReauth();
     const dateOpts = useDateFormatOptions();
     const { instance, loading: instanceLoading, hasPermission } = useVmInstance();

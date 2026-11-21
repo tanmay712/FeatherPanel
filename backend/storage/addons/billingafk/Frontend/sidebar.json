@@ -1,0 +1,34 @@
+{
+  "client": {
+    "/earn/afk": {
+      "name": "AFK Earnings",
+      "icon": "⏱️",
+      "showBadge": false,
+      "redirect": "/earn/afk",
+      "lucideIcon": "timer",
+      "component": "/billingafk/dist/afk.html",
+      "description": "Earn credits by staying AFK",
+      "category": "client",
+      "group": "Earn Credits",
+      "enabled": {
+        "type": "plugin_setting",
+        "key": "is_enabled",
+        "equals": "1"
+      }
+    }
+  },
+  "admin": {
+    "/billingafk": {
+      "name": "AFK Rewards",
+      "icon": "⏱️",
+      "lucideIcon": "timer",
+      "showBadge": false,
+      "redirect": "/billingafk",
+      "component": "/billingafk/dist/admin.html",
+      "description": "Configure AFK rewards and view statistics",
+      "category": "admin",
+      "group": "Fremium Earn Credits"
+    }
+  },
+  "server": {}
+}

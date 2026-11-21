@@ -26,7 +26,7 @@ use App\Services\FeatherCloud\FeatherCloudException;
 class DemoCloudHelper
 {
     public const ERROR_CODE = 'CLOUD_DISABLED_IN_DEMO';
-    public const ERROR_MESSAGE = 'FeatherPanel Cloud is not available on demo instances.';
+    public const ERROR_MESSAGE = 'OrveX Panel Cloud is not available on demo instances.';
 
     public static function isBlocked(): bool
     {

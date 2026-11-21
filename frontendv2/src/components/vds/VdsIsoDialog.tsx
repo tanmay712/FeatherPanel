@@ -31,7 +31,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/featherui/Button';
 import { Dialog, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 import { cn } from '@/lib/utils';
 import type { VdsFeatures } from '@/hooks/useVdsFeatures';
 
@@ -112,7 +112,7 @@ export const apiIsoError = (err: unknown, fallback: string) =>
  * the VDS Settings → My ISOs card.
  */
 export function VdsIsoDialog({ vmId, open, onOpenChange, onMounted }: VdsIsoDialogProps) {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
     const [list, setList] = useState<ProviderIso[] | null>(null);
     const [busy, setBusy] = useState<string | null>(null);
 

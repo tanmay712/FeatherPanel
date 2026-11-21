@@ -60,8 +60,10 @@ class VmUserExtrasController
         }
         $isQemu = ($vmInstance['vm_type'] ?? 'qemu') === 'qemu';
         $max = self::maxTimeframe();
+        $featureNode = VmNode::getVmNodeById((int) ($vmInstance['vm_node_id'] ?? 0));
+        $isOrvex = $featureNode !== null && VmInstanceUtil::isOrvexNode($featureNode);
 
-        return ApiResponse::success([
+        $features = [
             'graphs' => [
                 'enabled' => self::flag(ConfigInterface::VDS_GRAPHS_ENABLED, 'true'),
                 'timeframes' => array_slice(self::TIMEFRAMES, 0, array_search($max, self::TIMEFRAMES, true) + 1),
@@ -85,7 +87,20 @@ class VmUserExtrasController
             'schedules' => VmUserAutomationController::scheduleFeatures(),
             'reauth' => \App\Services\Vm\VdsReauth::features($request),
             'bandwidth' => ['enabled' => self::flag(ConfigInterface::VDS_BANDWIDTH_ENABLED, 'true')],
-        ], 'Features fetched', 200);
+        ];
+        if ($isOrvex) {
+            // OrveX nodes have no Proxmox firewall, ISO library or rescue ISO.
+            $features['firewall']['enabled'] = false;
+            $features['iso']['enabled'] = false;
+            $features['rescue']['enabled'] = false;
+        }
+        $features['access'] = [
+            'node_type' => $isOrvex ? 'orvex' : 'proxmox',
+            'password_change' => $isOrvex || $isQemu,
+            'graphical_console' => $isQemu,
+        ];
+
+        return ApiResponse::success($features, 'Features fetched', 200);
     }
 
     #[OA\Get(

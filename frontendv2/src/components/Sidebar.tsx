@@ -213,9 +213,9 @@ function SidebarContent({
             return pathname === href;
         }
 
-        // For VDS pages, only treat the exact root (/vds/{id}) as "console";
+        // For VDS/VPS pages, only treat the exact root (/vds/{id}, /vps/{id}) as "console";
         // subroutes like /vds/{id}/activities should not also highlight console.
-        const vdsRootRegex = /^\/vds\/[^/]+$/;
+        const vdsRootRegex = /^\/(?:vds|vps)\/[^/]+$/;
         if (vdsRootRegex.test(href)) {
             return pathname === href;
         }
@@ -239,7 +239,10 @@ function SidebarContent({
         return translated;
     };
 
-    const logoUrl = theme === 'dark' ? settings?.app_logo_dark || '/logo.png' : settings?.app_logo_white || '/logo.png';
+    const logoUrl =
+        theme === 'dark'
+            ? settings?.app_logo_dark || '/branding/orvex-logo.png'
+            : settings?.app_logo_white || '/branding/orvex-logo.png';
 
     const isClassicChrome = chromeLayout === 'classic';
     const isCompact = sidebarDensity === 'compact';

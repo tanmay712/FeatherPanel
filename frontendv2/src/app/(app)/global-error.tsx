@@ -173,7 +173,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
                         </div>
 
                         <div className='text-muted-foreground mt-8 text-center text-xs'>
-                            <p className='mb-2 font-medium'>Running on FeatherPanel {version ? `v${version}` : ''}</p>
+                            <p className='mb-2 font-medium'>Running on OrveX Panel {version ? `v${version}` : ''}</p>
                             <a
                                 href='https://featherpanel.com'
                                 target='_blank'

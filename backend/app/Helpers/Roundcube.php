@@ -148,7 +148,7 @@ class Roundcube
 \$config['smtp_server'] = 'tls://%h';
 \$config['smtp_port'] = 587;
 \$config['des_key'] = '{$desKey}';
-\$config['product_name'] = 'FeatherPanel Webmail';
+\$config['product_name'] = 'OrveX Panel Webmail';
 \$config['plugins'] = ['archive', 'zipdownload'];
 \$config['skin'] = 'elastic';
 \$config['enable_installer'] = false;

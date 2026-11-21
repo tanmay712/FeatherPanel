@@ -19,6 +19,7 @@ import type { ScopedEntityKind } from '@/lib/global-search';
 import type { Server } from '@/types/server';
 import type { WebSpace } from '@/types/webspace';
 import type { VmInstance } from '@/lib/vms-api';
+import { parseVmInstancePath } from '@/lib/vm-products';
 
 export type GlobalSearchEntityContext = {
     kind: ScopedEntityKind;
@@ -27,10 +28,9 @@ export type GlobalSearchEntityContext = {
     entityName: string;
 };
 
+/** Id of the virtual server page (VDS /vds/{id} or VPS /vps/{id}) the user is on. */
 export function getCurrentVdsId(pathname: string): string | null {
-    if (!pathname.startsWith('/vds/')) return null;
-    const segment = pathname.split('/')[2];
-    return segment || null;
+    return parseVmInstancePath(pathname)?.id || null;
 }
 
 export function resolveGlobalSearchEntityContext(

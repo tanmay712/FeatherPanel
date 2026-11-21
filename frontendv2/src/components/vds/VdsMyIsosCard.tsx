@@ -24,7 +24,7 @@ import { Input } from '@/components/featherui/Input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 import type { VdsFeatures } from '@/hooks/useVdsFeatures';
 import { apiIsoError, formatIsoSize, type IsoList, type UserIso } from '@/components/vds/VdsIsoDialog';
 
@@ -40,7 +40,7 @@ interface VdsMyIsosCardProps {
  * download a URL. Mounting host library images stays in the Mount ISO dialog.
  */
 export function VdsMyIsosCard({ vmId, features, canSettings, onMounted }: VdsMyIsosCardProps) {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
     const iso = features?.iso;
     const [list, setList] = useState<IsoList | null>(null);
     const [busy, setBusy] = useState<string | null>(null);

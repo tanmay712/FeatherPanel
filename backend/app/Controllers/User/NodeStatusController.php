@@ -84,7 +84,7 @@ class NodeStatusController
             'show_player_count' => $showPlayerCount,
             'powered_by' => [
                 'show' => $showPoweredBy,
-                'label' => 'FeatherPanel',
+                'label' => 'OrveX Panel',
                 'url' => 'https://featherpanel.com',
             ],
         ];

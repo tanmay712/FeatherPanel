@@ -87,7 +87,7 @@ class AiEditorHelperService
         $wasRedacted = $redactedConsole !== $console || $redactedFile !== $fileContent || $redactedQuestion !== $question;
 
         $system = <<<'PROMPT'
-You are FeatherPanel's optional AI helper for game-server console errors and config/code files.
+You are OrveX Panel's optional AI helper for game-server console errors and config/code files.
 Your job:
 1) Explain what went wrong in plain language.
 2) When a file is provided and a fix is clear, suggest a full corrected file body.
@@ -144,7 +144,7 @@ PROMPT;
             'file_path' => $outPath,
             'suggested_content' => is_string($suggested) ? $suggested : null,
             'unified_diff' => $unified,
-            'model' => (string) ($result['model'] ?? 'FeatherPanel AI'),
+            'model' => (string) ($result['model'] ?? 'OrveX Panel AI'),
             'redacted' => $wasRedacted,
         ];
     }

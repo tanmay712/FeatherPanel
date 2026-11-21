@@ -290,7 +290,7 @@ class ServerDatabaseDumpService
 
         $exportedAt = date('Y-m-d H:i:s');
         $lines = [
-            '-- FeatherPanel SQL Dump',
+            '-- OrveX Panel SQL Dump',
             "-- Database: {$database['database']}",
             "-- Generated: {$exportedAt}",
             "-- Host: {$database['database_host']}:{$database['database_port']}",

@@ -381,7 +381,7 @@ class CloudManagementController
             $config->setSetting(ConfigInterface::FEATHERCLOUD_RELINK_PENDING_AT, gmdate('c'));
 
             // Get panel information
-            $panelName = $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel');
+            $panelName = $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel');
             // app_url may exist in DB as an empty string, which bypasses the default argument to getSetting()
             $panelUrl = trim((string) ($config->getSetting(ConfigInterface::APP_URL, 'https://featherpanel.mythical.systems') ?? ''));
             if ($panelUrl === '') {
@@ -390,7 +390,11 @@ class CloudManagementController
             if ($panelUrl === '') {
                 $panelUrl = 'https://featherpanel.mythical.systems';
             }
-            $logoUrl = $config->getSetting(ConfigInterface::APP_LOGO_WHITE, 'https://github.com/featherpanel-com.png');
+            $logoUrl = (string) $config->getSetting(ConfigInterface::APP_LOGO_WHITE, '/branding/orvex-logo.png');
+            if (str_starts_with($logoUrl, '/') && !str_starts_with($logoUrl, '//')) {
+                // Relative logo paths (e.g. the bundled default) must be absolute for the cloud.
+                $logoUrl = rtrim($panelUrl, '/') . $logoUrl;
+            }
 
             // Reuse the existing identity pair for linked panels. Only create a new pair
             // for a truly brand-new connection with no stored identity keys at all.

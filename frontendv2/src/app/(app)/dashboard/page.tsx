@@ -19,7 +19,18 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import Link from 'next/link';
 import Image from 'next/image';
 import axios from 'axios';
-import { BookOpen, Gamepad2, Globe, History, LayoutGrid, LifeBuoy, MonitorCog, Server, Settings2 } from 'lucide-react';
+import {
+    BookOpen,
+    Boxes,
+    Gamepad2,
+    Globe,
+    History,
+    LayoutGrid,
+    LifeBuoy,
+    MonitorCog,
+    Server,
+    Settings2,
+} from 'lucide-react';
 
 import { useTranslation } from '@/contexts/TranslationContext';
 import { useLiveRefresh } from '@/hooks/useLiveRefresh';
@@ -34,6 +45,7 @@ import { formatDisk, getServerCpuLimit, getServerDiskLimit, getServerMemoryLimit
 import { cn, isEnabled } from '@/lib/utils';
 import { serversApi } from '@/lib/servers-api';
 import { vmsApi, type VmInstance } from '@/lib/vms-api';
+import { vmInstanceHref } from '@/lib/vm-products';
 
 import type { Server as ServerData } from '@/types/server';
 import type { Activity } from '@/types/activity';
@@ -127,6 +139,7 @@ const STAT_GRID: Record<number, string> = {
     2: 'grid-cols-2',
     3: 'grid-cols-2 lg:grid-cols-3',
     4: 'grid-cols-2 lg:grid-cols-4',
+    5: 'grid-cols-2 lg:grid-cols-5',
 };
 
 export default function DashboardPage() {
@@ -141,8 +154,11 @@ export default function DashboardPage() {
 
     const [rawServers, setServers] = useState<ServerData[]>([]);
     const [rawServerTotal, setServerTotal] = useState(0);
+    // VDS servers (Proxmox nodes) and VPS servers (OrveX nodes) are separate modules.
     const [rawVms, setVms] = useState<VmInstance[]>([]);
     const [rawVmTotal, setVmTotal] = useState(0);
+    const [rawVps, setVps] = useState<VmInstance[]>([]);
+    const [rawVpsTotal, setVpsTotal] = useState(0);
     const [rawWebspaces, setWebspaces] = useState<DashboardWebSpace[]>([]);
     const [rawWebspaceTotal, setWebspaceTotal] = useState(0);
     const [activities, setActivities] = useState<Activity[]>([]);
@@ -161,9 +177,12 @@ export default function DashboardPage() {
     // A disabled module's resources are left out (its API refuses anyway).
     const servers = useMemo(() => (modules.game ? rawServers : []), [modules.game, rawServers]);
     const vms = useMemo(() => (modules.vds ? rawVms : []), [modules.vds, rawVms]);
+    const vpsList = useMemo(() => (modules.vps ? rawVps : []), [modules.vps, rawVps]);
+    const allVms = useMemo(() => [...vms, ...vpsList], [vms, vpsList]);
     const webspaces = useMemo(() => (modules.web ? rawWebspaces : []), [modules.web, rawWebspaces]);
     const serverTotal = modules.game ? rawServerTotal : 0;
     const vmTotal = modules.vds ? rawVmTotal : 0;
+    const vpsTotal = modules.vps ? rawVpsTotal : 0;
     const webspaceTotal = modules.web ? rawWebspaceTotal : 0;
 
     const { serverLiveData, connectServers, disconnectAll } = useServersWebSocket();
@@ -236,10 +255,19 @@ export default function DashboardPage() {
                         typeof res.pagination?.total_records === 'number' ? res.pagination.total_records : list.length,
                     );
                 }),
-                vmsApi.getVms(1, 50).then((res) => {
+                vmsApi.getVms(1, 50, '', 'proxmox').then((res) => {
                     const list = Array.isArray(res.data?.instances) ? res.data.instances : [];
                     setVms(list);
                     setVmTotal(
+                        typeof res.data?.pagination?.total_records === 'number'
+                            ? res.data.pagination.total_records
+                            : list.length,
+                    );
+                }),
+                vmsApi.getVms(1, 50, '', 'orvex').then((res) => {
+                    const list = Array.isArray(res.data?.instances) ? res.data.instances : [];
+                    setVps(list);
+                    setVpsTotal(
                         typeof res.data?.pagination?.total_records === 'number'
                             ? res.data.pagination.total_records
                             : list.length,
@@ -504,8 +532,8 @@ export default function DashboardPage() {
             });
         }
 
-        for (const vm of vms) {
-            const href = `/vds/${vm.id}`;
+        for (const vm of allVms) {
+            const href = vmInstanceHref(vm);
             if (vm.suspended === 1 || vm.status === 'suspended') {
                 items.push({
                     id: `vm-suspended-${vm.id}`,
@@ -544,10 +572,10 @@ export default function DashboardPage() {
             }
         }
         return items;
-    }, [servers, vms, webspaces, tickets, ticketsEnabled, overview, liveFor, t]);
+    }, [servers, allVms, webspaces, tickets, ticketsEnabled, overview, liveFor, t]);
 
     const unreadTickets = tickets.filter((ticket) => ticket.has_unread_messages_since_last_reply).length;
-    const resourceTotal = serverTotal + vmTotal + webspaceTotal;
+    const resourceTotal = serverTotal + vmTotal + vpsTotal + webspaceTotal;
 
     let statusLine: string | null = null;
     let statusTone: 'neutral' | 'good' | 'warning' = 'neutral';
@@ -605,6 +633,20 @@ export default function DashboardPage() {
                           })
                         : undefined,
                 href: '/dashboard/vms',
+            },
+        modules.vps &&
+            vpsTotal > 0 && {
+                key: 'vps' as const,
+                icon: Boxes,
+                label: t('dashboard.home.stats.vps'),
+                value: String(vpsTotal),
+                hint:
+                    vpsTotal > 0 && vpsList.length === vpsTotal
+                        ? t('dashboard.home.stats.running', {
+                              count: String(vpsList.filter((vm) => vm.status === 'running').length),
+                          })
+                        : undefined,
+                href: '/dashboard/vps',
             },
         modules.web &&
             webspaceTotal > 0 && {
@@ -683,7 +725,7 @@ export default function DashboardPage() {
     // Nothing to manage yet: one calm welcome card with a way forward instead of empty sections.
     const resourceWidgetIds = config.widgets
         .map((w) => w.id)
-        .filter((id) => id === 'servers' || id === 'vds' || id === 'webspaces');
+        .filter((id) => id === 'servers' || id === 'vds' || id === 'vps' || id === 'webspaces');
     const onboarding = (
         <section className='fp-surface rounded-xl border p-6 text-center sm:p-8'>
             <span className='fp-icon-tile mx-auto flex h-12 w-12 items-center justify-center rounded-xl'>
@@ -766,6 +808,21 @@ export default function DashboardPage() {
             </DashboardPanel>
         ) : null;
 
+    const vpsBlock =
+        vpsTotal > 0 ? (
+            <DashboardPanel
+                title={t('dashboard.home.sections.vps')}
+                icon={Boxes}
+                count={vpsTotal}
+                action={{ label: t('dashboard.resources.view_all'), href: '/dashboard/vps' }}
+                flush
+            >
+                {vpsList.slice(0, SECTION_LIMIT).map((vm) => (
+                    <DashboardVmRow key={vm.id} vm={vm} compact={compact} />
+                ))}
+            </DashboardPanel>
+        ) : null;
+
     const webspacesBlock =
         webspaceTotal > 0 ? (
             <DashboardPanel
@@ -781,10 +838,12 @@ export default function DashboardPage() {
             </DashboardPanel>
         ) : null;
 
-    const resourceBlock = (id: 'servers' | 'vds' | 'webspaces'): ReactNode => {
+    const resourceBlock = (id: 'servers' | 'vds' | 'vps' | 'webspaces'): ReactNode => {
         if (loadingResources) return id === resourceWidgetIds[0] ? sectionSkeleton : null;
         if (resourceTotal === 0) return id === resourceWidgetIds[0] ? onboarding : null;
-        return id === 'servers' ? serversBlock : id === 'vds' ? vdsBlock : webspacesBlock;
+        if (id === 'servers') return serversBlock;
+        if (id === 'vds') return vdsBlock;
+        return id === 'vps' ? vpsBlock : webspacesBlock;
     };
 
     const activityLiveBadge =
@@ -903,8 +962,9 @@ export default function DashboardPage() {
         const ids: DashboardWidgetId[] = ['greeting', 'stats', 'attention'];
         if (modules.game) ids.push('servers', 'pinned', 'recent');
         if (modules.vds) ids.push('vds');
+        if (modules.vps) ids.push('vps');
         if (modules.web) ids.push('webspaces');
-        if (modules.game || modules.vds || modules.web) ids.push('usage');
+        if (modules.game || modules.vds || modules.vps || modules.web) ids.push('usage');
         if (modules.game)
             ids.push('status', 'uptime', 'network', 'backups', 'schedules', 'players', 'heatmap', 'trends');
         ids.push('quick_actions', 'announcements', 'activity', 'notes', 'quick_links', 'clock');
@@ -913,7 +973,7 @@ export default function DashboardPage() {
         if (modules.web) ids.push('recent_mails');
         ids.push('profile');
         return ids;
-    }, [modules.game, modules.vds, modules.web, ticketsEnabled, kbEnabled]);
+    }, [modules.game, modules.vds, modules.vps, modules.web, ticketsEnabled, kbEnabled]);
 
     const renderWidget = (id: DashboardWidgetId): ReactNode => {
         switch (id) {
@@ -954,6 +1014,7 @@ export default function DashboardPage() {
                 return attentionBlock;
             case 'servers':
             case 'vds':
+            case 'vps':
             case 'webspaces':
                 return resourceBlock(id);
             case 'usage':
@@ -961,7 +1022,7 @@ export default function DashboardPage() {
                     <UsageWidget
                         overview={overview}
                         loading={loadingOverview || loadingResources}
-                        vms={vms}
+                        vms={allVms}
                         webspaces={webspaceUsage}
                     />
                 );

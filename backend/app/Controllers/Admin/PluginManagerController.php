@@ -42,7 +42,7 @@ use App\Plugins\Events\Events\PluginManagerEvent;
         new OA\Property(property: 'identifier', type: 'string', description: 'Plugin identifier'),
         new OA\Property(property: 'description', type: 'string', description: 'Plugin description'),
         new OA\Property(property: 'version', type: 'string', description: 'Plugin version'),
-        new OA\Property(property: 'target', type: 'string', description: 'Target FeatherPanel version'),
+        new OA\Property(property: 'target', type: 'string', description: 'Target OrveX Panel version'),
         new OA\Property(property: 'author', type: 'array', items: new OA\Items(type: 'string'), description: 'Plugin authors'),
         new OA\Property(property: 'icon', type: 'string', description: 'Plugin icon URL'),
         new OA\Property(property: 'flags', type: 'array', items: new OA\Items(type: 'string'), description: 'Plugin flags'),
@@ -78,7 +78,7 @@ use App\Plugins\Events\Events\PluginManagerEvent;
         new OA\Property(property: 'name', type: 'string', description: 'Plugin name'),
         new OA\Property(property: 'description', type: 'string', description: 'Plugin description'),
         new OA\Property(property: 'version', type: 'string', description: 'Plugin version'),
-        new OA\Property(property: 'target', type: 'string', description: 'Target FeatherPanel version'),
+        new OA\Property(property: 'target', type: 'string', description: 'Target OrveX Panel version'),
         new OA\Property(property: 'author', type: 'array', items: new OA\Items(type: 'string'), description: 'Plugin authors'),
         new OA\Property(property: 'flags', type: 'array', items: new OA\Items(type: 'string'), description: 'Plugin flags'),
         new OA\Property(property: 'dependencies', type: 'array', items: new OA\Items(type: 'string'), description: 'Plugin dependencies'),
@@ -2289,13 +2289,13 @@ class {$className}Command implements CommandBuilder
         // Create comprehensive README
         $readmeContent = "# {$className} Plugin
 
-A comprehensive example plugin created with FeatherPanel Plugin Manager that demonstrates all plugin capabilities.
+A comprehensive example plugin created with OrveX Panel Plugin Manager that demonstrates all plugin capabilities.
 
 ## What it demonstrates
 - **Dashboard Integration**: Shows how plugins can add pages to the user dashboard
 - **Admin Integration**: Demonstrates admin panel integration with permissions
 - **Server Integration**: Shows server-side functionality and monitoring
-- **Plugin Widgets**: Embeds custom HTML content into existing FeatherPanel pages
+- **Plugin Widgets**: Embeds custom HTML content into existing OrveX Panel pages
 - **Database Migrations**: Creates plugin-specific tables with proper naming
 - **Cron Jobs**: Runs scheduled tasks every hour
 - **CLI Commands**: Provides command-line interface
@@ -2363,7 +2363,7 @@ A comprehensive example plugin created with FeatherPanel Plugin Manager that dem
 ## Migration Naming
 Migrations use timestamp format `YYYY-MM-DD-HH.MM-description.sql` to avoid conflicts with other plugins and the main system.
 
-This is a safe, comprehensive example that demonstrates all FeatherPanel plugin capabilities!";
+This is a safe, comprehensive example that demonstrates all OrveX Panel plugin capabilities!";
 
         $publicFileTemplate = "Hi, 
 i am a public file :D 
@@ -2925,7 +2925,7 @@ class AppReadyEvent
         file_put_contents(
             $pluginPath . '/README.md',
             "# {$name} Theme Pack\n\n"
-            . "Selectable FeatherPanel theme pack.\n\n"
+            . "Selectable OrveX Panel theme pack.\n\n"
             . "## Files\n\n"
             . "- `Frontend/theme.json` - light/dark design tokens\n"
             . "- `Frontend/theme.css` - CSS applied only while this pack is active\n\n"
@@ -3002,7 +3002,7 @@ class AppReadyEvent
     }
 
     FP.events.on('fp:host:ready', function () {
-      console.log('[UI Pack] FeatherPanel Power SDK ready', FP.version);
+      console.log('[UI Pack] OrveX Panel Power SDK ready', FP.version);
     });
 
     FP.actions.register('fp:server:power', {
@@ -3045,7 +3045,7 @@ JS;
         file_put_contents(
             $pluginPath . '/README.md',
             "# {$name} UI Pack\n\n"
-            . "FeatherPanel layout takeover pack + Power SDK examples.\n\n"
+            . "OrveX Panel layout takeover pack + Power SDK examples.\n\n"
             . "## Files\n\n"
             . "- `Frontend/ui.json` - shell/page replace, hide, actions\n"
             . "- `Frontend/overrides.json` - surgical hide/replace/actions\n"
@@ -3064,7 +3064,7 @@ JS;
         // Create a simple README
         $readmeContent = "# {$className} Plugin
 
-A fresh plugin template for FeatherPanel.
+A fresh plugin template for OrveX Panel.
 
 ## Structure
 

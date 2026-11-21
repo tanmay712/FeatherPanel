@@ -18,7 +18,8 @@ See the LICENSE file or <https://www.gnu.org/licenses/>.
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useParams, usePathname, useSearchParams } from 'next/navigation';
 import axios from 'axios';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmProduct, useVmTranslation } from '@/hooks/useVmProduct';
+import { productForNodeType, VM_PRODUCT_ROUTES } from '@/lib/vm-products';
 import { PageHeader } from '@/components/featherui/PageHeader';
 import { Button } from '@/components/featherui/Button';
 import { Input } from '@/components/featherui/Input';
@@ -69,7 +70,8 @@ import { Sensitive } from '@/components/common/Sensitive';
 import { VdsMigrateCard } from '@/components/admin/VdsMigrateCard';
 
 export default function VmInstanceEditPage() {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
+    const { product, routes } = useVmProduct();
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
@@ -227,13 +229,21 @@ export default function VmInstanceEditPage() {
 
     useEffect(() => {
         if (!id || Number.isNaN(id)) {
-            router.replace('/admin/vm-instances');
+            router.replace(routes.adminServers);
             return;
         }
         axios
             .get(`/api/admin/vm-instances/${id}`)
             .then((res) => {
                 const inst = res.data.data?.instance as Record<string, unknown>;
+                // Servers on OrveX nodes are managed under VPS servers, on Proxmox nodes under VDS servers.
+                const instProduct = inst ? productForNodeType(inst.node_type as string | undefined) : product;
+                if (inst && instProduct !== product) {
+                    router.replace(
+                        `${VM_PRODUCT_ROUTES[instProduct].adminServers}/${id}/edit${window.location.search}`,
+                    );
+                    return;
+                }
                 if (inst) {
                     setInstance(inst);
                     setHostname((inst.hostname as string) ?? '');
@@ -265,7 +275,7 @@ export default function VmInstanceEditPage() {
             })
             .catch((error) => toast.error(getApiErrorMessage(error, t, 'admin.vmInstances.errors.fetch_failed')))
             .finally(() => setLoading(false));
-    }, [id, router, t]);
+    }, [id, router, t, product, routes]);
 
     useEffect(() => {
         if (!id || !instance) return;
@@ -706,7 +716,7 @@ export default function VmInstanceEditPage() {
                                 {t('admin.vmInstances.suspend')}
                             </Button>
                         )}
-                        <Button variant='outline' size='sm' onClick={() => router.push('/admin/vm-instances')}>
+                        <Button variant='outline' size='sm' onClick={() => router.push(routes.adminServers)}>
                             <ArrowLeft className='mr-2 h-4 w-4' />
                             {t('common.back')}
                         </Button>
@@ -830,14 +840,18 @@ export default function VmInstanceEditPage() {
                             onSave={handleSaveResources}
                             saving={savingTab === 'resources'}
                         />
-                        {instance && typeof instance.pve_node === 'string' && instance.pve_node !== '' && (
-                            <VdsMigrateCard
-                                instanceId={id}
-                                vmNodeId={Number(instance.vm_node_id)}
-                                pveNode={instance.pve_node}
-                                onMigrated={() => window.location.reload()}
-                            />
-                        )}
+                        {/* Live migration moves a VDS between Proxmox cluster nodes. */}
+                        {product === 'vds' &&
+                            instance &&
+                            typeof instance.pve_node === 'string' &&
+                            instance.pve_node !== '' && (
+                                <VdsMigrateCard
+                                    instanceId={id}
+                                    vmNodeId={Number(instance.vm_node_id)}
+                                    pveNode={instance.pve_node}
+                                    onMigrated={() => window.location.reload()}
+                                />
+                            )}
                     </TabsContent>
 
                     <TabsContent value='history' className='mt-0 focus-visible:ring-0 focus-visible:outline-none'>

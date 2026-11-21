@@ -22,7 +22,7 @@ import { ArrowDown, ArrowUp, Disc3, HardDrive, Loader2, Network } from 'lucide-r
 import { Button } from '@/components/featherui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 import { getApiErrorMessage, getApiErrorMessageFromPayload } from '@/lib/api-errors';
 import { cn } from '@/lib/utils';
 
@@ -55,7 +55,7 @@ function typeIcon(type: string) {
  * Reorder and enable/disable Proxmox QEMU boot devices (disk / CD-ROM / NIC).
  */
 export function VdsBootOrderCard({ vmId, canEdit, refreshKey = 0 }: VdsBootOrderCardProps) {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [devices, setDevices] = useState<BootDevice[]>([]);

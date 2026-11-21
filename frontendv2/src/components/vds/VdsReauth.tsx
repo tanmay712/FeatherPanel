@@ -18,7 +18,7 @@ See the LICENSE file or <https://www.gnu.org/licenses/>.
 import { createContext, ReactNode, useCallback, useContext, useRef, useState } from 'react';
 import axios from 'axios';
 import { KeyRound } from 'lucide-react';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 import { Button } from '@/components/featherui/Button';
 import { Input } from '@/components/featherui/Input';
 import { Dialog, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -50,7 +50,7 @@ interface Prompt {
  * the X-Confirm-* header. The secret is held only in memory for that single retry.
  */
 export function VdsReauthProvider({ children }: { children: ReactNode }) {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
     const [prompt, setPrompt] = useState<Prompt | null>(null);
     const [value, setValue] = useState('');
     const resolver = useRef<((v: string | null) => void) | null>(null);

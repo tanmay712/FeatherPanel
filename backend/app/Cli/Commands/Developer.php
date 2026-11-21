@@ -42,7 +42,7 @@ class Developer extends App implements CommandBuilder
                     $app->send('&c&l║                   ⚠️   WOAH!   ⚠️                    ║');
                     $app->send('&c&l╚════════════════════════════════════════════════════════════╝');
                     $app->send('');
-                    $app->send('&c&lThis command only works for production installs of FeatherPanel!');
+                    $app->send('&c&lThis command only works for production installs of OrveX Panel!');
                     $app->send('');
                     $app->send('&7This developer server feature is designed to run inside the');
                     $app->send('&7Docker container environment (/var/www/html).');
@@ -50,7 +50,7 @@ class Developer extends App implements CommandBuilder
                     $app->send('&7Current directory: &f' . getcwd());
                     $app->send('');
                     $app->send('&7To use this feature, run the command from inside the');
-                    $app->send('&7FeatherPanel backend container.');
+                    $app->send('&7OrveX Panel backend container.');
                     $app->send('');
                     exit;
                 }
@@ -103,7 +103,7 @@ class Developer extends App implements CommandBuilder
 
     private static function showHelp(App $app): void
     {
-        $app->send($app->color1 . '&l=== FeatherPanel Developer Server ===');
+        $app->send($app->color1 . '&l=== OrveX Panel Developer Server ===');
         $app->send('');
         $app->send($app->color3 . 'Available Commands:');
         $app->send('');

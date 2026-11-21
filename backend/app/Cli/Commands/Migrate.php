@@ -45,7 +45,7 @@ class Migrate extends App implements CommandBuilder
         $cliApp = App::getInstance();
 
         // Display header
-        $cliApp->send($cliApp->color1 . '&l[FeatherPanel] &r' . $cliApp->color3 . 'Database Migration Tool');
+        $cliApp->send($cliApp->color1 . '&l[OrveX Panel] &r' . $cliApp->color3 . 'Database Migration Tool');
         $cliApp->send('&7' . str_repeat('─', 50));
 
         if (!file_exists(__DIR__ . '/../../../storage/config/.env')) {

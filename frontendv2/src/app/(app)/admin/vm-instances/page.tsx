@@ -19,7 +19,8 @@ import { TipCard, TipGrid } from '@/components/featherui/TipCard';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmProduct, useVmTranslation } from '@/hooks/useVmProduct';
+import { vmInstanceBase } from '@/lib/vm-products';
 import { PageHeader } from '@/components/featherui/PageHeader';
 import { Button } from '@/components/featherui/Button';
 import { Input } from '@/components/featherui/Input';
@@ -123,6 +124,7 @@ function formatDisk(gb: number): string {
 }
 
 const VM_INSTANCES_LIST_FILTERS_KEY = 'featherpanel_admin_vm_instances_filters_v1';
+const VPS_SERVERS_LIST_FILTERS_KEY = 'featherpanel_admin_vps_servers_filters_v1';
 const VM_INSTANCES_LIST_FILTERS_DEFAULTS = {
     searchQuery: '',
     ownerFilter: '',
@@ -136,12 +138,14 @@ const VM_INSTANCES_LIST_FILTERS_DEFAULTS = {
     filterNode: null as VmNode | null,
 };
 
+/** VDS servers (/admin/vm-instances, Proxmox nodes) or VPS servers (/admin/vps-servers, OrveX nodes). */
 export default function VmInstancesPage() {
-    const { t } = useTranslation();
+    const { t, product } = useVmTranslation();
+    const { routes, nodeType } = useVmProduct();
     const router = useRouter();
 
     const { filters, patchFilters, resetFilters, hydrated, isFiltered } = usePersistedListFilters(
-        VM_INSTANCES_LIST_FILTERS_KEY,
+        product === 'vps' ? VPS_SERVERS_LIST_FILTERS_KEY : VM_INSTANCES_LIST_FILTERS_KEY,
         VM_INSTANCES_LIST_FILTERS_DEFAULTS,
     );
     const {
@@ -209,6 +213,7 @@ export default function VmInstancesPage() {
                     owner_id: ownerFilter || undefined,
                     node_id: nodeFilter || undefined,
                     status: statusFilter || undefined,
+                    node_type: nodeType,
                 },
             });
 
@@ -228,7 +233,7 @@ export default function VmInstancesPage() {
         } finally {
             setLoading(false);
         }
-    }, [page, pageSize, debouncedSearch, ownerFilter, nodeFilter, statusFilter, t, hydrated]);
+    }, [page, pageSize, debouncedSearch, ownerFilter, nodeFilter, statusFilter, t, hydrated, nodeType]);
 
     useEffect(() => {
         fetchWidgets();
@@ -300,7 +305,7 @@ export default function VmInstancesPage() {
         setLoadingNodes(true);
         try {
             const { data } = await axios.get('/api/admin/vm-nodes', {
-                params: { limit: 50 },
+                params: { limit: 50, node_type: nodeType },
             });
             setNodesList(data.data?.vm_nodes || []);
         } catch (error) {
@@ -359,7 +364,7 @@ export default function VmInstancesPage() {
                 description={t('admin.vmInstances.description')}
                 icon={Server}
                 actions={
-                    <Button size='sm' onClick={() => router.push('/admin/vm-instances/create')}>
+                    <Button size='sm' onClick={() => router.push(`${routes.adminServers}/create`)}>
                         <Plus className='mr-2 h-4 w-4' />
                         {t('admin.vmInstances.create')}
                     </Button>
@@ -457,7 +462,7 @@ export default function VmInstancesPage() {
                     title={t('emptyStates.vmInstances.title')}
                     description={t('emptyStates.vmInstances.description')}
                     action={
-                        <Button size='sm' onClick={() => router.push('/admin/vm-instances/create')}>
+                        <Button size='sm' onClick={() => router.push(`${routes.adminServers}/create`)}>
                             <Plus className='mr-2 h-4 w-4' />
                             {t('admin.vmInstances.create')}
                         </Button>
@@ -543,7 +548,7 @@ export default function VmInstancesPage() {
                                             )}
                                         </div>
                                     }
-                                    onClick={() => router.push(`/vds/${inst.id}`)}
+                                    onClick={() => router.push(vmInstanceBase(product, inst.id))}
                                     actions={
                                         <div className='flex items-center gap-2' onClick={(e) => e.stopPropagation()}>
                                             <Button
@@ -561,7 +566,7 @@ export default function VmInstancesPage() {
                                                     className='text-primary hover:text-primary hover:bg-primary/10'
                                                     onClick={() =>
                                                         router.push(
-                                                            `/admin/vm-instances/${inst.id}/edit?tab=details&assign=1`,
+                                                            `${routes.adminServers}/${inst.id}/edit?tab=details&assign=1`,
                                                         )
                                                     }
                                                     title={t('admin.vmInstances.assign_owner')}
@@ -572,7 +577,7 @@ export default function VmInstancesPage() {
                                             <Button
                                                 size='sm'
                                                 variant='ghost'
-                                                onClick={() => router.push(`/admin/vm-instances/${inst.id}/edit`)}
+                                                onClick={() => router.push(`${routes.adminServers}/${inst.id}/edit`)}
                                                 title={t('common.edit')}
                                             >
                                                 <Pencil className='h-4 w-4' />
@@ -818,7 +823,7 @@ export default function VmInstancesPage() {
                                     <Button
                                         variant='outline'
                                         size='sm'
-                                        onClick={() => router.push(`/vds/${selectedInstance.id}`)}
+                                        onClick={() => router.push(vmInstanceBase(product, selectedInstance.id))}
                                         className='rounded-xl border-dashed'
                                     >
                                         <Eye className='mr-2 h-4 w-4' />

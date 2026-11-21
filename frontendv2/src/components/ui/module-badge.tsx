@@ -20,9 +20,10 @@ const MODULE_TONES: Record<PanelModule, string> = {
     game: 'bg-emerald-500/12 text-emerald-600 ring-emerald-500/25 dark:text-emerald-300',
     web: 'bg-sky-500/12 text-sky-600 ring-sky-500/25 dark:text-sky-300',
     vds: 'bg-violet-500/12 text-violet-600 ring-violet-500/25 dark:text-violet-300',
+    vps: 'bg-amber-500/12 text-amber-700 ring-amber-500/25 dark:text-amber-300',
 };
 
-/** Small GAME / WEB / VDS tag. Same look in sidebars, command palette and dashboard. */
+/** Small GAME / WEB / VDS / VPS tag. Same look in sidebars, command palette and dashboard. */
 export function ModuleBadge({ module, className }: { module: PanelModule; className?: string }) {
     return (
         <span

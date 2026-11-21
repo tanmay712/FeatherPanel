@@ -29,7 +29,7 @@ import {
 } from 'recharts';
 import { Activity, Cpu, Database, Globe, HardDrive, RefreshCw, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/featherui/Button';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 import { cn, formatFileSize } from '@/lib/utils';
 import type { VdsTimeframe } from '@/hooks/useVdsFeatures';
 
@@ -87,7 +87,7 @@ function formatTick(ts: number, timeframe: VdsTimeframe): string {
  * range selector limited to the admin's maximum timeframe.
  */
 export function VdsResourceGraphs({ vmId, timeframes }: { vmId: number; timeframes: VdsTimeframe[] }) {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
     const [timeframe, setTimeframe] = useState<VdsTimeframe>(timeframes[0] ?? 'hour');
     const [points, setPoints] = useState<RrdPoint[] | null>(null);
     const [error, setError] = useState(false);

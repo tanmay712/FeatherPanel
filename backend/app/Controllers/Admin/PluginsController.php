@@ -48,7 +48,7 @@ use App\Plugins\Events\Events\PluginsSettingsEvent;
             new OA\Property(property: 'identifier', type: 'string', description: 'Plugin identifier'),
             new OA\Property(property: 'description', type: 'string', description: 'Plugin description'),
             new OA\Property(property: 'version', type: 'string', description: 'Plugin version'),
-            new OA\Property(property: 'target', type: 'string', description: 'Target FeatherPanel version'),
+            new OA\Property(property: 'target', type: 'string', description: 'Target OrveX Panel version'),
             new OA\Property(property: 'author', type: 'array', items: new OA\Items(type: 'string'), description: 'Plugin authors'),
             new OA\Property(property: 'icon', type: 'string', description: 'Plugin icon URL'),
             new OA\Property(property: 'flags', type: 'array', items: new OA\Items(type: 'string'), description: 'Plugin flags'),

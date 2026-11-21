@@ -19,7 +19,8 @@ import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { HardDrive } from 'lucide-react';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
+import { vmInstanceBase } from '@/lib/vm-products';
 import { useVmInstance } from '@/contexts/VmInstanceContext';
 import { useVdsFeatures } from '@/hooks/useVdsFeatures';
 import { Button } from '@/components/featherui/Button';
@@ -32,7 +33,7 @@ import { VdsMyIsosCard } from '@/components/vds/VdsMyIsosCard';
 export default function VdsBootPage() {
     const { id } = useParams() as { id: string };
     const router = useRouter();
-    const { t } = useTranslation();
+    const { t, product } = useVmTranslation();
     const { instance, loading: instanceLoading, hasPermission } = useVmInstance();
     const features = useVdsFeatures(Number(id));
     const [orderRefresh, setOrderRefresh] = useState(0);
@@ -49,7 +50,7 @@ export default function VdsBootPage() {
         return (
             <div className='flex flex-1 flex-col items-center justify-center gap-4 p-8'>
                 <p className='text-muted-foreground'>{t('vds.settings.access_denied')}</p>
-                <Button variant='outline' onClick={() => router.push(`/vds/${id}`)}>
+                <Button variant='outline' onClick={() => router.push(vmInstanceBase(product, id))}>
                     {t('common.back')}
                 </Button>
             </div>
@@ -65,7 +66,10 @@ export default function VdsBootPage() {
                     icon={HardDrive}
                 />
                 <p className='text-muted-foreground text-sm'>
-                    <Link href={`/vds/${id}/settings`} className='text-primary underline-offset-4 hover:underline'>
+                    <Link
+                        href={vmInstanceBase(product, id, 'settings')}
+                        className='text-primary underline-offset-4 hover:underline'
+                    >
                         {t('vds.boot.back_to_settings')}
                     </Link>
                 </p>

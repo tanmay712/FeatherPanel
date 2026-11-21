@@ -98,7 +98,7 @@ class Settings extends App implements CommandBuilder
 
     private static function showHeader(): void
     {
-        self::$cliApp->send(self::$cliApp->color1 . '=== FeatherPanel Settings ===');
+        self::$cliApp->send(self::$cliApp->color1 . '=== OrveX Panel Settings ===');
         self::$cliApp->send('&7Total Settings: &f' . count(self::$settings) . ' &7| Page: &f' . (self::$currentPage + 1) . '/' . max(1, ceil(count(self::$settings) / max(1, self::$pageSize))));
         self::$cliApp->send('');
     }

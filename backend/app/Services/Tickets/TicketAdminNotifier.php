@@ -46,7 +46,7 @@ class TicketAdminNotifier
             return;
         }
 
-        $appName = $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel');
+        $appName = $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel');
         $appUrl = rtrim($config->getSetting(ConfigInterface::APP_URL, 'https://featherpanel.mythical.systems'), '/');
         $supportUrl = $config->getSetting(ConfigInterface::APP_SUPPORT_URL, 'https://discord.mythical.systems');
 

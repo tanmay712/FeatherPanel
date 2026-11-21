@@ -87,6 +87,7 @@ import {
     type ParsedGlobalSearchQuery,
 } from '@/lib/global-search';
 import { resolveGlobalSearchEntityContext, type GlobalSearchEntityContext } from '@/lib/global-search-context';
+import { parseVmInstancePath, productForNodeType, vmInstanceHref } from '@/lib/vm-products';
 import { getServerRouteId } from '@/lib/server-switch';
 import { getWebSpaceRouteId } from '@/lib/webspace-switch';
 import { vmsApi, type VmInstance } from '@/lib/vms-api';
@@ -503,14 +504,16 @@ export function useGlobalSearchItems(open: boolean, query: string) {
         }
 
         for (const vm of vms) {
-            const vdsNav = getVdsNavigationItems(t, String(vm.id))[0];
+            // VDS servers (Proxmox nodes) open under /vds, VPS servers (OrveX nodes) under /vps.
+            const product = productForNodeType(vm.node_type);
+            const vdsNav = getVdsNavigationItems(t, String(vm.id), { product })[0];
             items.push({
                 id: `vm-${vm.id}`,
                 title: vm.hostname || `VM ${vm.vmid}`,
                 subtitle: vm.node_name ?? vm.pve_node,
-                href: `/vds/${vm.id}`,
+                href: vmInstanceHref(vm),
                 category: 'vms',
-                module: 'vds',
+                module: product,
                 icon: vdsNav?.icon && typeof vdsNav.icon === 'function' ? vdsNav.icon : HardDrive,
                 lucideIcon: vdsNav?.lucideIcon,
                 panelIcon: vdsNav?.panelIcon,
@@ -520,7 +523,7 @@ export function useGlobalSearchItems(open: boolean, query: string) {
                     String(vm.vmid),
                     vm.node_name,
                     vm.pve_node,
-                    'vds',
+                    product,
                     'vm',
                     'virtual',
                 ].filter(Boolean) as string[],
@@ -547,7 +550,9 @@ export function useGlobalSearchItems(open: boolean, query: string) {
                 server.node?.daemon_type ?? null,
             );
         } else {
-            navItems = getVdsNavigationItems(t, entityContext.routeId);
+            navItems = getVdsNavigationItems(t, entityContext.routeId, {
+                product: parseVmInstancePath(pathname)?.product ?? 'vds',
+            });
         }
 
         return filterByPermission(
@@ -559,7 +564,7 @@ export function useGlobalSearchItems(open: boolean, query: string) {
             }),
             hasPermission,
         );
-    }, [showCurrentContext, entityContext, servers, t, settings, hasPermission, parsedQuery.text]);
+    }, [showCurrentContext, entityContext, servers, t, settings, hasPermission, parsedQuery.text, pathname]);
 
     const scopedItems = useMemo(() => {
         const q = parsedQuery.text.trim();
@@ -631,9 +636,9 @@ export function useGlobalSearchItems(open: boolean, query: string) {
         for (const vm of vms) {
             if (entityContext?.kind === 'vds' && entityContext.entityKey === String(vm.id)) continue;
             const vmName = vm.hostname || `VM ${vm.vmid}`;
-            const navItems = getVdsNavigationItems(t, String(vm.id)).filter(
-                (item) => !item.permission || hasPermission(item.permission),
-            );
+            const navItems = getVdsNavigationItems(t, String(vm.id), {
+                product: productForNodeType(vm.node_type),
+            }).filter((item) => !item.permission || hasPermission(item.permission));
             const expand = shouldExpandEntityNav(
                 vmName,
                 [vm.description, String(vm.vmid), vm.node_name, vm.pve_node].filter(Boolean) as string[],

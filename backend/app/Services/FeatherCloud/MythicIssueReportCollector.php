@@ -337,7 +337,7 @@ class MythicIssueReportCollector
                 continue;
             }
 
-            $header = "=== FeatherPanel {$type} log (last " . self::PANEL_LOG_LINES . " lines) ===\n";
+            $header = "=== OrveX Panel {$type} log (last " . self::PANEL_LOG_LINES . " lines) ===\n";
             $upload = LogHelper::uploadPaste($header . $content, 'featherpanel-issue');
             $results[$type] = $upload;
         }
@@ -487,7 +487,7 @@ class MythicIssueReportCollector
         $lines = [
             '---',
             '### Automatic environment',
-            '- FeatherPanel: ' . ($d['version'] ?? 'unknown') . ' (' . ($d['upstream'] ?? 'n/a') . ')',
+            '- OrveX Panel: ' . ($d['version'] ?? 'unknown') . ' (' . ($d['upstream'] ?? 'n/a') . ')',
             '- PHP: ' . ($d['php_version'] ?? 'unknown') . ' / ' . ($d['php_sapi'] ?? ''),
             '- OS: ' . ($d['os_detail'] ?? ($d['os'] ?? 'unknown')),
             '- Install: ' . ($d['install_type'] ?? 'other'),

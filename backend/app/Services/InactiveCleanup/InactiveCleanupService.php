@@ -337,7 +337,12 @@ class InactiveCleanupService
 
     // Data access and side effects (protected so tests can replace them)
 
-    /** @return array<int, array<string, mixed>> */
+    /**
+     * Servers the cleanup looks at. Free servers are left out: they follow their own login-based
+     * rule ({@see \App\Services\FreeServers\FreeServerInactivity}) and are never deleted.
+     *
+     * @return array<int, array<string, mixed>>
+     */
     protected function servers(): array
     {
         $sql = 'SELECT s.id, s.uuidShort, s.name, s.owner_id, s.node_id, s.disk, s.suspended, s.inactivity_exempt,
@@ -346,6 +351,7 @@ class InactiveCleanupService
             FROM featherpanel_servers s
             LEFT JOIN (SELECT server_id, MAX(timestamp) AS last_at FROM featherpanel_server_activities WHERE user_id IS NOT NULL GROUP BY server_id) a ON a.server_id = s.id
             LEFT JOIN featherpanel_users u ON u.id = s.owner_id
+            WHERE NOT EXISTS (SELECT 1 FROM featherpanel_free_servers fs WHERE fs.server_id = s.id)
             ORDER BY last_activity_at ASC';
 
         return Database::getPdoConnection()->query($sql)->fetchAll(\PDO::FETCH_ASSOC);
@@ -383,7 +389,7 @@ class InactiveCleanupService
         ], '/server/' . $item['uuid_short'], 'server_inactive:' . $item['server_id']);
 
         $config = App::getInstance(true)->getConfig();
-        $appName = (string) $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel');
+        $appName = (string) $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel');
         $url = rtrim((string) $config->getSetting(ConfigInterface::APP_URL, ''), '/') . '/server/' . $item['uuid_short'];
         $esc = static fn (string $v): string => htmlspecialchars($v, ENT_QUOTES, 'UTF-8');
         $what = [

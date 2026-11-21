@@ -20,7 +20,8 @@ import { useParams, useRouter } from 'next/navigation';
 import axios from 'axios';
 import Link from 'next/link';
 import { useVmInstance } from '@/contexts/VmInstanceContext';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
+import { vmInstanceBase } from '@/lib/vm-products';
 import { VdsPageHeader } from '@/components/vds/VdsPageHeader';
 import { VdsPageLoading } from '@/components/vds/VdsPageLoading';
 import { Button } from '@/components/featherui/Button';
@@ -75,7 +76,7 @@ function OptionRow({ title, hint, children }: { title: string; hint: string; chi
 export default function VdsSettingsPage() {
     const { id } = useParams() as { id: string };
     const router = useRouter();
-    const { t } = useTranslation();
+    const { t, product } = useVmTranslation();
     const withReauth = useVdsReauth();
     const { instance, loading: instanceLoading, hasPermission, refreshInstance } = useVmInstance();
     const { fetchWidgets, getWidgets } = usePluginWidgets('vds-settings');
@@ -296,7 +297,7 @@ export default function VdsSettingsPage() {
                     title={t('common.accessDenied')}
                     description={t('vds.settings.access_denied')}
                     action={
-                        <Button variant='outline' onClick={() => router.push(`/vds/${id}`)}>
+                        <Button variant='outline' onClick={() => router.push(vmInstanceBase(product, id))}>
                             {t('common.goBack')}
                         </Button>
                     }
@@ -449,9 +450,9 @@ export default function VdsSettingsPage() {
                 </PageCard>
             )}
 
-            {isQemu && (
+            {isQemu && product === 'vds' && (
                 <Link
-                    href={`/vds/${id}/boot`}
+                    href={vmInstanceBase(product, id, 'boot')}
                     className='fp-surface group flex items-center gap-3 rounded-xl border p-4 transition-colors hover:bg-muted/20 focus-visible:ring-primary focus-visible:ring-2 focus-visible:outline-none sm:p-5'
                 >
                     <span className='fp-icon-tile flex h-9 w-9 shrink-0 items-center justify-center rounded-lg'>

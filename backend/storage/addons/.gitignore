@@ -1,3 +1,5 @@
-/*/
-*.sh
-*.build.log
+# FeatherPanel ships the official addon suite pre-bundled in this directory.
+# Only transient local files are ignored.
+/*.sh
+/*.build.log
+*.temp

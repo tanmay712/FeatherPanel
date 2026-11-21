@@ -19,7 +19,7 @@ import * as React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import axios from 'axios';
 import { useVmInstance } from '@/contexts/VmInstanceContext';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 import { VdsPageHeader } from '@/components/vds/VdsPageHeader';
 import { VdsPageLoading } from '@/components/vds/VdsPageLoading';
 import { Button } from '@/components/featherui/Button';
@@ -33,6 +33,7 @@ import { WidgetRenderer } from '@/components/server/WidgetRenderer';
 import { getApiErrorMessage } from '@/lib/api-errors';
 import { Sensitive } from '@/components/common/Sensitive';
 import { VdsBandwidthCard } from '@/components/vds/VdsBandwidthCard';
+import { VdsNatForwardsCard } from '@/components/vds/VdsAccess';
 
 interface AssignedIp {
     id: number;
@@ -58,7 +59,7 @@ interface NetworkingResponse {
 export default function VdsNetworkingPage() {
     const { id } = useParams() as { id: string };
     const router = useRouter();
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
     const { instance, loading: instanceLoading, hasPermission, refreshInstance } = useVmInstance();
     const { fetchWidgets, getWidgets } = usePluginWidgets('vds-network');
 
@@ -161,6 +162,8 @@ export default function VdsNetworkingPage() {
             />
 
             {instance && <VdsBandwidthCard id={instance.id} />}
+
+            {instance && <VdsNatForwardsCard vmId={instance.id} />}
 
             <div className='grid grid-cols-1 gap-6 xl:grid-cols-3'>
                 <Card className='xl:col-span-2'>

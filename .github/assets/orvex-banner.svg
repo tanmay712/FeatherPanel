@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" width="1200" height="360" role="img" aria-label="OrveX Panel - game servers, billing and VPS hosting in one open-source panel">
+  <title>OrveX Panel</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b0a1f"/>
+      <stop offset="0.55" stop-color="#161335"/>
+      <stop offset="1" stop-color="#1e1b4b"/>
+    </linearGradient>
+    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4f46e5"/>
+      <stop offset="1" stop-color="#a855f7"/>
+    </linearGradient>
+    <linearGradient id="title" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.6" stop-color="#e9d5ff"/>
+      <stop offset="1" stop-color="#a5b4fc"/>
+    </linearGradient>
+    <radialGradient id="blobA"><stop offset="0" stop-color="#7c3aed" stop-opacity="0.55"/><stop offset="1" stop-color="#7c3aed" stop-opacity="0"/></radialGradient>
+    <radialGradient id="blobB"><stop offset="0" stop-color="#06b6d4" stop-opacity="0.35"/><stop offset="1" stop-color="#06b6d4" stop-opacity="0"/></radialGradient>
+    <radialGradient id="blobC"><stop offset="0" stop-color="#db2777" stop-opacity="0.30"/><stop offset="1" stop-color="#db2777" stop-opacity="0"/></radialGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#ffffff" stroke-opacity="0.045"/>
+    </pattern>
+    <clipPath id="frame"><rect width="1200" height="360" rx="28"/></clipPath>
+  </defs>
+  <style>
+    .blob { transform-box: fill-box; transform-origin: center; animation: drift 18s ease-in-out infinite alternate; }
+    .b2 { animation-duration: 23s; animation-direction: alternate-reverse; }
+    .b3 { animation-duration: 29s; }
+    @keyframes drift { 0% { transform: translate(0,0) scale(1); } 50% { transform: translate(60px,-25px) scale(1.15); } 100% { transform: translate(-40px,30px) scale(0.95); } }
+    .orbit { transform-box: view-box; transform-origin: 190px 180px; animation: spin 16s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .core { transform-box: fill-box; transform-origin: center; animation: pulse 3.2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(0.82); opacity: 0.85; } }
+    .pill { opacity: 0; animation: rise 0.8s ease-out forwards; }
+    .fade { opacity: 0; animation: rise 0.9s ease-out forwards; }
+    @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @media (prefers-reduced-motion: reduce) { .blob, .orbit, .core { animation: none; } .pill, .fade { animation: none; opacity: 1; } }
+  </style>
+  <g clip-path="url(#frame)">
+    <rect width="1200" height="360" fill="url(#bg)"/>
+    <ellipse class="blob" cx="260" cy="90" rx="320" ry="220" fill="url(#blobA)"/>
+    <ellipse class="blob b2" cx="980" cy="300" rx="360" ry="230" fill="url(#blobB)"/>
+    <ellipse class="blob b3" cx="760" cy="40" rx="260" ry="170" fill="url(#blobC)"/>
+    <rect width="1200" height="360" fill="url(#grid)"/>
+  </g>
+  <rect x="98" y="88" width="184" height="184" rx="44" fill="url(#tile)"/>
+  <rect x="98" y="88" width="184" height="184" rx="44" fill="none" stroke="#ffffff" stroke-opacity="0.18"/>
+  <g class="orbit">
+    <circle cx="190" cy="180" r="46" fill="none" stroke="#ffffff" stroke-width="13" stroke-linecap="round"
+            stroke-dasharray="231.2 57.8" transform="rotate(-9 190 180)"/>
+    <circle cx="222.5" cy="147.5" r="11" fill="#ffffff"/>
+  </g>
+  <circle class="core" cx="190" cy="180" r="11" fill="#ffffff"/>
+  <text x="356" y="168" class="fade" fill="url(#title)" font-family="Segoe UI, Inter, Helvetica Neue, Arial, sans-serif" font-size="86" font-weight="800" letter-spacing="-2">OrveX Panel</text>
+  <text x="360" y="222" class="fade" style="animation-delay:0.2s" fill="#c4b5fd" font-family="Segoe UI, Inter, Helvetica Neue, Arial, sans-serif" font-size="25" font-weight="500">Game servers, billing and VPS hosting in one open-source panel</text>
+    <g class="pill" style="animation-delay:0.40s">
+      <rect x="360" y="262" width="161" height="38" rx="19" fill="#ffffff" fill-opacity="0.07" stroke="#a78bfa" stroke-opacity="0.45"/>
+      <text x="440" y="287" text-anchor="middle" fill="#ede9fe" font-family="Segoe UI, Inter, Helvetica Neue, Arial, sans-serif" font-size="16" font-weight="600">KVM + LXC VPS</text>
+    </g>
+    <g class="pill" style="animation-delay:0.55s">
+      <rect x="533" y="262" width="257" height="38" rx="19" fill="#ffffff" fill-opacity="0.07" stroke="#a78bfa" stroke-opacity="0.45"/>
+      <text x="661" y="287" text-anchor="middle" fill="#ede9fe" font-family="Segoe UI, Inter, Helvetica Neue, Arial, sans-serif" font-size="16" font-weight="600">Dedicated &amp; shared IPv4</text>
+    </g>
+    <g class="pill" style="animation-delay:0.70s">
+      <rect x="802" y="262" width="190" height="38" rx="19" fill="#ffffff" fill-opacity="0.07" stroke="#a78bfa" stroke-opacity="0.45"/>
+      <text x="896" y="287" text-anchor="middle" fill="#ede9fe" font-family="Segoe UI, Inter, Helvetica Neue, Arial, sans-serif" font-size="16" font-weight="600">Billing built in</text>
+    </g>
+    <g class="pill" style="animation-delay:0.85s">
+      <rect x="1003" y="262" width="151" height="38" rx="19" fill="#ffffff" fill-opacity="0.07" stroke="#a78bfa" stroke-opacity="0.45"/>
+      <text x="1079" y="287" text-anchor="middle" fill="#ede9fe" font-family="Segoe UI, Inter, Helvetica Neue, Arial, sans-serif" font-size="16" font-weight="600">Game servers</text>
+    </g>
+</svg>

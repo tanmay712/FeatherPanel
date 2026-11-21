@@ -24,9 +24,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 #[OA\Info(
-    title: 'FeatherPanel API Documentation',
+    title: 'OrveX Panel API Documentation',
     version: APP_VERSION,
-    description: 'The FeatherPanel API is a RESTful API that allows you to manage your FeatherPanel server and resources.',
+    description: 'The OrveX Panel API is a RESTful API that allows you to manage your OrveX Panel server and resources.',
     termsOfService: 'https://mythical.systems/terms',
     contact: new OA\Contact(
         name: 'MythicalSystems',
@@ -40,7 +40,7 @@ use Symfony\Component\HttpFoundation\Response;
 )]
 #[OA\Server(
     url: '/',
-    description: 'FeatherPanel API Server'
+    description: 'OrveX Panel API Server'
 )]
 #[OA\Tag(name: 'System', description: 'System configuration and settings')]
 #[OA\Tag(name: 'Admin - Users', description: 'User management operations')]
@@ -62,7 +62,7 @@ class ApiDocs
     #[OA\Get(
         path: '/api/openapi.json',
         summary: 'Get OpenAPI specification',
-        description: 'Retrieve the complete OpenAPI 3.1 specification for the FeatherPanel API, including all documented endpoints, schemas, and metadata.',
+        description: 'Retrieve the complete OpenAPI 3.1 specification for the OrveX Panel API, including all documented endpoints, schemas, and metadata.',
         tags: ['System'],
         responses: [
             new OA\Response(
@@ -154,9 +154,9 @@ class ApiDocs
                 $openapiArray = [
                     'openapi' => '3.1.0',
                     'info' => [
-                        'title' => 'FeatherPanel API',
+                        'title' => 'OrveX Panel API',
                         'version' => APP_VERSION,
-                        'description' => 'The FeatherPanel API is a RESTful API that allows you to manage your FeatherPanel server and resources.',
+                        'description' => 'The OrveX Panel API is a RESTful API that allows you to manage your OrveX Panel server and resources.',
                         'contact' => [
                             'name' => 'MythicalSystems',
                             'url' => 'https://mythical.systems',
@@ -170,7 +170,7 @@ class ApiDocs
                     'servers' => [
                         [
                             'url' => '/api',
-                            'description' => 'FeatherPanel API Server',
+                            'description' => 'OrveX Panel API Server',
                         ],
                     ],
                     'paths' => [],

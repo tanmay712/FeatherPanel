@@ -16,6 +16,7 @@ See the LICENSE file or <https://www.gnu.org/licenses/>.
 import Permissions from '@/lib/permissions';
 import { NavigationItem } from '@/types/navigation';
 import { applyModulesToNavigation } from '@/lib/modules';
+import { VDS_ONLY_INSTANCE_PAGES, vmInstanceBase, type VmProduct } from '@/lib/vm-products';
 import type { AppSettings } from '@/types/settings';
 import {
     Disc3,
@@ -29,6 +30,7 @@ import {
     Settings,
     Activity,
     Hourglass,
+    Gift,
     BookOpen,
     Ticket,
     BarChart3,
@@ -210,11 +212,35 @@ const buildAdminNavigationItems = (
             group: 'servers',
         },
         {
+            id: 'admin-free-servers',
+            module: 'game',
+            name: t('navigation.items.freeServers'),
+            title: t('navigation.items.freeServers'),
+            url: '/admin/free-servers',
+            icon: Gift,
+            isActive: false,
+            category: 'admin',
+            permission: Permissions.ADMIN_SERVERS_VIEW,
+            group: 'servers',
+        },
+        {
             id: 'admin-vm-instances',
             module: 'vds',
             name: t('navigation.items.virtualServersVds'),
             title: t('navigation.items.virtualServersVds'),
             url: '/admin/vm-instances',
+            icon: Server,
+            isActive: false,
+            category: 'admin',
+            permission: Permissions.ADMIN_VM_INSTANCES_VIEW,
+            group: 'servers',
+        },
+        {
+            id: 'admin-vps-servers',
+            module: 'vps',
+            name: t('navigation.items.virtualServersVps'),
+            title: t('navigation.items.virtualServersVps'),
+            url: '/admin/vps-servers',
             icon: Server,
             isActive: false,
             category: 'admin',
@@ -320,6 +346,18 @@ const buildAdminNavigationItems = (
             name: t('navigation.items.vdsNodes'),
             title: t('navigation.items.vdsNodes'),
             url: '/admin/vds-nodes',
+            icon: Server,
+            isActive: false,
+            category: 'admin',
+            permission: Permissions.ADMIN_VM_NODES_VIEW,
+            group: 'infrastructure',
+        },
+        {
+            id: 'admin-vps-nodes',
+            module: 'vps',
+            name: t('navigation.items.vpsNodes'),
+            title: t('navigation.items.vpsNodes'),
+            url: '/admin/vps-nodes',
             icon: Server,
             isActive: false,
             category: 'admin',
@@ -1143,6 +1181,17 @@ const buildMainNavigationItems = (
             group: 'overview',
         },
         {
+            id: 'vps',
+            module: 'vps',
+            name: t('navigation.items.virtualServersVps'),
+            title: t('navigation.items.virtualServersVps'),
+            url: '/dashboard/vps',
+            icon: Server,
+            isActive: false,
+            category: 'main',
+            group: 'overview',
+        },
+        {
             id: 'webspaces',
             module: 'web',
             name: t('navigation.items.webSpaces'),
@@ -1231,18 +1280,24 @@ const buildMainNavigationItems = (
     return items;
 };
 
+/**
+ * Sidebar of one virtual server. VDS servers live under /vds/{id}, VPS servers (OrveX nodes)
+ * under /vps/{id}; item ids are shared so sidebar customization applies to both.
+ */
 export const getVdsNavigationItems = (
     t: TFunction,
     instanceId: string,
-    options?: { vmType?: string | null },
+    options?: { vmType?: string | null; product?: VmProduct },
 ): NavigationItem[] => {
     const isQemu = (options?.vmType ?? 'qemu') !== 'lxc';
+    const product = options?.product ?? 'vds';
+    const base = vmInstanceBase(product, instanceId);
     const items: NavigationItem[] = [
         {
             id: 'vds-overview',
             name: t('navigation.items.console'),
             title: t('navigation.items.console'),
-            url: `/vds/${instanceId}`,
+            url: base,
             icon: SquareTerminal,
             isActive: false,
             category: 'server',
@@ -1252,7 +1307,7 @@ export const getVdsNavigationItems = (
             id: 'vds-activities',
             name: t('navigation.items.activities'),
             title: t('navigation.items.activities'),
-            url: `/vds/${instanceId}/activities`,
+            url: `${base}/activities`,
             icon: Clock,
             isActive: false,
             category: 'server',
@@ -1263,7 +1318,7 @@ export const getVdsNavigationItems = (
             id: 'vds-backups',
             name: t('navigation.items.backups'),
             title: t('navigation.items.backups'),
-            url: `/vds/${instanceId}/backups`,
+            url: `${base}/backups`,
             icon: Archive,
             isActive: false,
             category: 'server',
@@ -1274,7 +1329,7 @@ export const getVdsNavigationItems = (
             id: 'vds-snapshots',
             name: t('navigation.items.snapshots'),
             title: t('navigation.items.snapshots'),
-            url: `/vds/${instanceId}/snapshots`,
+            url: `${base}/snapshots`,
             icon: Camera,
             isActive: false,
             category: 'server',
@@ -1285,7 +1340,7 @@ export const getVdsNavigationItems = (
             id: 'vds-users',
             name: t('navigation.items.users'),
             title: t('navigation.items.users'),
-            url: `/vds/${instanceId}/users`,
+            url: `${base}/users`,
             icon: Users,
             isActive: false,
             category: 'server',
@@ -1296,7 +1351,7 @@ export const getVdsNavigationItems = (
             id: 'vds-network',
             name: t('navigation.items.network'),
             title: t('navigation.items.network'),
-            url: `/vds/${instanceId}/network`,
+            url: `${base}/network`,
             icon: Network,
             isActive: false,
             category: 'server',
@@ -1306,7 +1361,7 @@ export const getVdsNavigationItems = (
             id: 'vds-firewall',
             name: t('navigation.items.firewall'),
             title: t('navigation.items.firewall'),
-            url: `/vds/${instanceId}/firewall`,
+            url: `${base}/firewall`,
             icon: Shield,
             isActive: false,
             category: 'server',
@@ -1317,7 +1372,7 @@ export const getVdsNavigationItems = (
             id: 'vds-schedules',
             name: t('navigation.items.schedules'),
             title: t('navigation.items.schedules'),
-            url: `/vds/${instanceId}/schedules`,
+            url: `${base}/schedules`,
             icon: CalendarClock,
             isActive: false,
             category: 'server',
@@ -1330,7 +1385,7 @@ export const getVdsNavigationItems = (
                       id: 'vds-boot',
                       name: t('navigation.items.boot'),
                       title: t('navigation.items.boot'),
-                      url: `/vds/${instanceId}/boot`,
+                      url: `${base}/boot`,
                       icon: HardDrive,
                       isActive: false,
                       category: 'server' as const,
@@ -1343,7 +1398,7 @@ export const getVdsNavigationItems = (
             id: 'vds-settings',
             name: t('navigation.items.settings'),
             title: t('navigation.items.settings'),
-            url: `/vds/${instanceId}/settings`,
+            url: `${base}/settings`,
             icon: Settings,
             isActive: false,
             category: 'server',
@@ -1351,6 +1406,13 @@ export const getVdsNavigationItems = (
             permission: 'settings',
         },
     ];
+
+    // Proxmox-only pages (firewall, boot order & ISO) are not part of the VPS product.
+    if (product === 'vps') {
+        return items.filter(
+            (item) => !(VDS_ONLY_INSTANCE_PAGES as readonly string[]).includes(item.id.replace(/^vds-/, '')),
+        );
+    }
 
     return items;
 };

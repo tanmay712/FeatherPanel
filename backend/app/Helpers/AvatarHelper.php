@@ -69,6 +69,7 @@ class AvatarHelper
         $config = App::getInstance(true)->getConfig();
         $knownDefaults = [
             'https://github.com/featherpanel-com.png',
+            '/branding/orvex-logo.png',
             $config->getSetting(ConfigInterface::APP_LOGO_WHITE, ''),
             $config->getSetting(ConfigInterface::APP_LOGO_DARK, ''),
         ];
@@ -93,7 +94,7 @@ class AvatarHelper
 
         switch ($provider) {
             case self::PROVIDER_PANEL_LOGO:
-                return $config->getSetting(ConfigInterface::APP_LOGO_WHITE, 'https://github.com/featherpanel-com.png');
+                return $config->getSetting(ConfigInterface::APP_LOGO_WHITE, '/branding/orvex-logo.png');
 
             case self::PROVIDER_UI_AVATARS:
                 $name = self::buildDisplayName($username, $firstName, $lastName, $email);

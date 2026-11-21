@@ -60,7 +60,7 @@ class VdsChatbotService
         if ($enabled !== 'true') {
             return [
                 'response' => 'The AI chatbot is currently disabled by the administrator.',
-                'model'    => 'FeatherPanel VDS AI (Disabled)',
+                'model'    => 'OrveX Panel VDS AI (Disabled)',
             ];
         }
 
@@ -140,7 +140,7 @@ class VdsChatbotService
 
             return [
                 'response' => $errorMessage,
-                'model'    => 'FeatherPanel VDS AI (Error)',
+                'model'    => 'OrveX Panel VDS AI (Error)',
             ];
         }
 
@@ -160,7 +160,7 @@ class VdsChatbotService
         $toolExecutions = []; // Store tool execution results for frontend
         $toolActivity = [];
         $usageItems = [];
-        $result = ['response' => '', 'model' => 'FeatherPanel VDS AI'];
+        $result = ['response' => '', 'model' => 'OrveX Panel VDS AI'];
         $allowedSingleExecutionTools = $this->detectAllowedSingleExecutionTools($message, $history);
         $lastToolResultsText = '';
         $toolOutcomeFallbacks = [];
@@ -319,7 +319,7 @@ class VdsChatbotService
 
         return [
             'response'        => trim($finalResponse),
-            'model'           => $result['model'] ?? 'FeatherPanel VDS AI',
+            'model'           => $result['model'] ?? 'OrveX Panel VDS AI',
             'tool_executions' => $toolExecutions,
             'tool_activity'   => $toolActivity,
             'usage'           => TokenUsage::aggregate($usageItems),

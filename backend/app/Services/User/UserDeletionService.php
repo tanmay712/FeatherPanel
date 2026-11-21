@@ -186,8 +186,8 @@ class UserDeletionService
         try {
             AccountDeleted::send([
                 'email' => $user['email'],
-                'subject' => 'Your ' . $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel') . ' account has been deleted',
-                'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'FeatherPanel'),
+                'subject' => 'Your ' . $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel') . ' account has been deleted',
+                'app_name' => $config->getSetting(ConfigInterface::APP_NAME, 'OrveX Panel'),
                 'app_url' => $config->getSetting(ConfigInterface::APP_URL, 'https://featherpanel.mythical.systems'),
                 'first_name' => $user['first_name'],
                 'last_name' => $user['last_name'],

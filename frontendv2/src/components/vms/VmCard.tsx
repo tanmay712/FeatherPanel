@@ -31,7 +31,8 @@ import { Sensitive } from '@/components/common/Sensitive';
 import { ServiceExpiryChip } from '@/components/common/ServiceExpiryChip';
 import { StatusBadge } from '@/components/servers/StatusBadge';
 import { ResourceBar } from '@/components/servers/ResourceBar';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
+import { vmInstanceHref } from '@/lib/vm-products';
 
 interface VmCardProps {
     vm: VmInstance;
@@ -82,7 +83,7 @@ function QuickActions({
     onDone: () => void;
     className?: string;
 }) {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
     const [busy, setBusy] = useState<string | null>(null);
     const running = status === 'running';
 
@@ -145,7 +146,7 @@ function QuickActions({
                 </button>
             )}
             <Link
-                href={`/vds/${vm.id}`}
+                href={vmInstanceHref(vm)}
                 onClick={(e) => e.stopPropagation()}
                 className={cn(btn, 'border-border hover:bg-muted')}
                 title={t('ui.components.vms.vmCard.console')}
@@ -158,11 +159,11 @@ function QuickActions({
 }
 
 export function VmCard({ vm, layout }: VmCardProps) {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
     const suspended = vm.suspended === 1 || vm.status === 'suspended';
     const { live, refresh } = useVmLiveStatus(vm.id, !suspended);
     const status = suspended ? 'suspended' : live?.status || vm.status || 'unknown';
-    const href = `/vds/${vm.id}`;
+    const href = vmInstanceHref(vm);
     const vcpus = live?.maxcpu ?? (vm.cpus ?? 1) * (vm.cores ?? 1);
     const memLimit = live?.maxmem ?? (vm.memory ?? 0) * 1024 * 1024;
     const memUsed = status === 'running' ? (live?.mem ?? 0) : 0;

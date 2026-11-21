@@ -18,7 +18,7 @@ See the LICENSE file or <https://www.gnu.org/licenses/>.
 import { ReactNode } from 'react';
 import { useVmInstance } from '@/contexts/VmInstanceContext';
 import { useSettings } from '@/contexts/SettingsContext';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 import { SuspendedState } from '@/components/featherui/SuspendedState';
 
 interface VdsSuspendedWrapperProps {
@@ -28,7 +28,7 @@ interface VdsSuspendedWrapperProps {
 export function VdsSuspendedWrapper({ children }: VdsSuspendedWrapperProps) {
     const { instance } = useVmInstance();
     const { settings } = useSettings();
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
 
     if (instance?.suspended === 1 || instance?.status === 'suspended') {
         const suspension = instance.suspension;

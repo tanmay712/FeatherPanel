@@ -30,7 +30,7 @@ import {
     ShieldCheck,
     Trash2,
 } from 'lucide-react';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 import { cn } from '@/lib/utils';
 import { getApiErrorMessage } from '@/lib/api-errors';
 import { Button } from '@/components/featherui/Button';
@@ -146,7 +146,7 @@ function OptionRow({ title, hint, children }: { title: string; hint: string; chi
 }
 
 export function FirewallTab({ nodeId }: { nodeId: string }) {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
     const [pveNode, setPveNode] = useState('');
     const [state, setState] = useState<FirewallState | null>(null);
     const [error, setError] = useState<string | null>(null);

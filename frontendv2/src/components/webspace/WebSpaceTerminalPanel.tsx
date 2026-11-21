@@ -83,17 +83,17 @@ export function WebSpaceTerminalPanel({
     const handleInstallStarted = useCallback(() => {
         if (installStartedRef.current) return;
         installStartedRef.current = true;
-        terminalRef.current?.writeln('\u001b[33m[FeatherPanel] Install started...\u001b[0m');
+        terminalRef.current?.writeln('\u001b[33m[OrveX Panel] Install started...\u001b[0m');
     }, []);
 
     const handleInstallCompleted = useCallback(() => {
-        terminalRef.current?.writeln('\u001b[32m[FeatherPanel] Install completed.\u001b[0m');
+        terminalRef.current?.writeln('\u001b[32m[OrveX Panel] Install completed.\u001b[0m');
         onInstallCompleted?.();
     }, [onInstallCompleted]);
 
     const handleInstallFailed = useCallback(
         (message: string) => {
-            terminalRef.current?.writeln(`\u001b[31m[FeatherPanel] Install failed: ${message}\u001b[0m`);
+            terminalRef.current?.writeln(`\u001b[31m[OrveX Panel] Install failed: ${message}\u001b[0m`);
             onInstallFailed?.(message);
         },
         [onInstallFailed],

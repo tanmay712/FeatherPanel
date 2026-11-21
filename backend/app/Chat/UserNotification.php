@@ -43,6 +43,8 @@ class UserNotification
     public const KIND_STORAGE_DISCONNECTED = 'storage_disconnected';
     public const KIND_NODE_ALERT = 'node_alert';
     public const KIND_SERVER_INACTIVE = 'server_inactive';
+    public const KIND_FREE_SERVER_STOPPED = 'free_server_stopped';
+    public const KIND_FREE_SERVER_STORED = 'free_server_stored';
     public const KIND_WEBSPACE_INSTALLED = 'webspace_installed';
     public const KIND_WEBSPACE_INSTALL_FAILED = 'webspace_install_failed';
     public const KIND_WEBSPACE_BACKUP_COMPLETED = 'webspace_backup_completed';
@@ -67,6 +69,8 @@ class UserNotification
         self::KIND_STORAGE_DISCONNECTED,
         self::KIND_NODE_ALERT,
         self::KIND_SERVER_INACTIVE,
+        self::KIND_FREE_SERVER_STOPPED,
+        self::KIND_FREE_SERVER_STORED,
         self::KIND_WEBSPACE_INSTALLED,
         self::KIND_WEBSPACE_INSTALL_FAILED,
         self::KIND_WEBSPACE_BACKUP_COMPLETED,

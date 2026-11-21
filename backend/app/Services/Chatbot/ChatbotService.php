@@ -60,7 +60,7 @@ class ChatbotService
         if ($enabled !== 'true') {
             return [
                 'response' => 'The AI chatbot is currently disabled by the administrator.',
-                'model' => 'FeatherPanel AI (Disabled)',
+                'model' => 'OrveX Panel AI (Disabled)',
             ];
         }
 
@@ -147,7 +147,7 @@ class ChatbotService
 
             return [
                 'response' => $errorMessage,
-                'model' => 'FeatherPanel AI (Error)',
+                'model' => 'OrveX Panel AI (Error)',
             ];
         }
 
@@ -167,7 +167,7 @@ class ChatbotService
         $toolExecutions = []; // Store tool execution results for frontend
         $toolActivity = [];
         $usageItems = [];
-        $result = ['response' => '', 'model' => 'FeatherPanel AI'];
+        $result = ['response' => '', 'model' => 'OrveX Panel AI'];
         $requiredTool = $this->detectRequiredTool($message, $history);
         $allowedSingleExecutionTools = $this->detectAllowedSingleExecutionTools($message, $history);
         $lastToolResultsText = '';
@@ -348,7 +348,7 @@ class ChatbotService
 
         return [
             'response' => trim($finalResponse),
-            'model' => $result['model'] ?? 'FeatherPanel AI',
+            'model' => $result['model'] ?? 'OrveX Panel AI',
             'tool_executions' => $toolExecutions, // Include tool execution results for frontend
             'tool_activity' => $toolActivity,
             'usage' => TokenUsage::aggregate($usageItems),
@@ -709,7 +709,7 @@ class ChatbotService
 
         return [
             'response' => (string) ($result['response'] ?? ''),
-            'model' => (string) ($result['model'] ?? 'FeatherPanel AI'),
+            'model' => (string) ($result['model'] ?? 'OrveX Panel AI'),
             'usage' => is_array($result['usage'] ?? null) ? $result['usage'] : null,
         ];
     }

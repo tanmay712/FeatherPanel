@@ -1,0 +1,17 @@
+{
+  "dashboard": {},
+  "admin": {},
+  "server": {
+    "/minecraftdatapackinstaller": {
+      "name": "DataPack Installer",
+      "icon": "📦",
+      "showBadge": false,
+      "lucideIcon": "package",
+      "redirect": "/minecraftdatapackinstaller",
+      "component": "/minecraftdatapackinstaller/dist/index.html",
+      "description": "Install Vanilla Tweaks datapacks, resource packs, and crafting tweaks",
+      "category": "server",
+      "group": "Minecraft Java Edition"
+    }
+  }
+}

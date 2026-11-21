@@ -1,0 +1,2485 @@
+<script setup lang="ts">
+import { ref, onMounted, computed, watch } from "vue";
+import { useToast } from "vue-toastification";
+import {
+  Loader2, Plus, Pencil, Trash2, CreditCard, Users,
+  CheckCircle2, PauseCircle, XCircle, RefreshCw, Save, Settings,
+  ShieldAlert, BarChart3, ToggleLeft, ToggleRight, ServerOff, Server, FileText,
+  Mail, Clock, ChevronDown, ArrowLeft, HardDrive,
+  Package, Infinity, FolderOpen, Tag, ExternalLink, CircleDollarSign, Ticket,
+  Globe, Copy, Link2,
+} from "@lucide/vue";
+import {
+  useAdminPlansAPI, type Plan, type PlanFormData, type PlanOptions,
+} from "@/composables/usePlansAPI";
+import {
+  useAdminSubscriptionsAPI, type Subscription,
+} from "@/composables/useSubscriptionsAPI";
+import {
+  useSettingsAPI, type BillingPlanSettings,
+} from "@/composables/useSettingsAPI";
+import {
+  useAdminImagesAPI, type AdminImage,
+} from "@/composables/useImagesAdminAPI";
+import {
+  useAdminCategoriesAPI, type Category, type CategoryFormData,
+  CATEGORY_COLORS, colorClasses,
+} from "@/composables/useCategoriesAPI";
+import {
+  useAdminCouponsAPI, type PlanCoupon, type PlanCouponFormData,
+} from "@/composables/useCouponsAPI";
+
+const toast = useToast();
+const {
+  loading: plansLoading, listPlans, createPlan, updatePlan, deletePlan, getOptions,
+} = useAdminPlansAPI();
+const {
+  loading: subsLoading, listSubscriptions, getStats, cancelSubscription, refundSubscription,
+} = useAdminSubscriptionsAPI();
+const { loading: settingsLoading, getSettings, updateSettings } = useSettingsAPI();
+const { loading: imagesLoading, listImages, uploadImage } = useAdminImagesAPI();
+const {
+  loading: catsLoading, listCategories, createCategory, updateCategory, deleteCategory,
+} = useAdminCategoriesAPI();
+const {
+  loading: couponsLoading, listCoupons, createCoupon, updateCoupon, deleteCoupon,
+} = useAdminCouponsAPI();
+
+
+type Tab = "plans" | "categories" | "subscriptions" | "settings" | "coupons";
+type View = "list" | "editor";
+type CouponView = "list" | "editor";
+type PlanEditorForm = PlanFormData & {
+  allowed_upgrade_plan_ids: number[];
+  allowed_downgrade_plan_ids: number[];
+};
+
+const activeTab = ref<Tab>("plans");
+const currentView = ref<View>("list");
+const couponView = ref<CouponView>("list");
+const editingPlan = ref<Plan | null>(null);
+const editingCoupon = ref<PlanCoupon | null>(null);
+
+
+const categories = ref<Category[]>([]);
+const catsTotalPages = ref(1);
+const catsPage = ref(1);
+const catsSearch = ref("");
+const editingCategory = ref<Category | null>(null);
+const showCatModal = ref(false);
+const showDeleteCatConfirm = ref(false);
+const catToDelete = ref<Category | null>(null);
+const emptyCatForm = (): CategoryFormData => ({
+  name: "", description: null, icon: null, color: "blue", sort_order: 0, is_active: true,
+});
+const catForm = ref<CategoryFormData>(emptyCatForm());
+
+const plans = ref<Plan[]>([]);
+const subscriptions = ref<Subscription[]>([]);
+const stats = ref<{
+  subscriptions: Record<string, number>;
+  total_plans: number;
+  active_plans: number;
+  admin_refunds?: { total_credits_refunded: number; subscriptions_with_refunds: number };
+} | null>(null);
+const settings = ref<BillingPlanSettings | null>(null);
+const settingsForm = ref<BillingPlanSettings>({
+  suspend_servers: true, unsuspend_on_renewal: true, grace_period_days: 0,
+  termination_days: 0, send_suspension_email: true, send_termination_email: true,
+  allow_user_cancellation: true, cancel_at_period_end: true, generate_invoices: true,
+  plans_public_enabled: false, max_plans_per_user: 0,
+});
+const planOptions = ref<PlanOptions>({ plans: [], nodes: [], vm_nodes: [], vm_templates: [], realms: [], spells: [], categories: [] });
+
+
+const plansPage = ref(1);
+const plansTotalPages = ref(1);
+const plansSearch = ref("");
+const subsPage = ref(1);
+const subsTotalPages = ref(1);
+const subsSearch = ref("");
+const subsStatusFilter = ref("");
+
+
+const coupons = ref<PlanCoupon[]>([]);
+const couponsPage = ref(1);
+const couponsTotalPages = ref(1);
+const couponsSearch = ref("");
+const emptyCouponForm = (): PlanCouponFormData => ({
+  code: "",
+  plan_id: null,
+  discount_percent: 0,
+  discount_credits: 0,
+  coupon_scope: "initial",
+  max_uses: 0,
+  expires_at: "",
+});
+const couponForm = ref<PlanCouponFormData>(emptyCouponForm());
+const showDeleteCouponConfirm = ref(false);
+const couponToDelete = ref<PlanCoupon | null>(null);
+
+
+const showDeleteConfirm = ref(false);
+const planToDelete = ref<Plan | null>(null);
+const showCancelSubConfirm = ref(false);
+const subToCancel = ref<Subscription | null>(null);
+const showRefundSubConfirm = ref(false);
+const subToRefund = ref<Subscription | null>(null);
+const refundCreditsInput = ref(1);
+const availableImages = ref<AdminImage[]>([]);
+const imageSearch = ref("");
+const imageUploadName = ref("");
+const imageUploadFile = ref<File | null>(null);
+
+const PRESET_PERIODS = [
+  { label: "Daily", days: 1 }, { label: "Weekly", days: 7 },
+  { label: "Bi-Weekly", days: 14 }, { label: "Monthly", days: 30 },
+  { label: "Quarterly", days: 90 }, { label: "Semi-Annual", days: 180 },
+  { label: "Annual", days: 365 },
+];
+
+const emptyForm = (): PlanEditorForm => ({
+  category_id: null,
+  product_type: "server",
+  vds_config: {},
+  name: "", description: null, long_description: null,
+  price_credits: 0, tax_rate_percent: 0, extra_charge_percent: 0, extra_charge_name: null,
+  billing_period_days: 30, is_active: true, max_subscriptions: null,
+  node_ids: [], realms_id: null, spell_id: null,
+  memory: 512, cpu: 100, disk: 1024, swap: 0, io: 500,
+  backup_limit: 0, database_limit: 0, allocation_limit: null,
+  startup_override: null, image_override: null,
+  card_background_image: null,
+  allowed_upgrade_plan_ids: [],
+  allowed_downgrade_plan_ids: [],
+  slider_config: null,
+  user_can_choose_realm: false, allowed_realms: [],
+  user_can_choose_spell: false, allowed_spells: [],
+});
+const planForm = ref<PlanEditorForm>(emptyForm());
+const vdsConfig = () => {
+  if (!planForm.value.vds_config) planForm.value.vds_config = {};
+  return planForm.value.vds_config;
+};
+
+const ensureSliderConfig = (key: string) => {
+  if (!planForm.value.slider_config) {
+    planForm.value.slider_config = {};
+  }
+  if (!planForm.value.slider_config[key]) {
+    planForm.value.slider_config[key] = {
+      enabled: false,
+      base: key === 'memory' ? 512 : (key === 'disk' ? 1024 : (key === 'cpu' ? 100 : 0)),
+      max: key === 'memory' ? 16384 : (key === 'disk' ? 51200 : (key === 'cpu' ? 400 : 10)),
+      step: key === 'memory' ? 512 : (key === 'disk' ? 1024 : (key === 'cpu' ? 50 : 1)),
+      cost_per_step: 0,
+      rounding: 'nearest'
+    };
+  }
+  return planForm.value.slider_config[key];
+};
+
+function toggleNodeSelection(nodeId: number) {
+  if (planForm.value.node_ids.includes(nodeId)) {
+    planForm.value.node_ids = planForm.value.node_ids.filter((id) => id !== nodeId);
+    return;
+  }
+  planForm.value.node_ids = [...planForm.value.node_ids, nodeId];
+}
+
+function clearSelectedNodes() {
+  planForm.value.node_ids = [];
+}
+
+const filteredSpells = computed(() =>
+  planForm.value.realms_id
+    ? planOptions.value.spells.filter((s) => s.realm_id === planForm.value.realms_id)
+    : planOptions.value.spells
+);
+
+
+const allowedSpellsPool = computed(() =>
+  planForm.value.realms_id
+    ? planOptions.value.spells.filter((s) => s.realm_id === planForm.value.realms_id)
+    : planOptions.value.spells
+);
+
+
+
+function onAllowedRealmCheckboxChange(realmId: number, checked: boolean) {
+  if (checked) {
+    if (!planForm.value.allowed_realms.includes(realmId)) {
+      planForm.value.allowed_realms = [...planForm.value.allowed_realms, realmId];
+    }
+  } else {
+    planForm.value.allowed_realms = planForm.value.allowed_realms.filter((id) => id !== realmId);
+  }
+}
+
+function onAllowedSpellCheckboxChange(spellId: number, checked: boolean) {
+  if (checked) {
+    if (!planForm.value.allowed_spells.includes(spellId)) {
+      planForm.value.allowed_spells = [...planForm.value.allowed_spells, spellId];
+    }
+  } else {
+    planForm.value.allowed_spells = planForm.value.allowed_spells.filter((id) => id !== spellId);
+  }
+}
+
+function onAllowedUpgradePlanCheckboxChange(planId: number, checked: boolean) {
+  if (checked) {
+    if (!planForm.value.allowed_upgrade_plan_ids.includes(planId)) {
+      planForm.value.allowed_upgrade_plan_ids = [...planForm.value.allowed_upgrade_plan_ids, planId];
+    }
+  } else {
+    planForm.value.allowed_upgrade_plan_ids = planForm.value.allowed_upgrade_plan_ids.filter((id) => id !== planId);
+  }
+}
+
+function onAllowedDowngradePlanCheckboxChange(planId: number, checked: boolean) {
+  if (checked) {
+    if (!planForm.value.allowed_downgrade_plan_ids.includes(planId)) {
+      planForm.value.allowed_downgrade_plan_ids = [...planForm.value.allowed_downgrade_plan_ids, planId];
+    }
+  } else {
+    planForm.value.allowed_downgrade_plan_ids = planForm.value.allowed_downgrade_plan_ids.filter((id) => id !== planId);
+  }
+}
+
+function getPeriodLabel(days: number) {
+  return PRESET_PERIODS.find((p) => p.days === days)?.label ?? `${days}d`;
+}
+function formatDate(dt: string | null) {
+  if (!dt) return "-";
+  return new Date(dt).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+
+function normalizeAssetUrl(url: string): string {
+  const raw = url.trim();
+  if (!raw) return "";
+  try {
+    return new URL(raw, window.location.origin).toString();
+  } catch {
+    return raw;
+  }
+}
+
+function isImageIcon(icon: string | null | undefined): boolean {
+  if (!icon) return false;
+  const value = icon.trim().toLowerCase();
+  return (
+    value.startsWith("http://") ||
+    value.startsWith("https://") ||
+    value.startsWith("/") ||
+    value.startsWith("data:image/") ||
+    value.endsWith(".png") ||
+    value.endsWith(".jpg") ||
+    value.endsWith(".jpeg") ||
+    value.endsWith(".gif") ||
+    value.endsWith(".webp") ||
+    value.endsWith(".svg")
+  );
+}
+
+function openAdminPath(path: string) {
+  const target = window.top ?? window;
+  const normalized = path.startsWith("/") ? path : `/${path}`;
+  target.location.assign(normalized);
+}
+
+function statusBadgeClass(status: string) {
+  const map: Record<string, string> = {
+    active: "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30",
+    suspended: "bg-amber-500/20 text-amber-400 border border-amber-500/30",
+    cancelled: "bg-red-500/20 text-red-400 border border-red-500/30",
+    expired: "bg-red-500/20 text-red-400 border border-red-500/30",
+    pending: "bg-blue-500/20 text-blue-400 border border-blue-500/30",
+    cancelling: "bg-orange-500/20 text-orange-400 border border-orange-500/30",
+  };
+  return map[status] ?? "bg-muted text-muted-foreground border border-border";
+}
+
+function isPendingCancellation(sub: Subscription) {
+  return sub.pending_cancellation === true;
+}
+
+function subscriptionStatusLabel(sub: Subscription) {
+  return isPendingCancellation(sub) ? "Cancelling" : sub.status.charAt(0).toUpperCase() + sub.status.slice(1);
+}
+
+const loadPlans = async () => {
+  try {
+    const r = await listPlans(plansPage.value, 20, plansSearch.value);
+    plans.value = r.data; plansTotalPages.value = r.total_pages;
+  } catch (e) { toast.error(e instanceof Error ? e.message : "Failed to load plans"); }
+};
+const loadSubscriptions = async () => {
+  try {
+    const r = await listSubscriptions(subsPage.value, 20, subsStatusFilter.value, subsSearch.value);
+    subscriptions.value = r.data; subsTotalPages.value = r.total_pages;
+  } catch (e) { toast.error(e instanceof Error ? e.message : "Failed to load subscriptions"); }
+};
+const loadStats = async () => {
+  try { stats.value = await getStats(); } catch {  }
+};
+const loadOptions = async () => {
+  try { planOptions.value = await getOptions(); } catch {  }
+};
+const loadCategories = async () => {
+  try {
+    const r = await listCategories(catsPage.value, 50, catsSearch.value);
+    categories.value = r.data; catsTotalPages.value = r.total_pages;
+  } catch (e) { toast.error(e instanceof Error ? e.message : "Failed to load categories"); }
+};
+const loadCoupons = async () => {
+  try {
+    const r = await listCoupons(couponsPage.value, 20, couponsSearch.value);
+    coupons.value = r.data;
+    couponsTotalPages.value = r.total_pages;
+  } catch (e) { toast.error(e instanceof Error ? e.message : "Failed to load coupons"); }
+};
+
+const openCreateCoupon = () => {
+  editingCoupon.value = null;
+  couponForm.value = emptyCouponForm();
+  couponView.value = "editor";
+};
+const openEditCoupon = (coupon: PlanCoupon) => {
+  editingCoupon.value = coupon;
+  couponForm.value = {
+    code: coupon.code,
+    plan_id: coupon.plan_id,
+    discount_percent: Number(coupon.discount_percent ?? 0),
+    discount_credits: Number(coupon.discount_credits ?? 0),
+    coupon_scope: (coupon.coupon_scope as PlanCouponFormData["coupon_scope"]) ?? "initial",
+    max_uses: Number(coupon.max_uses ?? 0),
+    expires_at: coupon.expires_at ? coupon.expires_at.split(" ")[0] || "" : "",
+  };
+  couponView.value = "editor";
+};
+const cancelCouponEditor = () => {
+  couponView.value = "list";
+  editingCoupon.value = null;
+  couponForm.value = emptyCouponForm();
+};
+const saveCoupon = async () => {
+  if (!couponForm.value.code.trim()) {
+    toast.error("Coupon code is required");
+    return;
+  }
+  if (couponForm.value.discount_percent <= 0 && couponForm.value.discount_credits <= 0) {
+    toast.error("Set a percent and/or fixed credit discount");
+    return;
+  }
+  try {
+    if (editingCoupon.value) {
+      await updateCoupon(editingCoupon.value.id, couponForm.value);
+      toast.success("Coupon updated!");
+    } else {
+      await createCoupon(couponForm.value);
+      toast.success("Coupon created!");
+    }
+    cancelCouponEditor();
+    await loadCoupons();
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : "Failed to save coupon");
+  }
+};
+const confirmDeleteCoupon = (coupon: PlanCoupon) => {
+  couponToDelete.value = coupon;
+  showDeleteCouponConfirm.value = true;
+};
+const executeDeleteCoupon = async () => {
+  if (!couponToDelete.value) return;
+  try {
+    await deleteCoupon(couponToDelete.value.id);
+    toast.success("Coupon deleted.");
+    showDeleteCouponConfirm.value = false;
+    couponToDelete.value = null;
+    await loadCoupons();
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : "Failed to delete coupon");
+  }
+};
+const couponScopeLabel = (scope: string | null) => {
+  if (scope === "renewal") return "Renewals only";
+  if (scope === "both") return "Purchase + renewals";
+  return "First purchase";
+};
+const couponDiscountLabel = (coupon: PlanCoupon) => {
+  const parts: string[] = [];
+  if (Number(coupon.discount_percent ?? 0) > 0) parts.push(`${coupon.discount_percent}%`);
+  if (Number(coupon.discount_credits ?? 0) > 0) parts.push(`${Number(coupon.discount_credits).toLocaleString()} cr`);
+  return parts.join(" + ") || "-";
+};
+
+const openCatModal = (cat?: Category) => {
+  editingCategory.value = cat ?? null;
+  catForm.value = cat
+    ? { name: cat.name, description: cat.description, icon: cat.icon, color: cat.color, sort_order: cat.sort_order, is_active: cat.is_active }
+    : emptyCatForm();
+  showCatModal.value = true;
+};
+const saveCat = async () => {
+  try {
+    if (editingCategory.value) {
+      await updateCategory(editingCategory.value.id, catForm.value);
+      toast.success("Category updated!");
+    } else {
+      await createCategory(catForm.value);
+      toast.success("Category created!");
+    }
+    showCatModal.value = false;
+    await Promise.all([loadCategories(), loadOptions()]);
+  } catch (e) { toast.error(e instanceof Error ? e.message : "Failed to save category"); }
+};
+const confirmDeleteCat = (cat: Category) => { catToDelete.value = cat; showDeleteCatConfirm.value = true; };
+const executeDeleteCat = async () => {
+  if (!catToDelete.value) return;
+  try {
+    await deleteCategory(catToDelete.value.id);
+    toast.success("Category deleted.");
+    showDeleteCatConfirm.value = false; catToDelete.value = null;
+    await Promise.all([loadCategories(), loadOptions(), loadPlans()]);
+  } catch (e) { toast.error(e instanceof Error ? e.message : "Failed to delete category"); }
+};
+const loadSettings = async () => {
+  try {
+    const s = await getSettings(); settings.value = s; settingsForm.value = { ...s };
+  } catch (e) { toast.error(e instanceof Error ? e.message : "Failed to load settings"); }
+};
+
+const publicPlansUrl = computed(() => {
+  if (typeof window === "undefined") return "/billing/plans";
+  return `${window.location.origin}/billing/plans`;
+});
+const copyPublicPlansUrl = async () => {
+  try {
+    await navigator.clipboard.writeText(publicPlansUrl.value);
+    toast.success("Public plans URL copied");
+  } catch {
+    toast.error("Failed to copy URL");
+  }
+};
+
+const saveSettings = async () => {
+  try {
+    const u = await updateSettings(settingsForm.value); settings.value = u; settingsForm.value = { ...u };
+    toast.success("Settings saved!");
+  } catch (e) { toast.error(e instanceof Error ? e.message : "Failed to save settings"); }
+};
+
+const loadImages = async () => {
+  try {
+    const r = await listImages(1, 100, imageSearch.value.trim());
+    availableImages.value = r.images;
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : "Failed to load images");
+  }
+};
+
+const normalizeImageUrl = (url: string | null | undefined): string => {
+  const raw = (url ?? "").trim();
+  if (!raw) return "";
+  if (raw.startsWith("/")) return `${window.location.origin}${raw}`;
+  try {
+    const parsed = new URL(raw, window.location.origin);
+    if (parsed.protocol === "http:" && window.location.protocol === "https:") {
+      parsed.protocol = "https:";
+    }
+    return parsed.toString();
+  } catch {
+    return raw;
+  }
+};
+
+const openCreate = () => {
+  editingPlan.value = null;
+  planForm.value = emptyForm();
+  currentView.value = "editor";
+};
+const openEdit = (plan: Plan) => {
+  editingPlan.value = plan;
+  planForm.value = {
+    category_id: plan.category_id ?? null,
+    product_type: plan.product_type ?? "server",
+    vds_config: plan.vds_config ? (typeof plan.vds_config === "string" ? JSON.parse(plan.vds_config) : { ...plan.vds_config }) : {},
+    name: plan.name, description: plan.description, long_description: plan.long_description,
+    price_credits: plan.price_credits, billing_period_days: plan.billing_period_days,
+    tax_rate_percent: Number(plan.tax_rate_percent ?? 0),
+    extra_charge_percent: Number(plan.extra_charge_percent ?? 0),
+    extra_charge_name: plan.extra_charge_name ?? null,
+    is_active: !!plan.is_active, max_subscriptions: plan.max_subscriptions,
+    node_ids: Array.isArray(plan.node_ids)
+      ? [...plan.node_ids]
+      : typeof plan.node_ids === 'string'
+        ? JSON.parse(plan.node_ids)
+        : (plan.node_id != null ? [plan.node_id] : []),
+    realms_id: plan.realms_id, spell_id: plan.spell_id,
+    memory: plan.memory ?? 512, cpu: plan.cpu ?? 100, disk: plan.disk ?? 1024,
+    swap: plan.swap ?? 0, io: plan.io ?? 500, backup_limit: plan.backup_limit ?? 0,
+    database_limit: plan.database_limit ?? 0, allocation_limit: plan.allocation_limit,
+    startup_override: plan.startup_override, image_override: plan.image_override,
+    card_background_image: plan.card_background_image ?? null,
+    allowed_upgrade_plan_ids: Array.isArray(plan.allowed_upgrade_plan_ids) ? plan.allowed_upgrade_plan_ids : [],
+    allowed_downgrade_plan_ids: Array.isArray(plan.allowed_downgrade_plan_ids) ? plan.allowed_downgrade_plan_ids : [],
+    slider_config: plan.slider_config ? (typeof plan.slider_config === 'string' ? JSON.parse(plan.slider_config) : JSON.parse(JSON.stringify(plan.slider_config))) : null,
+    user_can_choose_realm: plan.user_can_choose_realm ?? false,
+    allowed_realms: Array.isArray(plan.allowed_realms) ? plan.allowed_realms : [],
+    user_can_choose_spell: plan.user_can_choose_spell ?? false,
+    allowed_spells: Array.isArray(plan.allowed_spells) ? plan.allowed_spells : [],
+  };
+  currentView.value = "editor";
+};
+const cancelEditor = () => { currentView.value = "list"; };
+
+const onRealmChange = () => {
+  if (planForm.value.spell_id) {
+    const spell = planOptions.value.spells.find((s) => s.id === planForm.value.spell_id);
+    if (!spell || spell.realm_id !== planForm.value.realms_id) {
+      planForm.value.spell_id = null;
+      planForm.value.startup_override = null;
+      planForm.value.image_override = null;
+    }
+  }
+};
+const onSpellChange = () => {
+  const spell = planOptions.value.spells.find((s) => s.id === planForm.value.spell_id);
+  if (spell) {
+    if (!planForm.value.startup_override) planForm.value.startup_override = spell.startup ?? null;
+    if (!planForm.value.image_override) planForm.value.image_override = spell.docker_image ?? null;
+  }
+};
+
+const savePlan = async () => {
+  try {
+    const payload = { ...planForm.value };
+    if (payload.slider_config) {
+      Object.entries(payload.slider_config).forEach(([key, config]) => {
+        if (config && config.enabled) {
+          (payload as any)[key] = config.base;
+        }
+      });
+    }
+    if (editingPlan.value) {
+      await updatePlan(editingPlan.value.id, payload);
+      toast.success("Plan updated!");
+    } else {
+      await createPlan(payload);
+      toast.success("Plan created!");
+    }
+    currentView.value = "list";
+    await loadPlans(); await loadStats();
+  } catch (e) { toast.error(e instanceof Error ? e.message : "Failed to save plan"); }
+};
+
+const pickCardImage = (url: string) => {
+  planForm.value.card_background_image = normalizeImageUrl(url);
+};
+
+const clearCardImage = () => {
+  planForm.value.card_background_image = null;
+};
+
+const onImageFileSelected = (event: Event) => {
+  const input = event.target as HTMLInputElement;
+  imageUploadFile.value = input.files?.[0] ?? null;
+};
+
+const uploadCardImage = async () => {
+  if (!imageUploadFile.value) {
+    toast.error("Pick an image file first.");
+    return;
+  }
+  const baseName = imageUploadName.value.trim() || `${planForm.value.name || "Plan"} background`;
+  try {
+    const uploaded = await uploadImage(baseName, imageUploadFile.value);
+    if (uploaded.url) {
+      planForm.value.card_background_image = uploaded.url;
+    }
+    imageUploadName.value = "";
+    imageUploadFile.value = null;
+    await loadImages();
+    toast.success("Image uploaded and selected.");
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : "Failed to upload image");
+  }
+};
+
+const confirmDelete = (plan: Plan) => { planToDelete.value = plan; showDeleteConfirm.value = true; };
+const executeDelete = async () => {
+  if (!planToDelete.value) return;
+  try {
+    await deletePlan(planToDelete.value.id);
+    toast.success("Plan deleted!"); showDeleteConfirm.value = false; planToDelete.value = null;
+    await loadPlans(); await loadStats();
+  } catch (e) { toast.error(e instanceof Error ? e.message : "Failed to delete plan"); }
+};
+const confirmCancelSub = (sub: Subscription) => { subToCancel.value = sub; showCancelSubConfirm.value = true; };
+const executeCancelSub = async () => {
+  if (!subToCancel.value) return;
+  try {
+    await cancelSubscription(subToCancel.value.id);
+    toast.success(settingsForm.value.cancel_at_period_end ? "Subscription scheduled to cancel at period end." : "Subscription cancelled!"); showCancelSubConfirm.value = false; subToCancel.value = null;
+    await loadSubscriptions(); await loadStats();
+  } catch (e) { toast.error(e instanceof Error ? e.message : "Failed to cancel subscription"); }
+};
+
+const confirmRefundSub = (sub: Subscription) => {
+  subToRefund.value = sub;
+  refundCreditsInput.value = Math.max(1, Number(sub.price_credits) || 1);
+  showRefundSubConfirm.value = true;
+};
+const executeRefundSub = async () => {
+  if (!subToRefund.value) return;
+  const amt = Math.floor(Number(refundCreditsInput.value));
+  if (!Number.isFinite(amt) || amt < 1) {
+    toast.error("Enter a valid credit amount (at least 1).");
+    return;
+  }
+  try {
+    const r = await refundSubscription(subToRefund.value.id, amt);
+    toast.success(
+      `Refunded ${r.credits_refunded.toLocaleString()} credits. User balance: ${r.user_credits_balance.toLocaleString()}. ` +
+        `Running total on this subscription: ${r.admin_credits_refunded_total.toLocaleString()} cr.`
+    );
+    showRefundSubConfirm.value = false;
+    subToRefund.value = null;
+    await loadSubscriptions();
+  } catch (e) { toast.error(e instanceof Error ? e.message : "Failed to refund"); }
+};
+
+const totalSubscriptions = computed(() => {
+  if (!stats.value) return 0;
+  return Object.values(stats.value.subscriptions).reduce((a, b) => a + b, 0);
+});
+const editorTitle = computed(() => editingPlan.value ? `Edit - ${editingPlan.value.name}` : "New Plan");
+
+onMounted(() => Promise.all([loadPlans(), loadSubscriptions(), loadStats(), loadSettings(), loadOptions(), loadCategories(), loadCoupons()]));
+
+watch(imageSearch, () => {
+  if (activeTab.value === "plans" && currentView.value === "editor") {
+    void loadImages();
+  }
+});
+
+watch(
+  () => [activeTab.value, currentView.value] as const,
+  ([tab, view]) => {
+    if (tab === "plans" && view === "editor" && availableImages.value.length === 0) {
+      void loadImages();
+    }
+  },
+  { immediate: true }
+);
+</script>
+
+<template>
+  <div class="w-full h-full overflow-auto min-h-screen">
+
+    <!-- Delete plan confirm -->
+    <div v-if="showDeleteConfirm" class="container mx-auto max-w-3xl px-4 md:px-8 py-6">
+      <div class="flex items-center gap-3 mb-6">
+        <button type="button" @click="showDeleteConfirm = false" class="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft class="h-4 w-4" />Back
+        </button>
+        <span class="text-muted-foreground/40">/</span>
+        <h1 class="text-base font-semibold text-foreground">Delete Plan</h1>
+      </div>
+      <div class="bg-card border border-border rounded-xl shadow-sm p-6">
+        <p class="text-sm text-muted-foreground mb-5">Delete <strong class="text-foreground">{{ planToDelete?.name }}</strong>? Plans with active subscriptions cannot be deleted.</p>
+        <div class="flex gap-3 justify-end">
+          <button @click="showDeleteConfirm = false" class="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-accent transition-colors">Cancel</button>
+          <button @click="executeDelete" :disabled="plansLoading" class="inline-flex items-center justify-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-600 disabled:opacity-60 transition-colors">
+            <Loader2 v-if="plansLoading" class="h-4 w-4 animate-spin" /><Trash2 v-else class="h-4 w-4" />Delete
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cancel subscription confirm -->
+    <div v-else-if="showCancelSubConfirm" class="container mx-auto max-w-3xl px-4 md:px-8 py-6">
+      <div class="flex items-center gap-3 mb-6">
+        <button type="button" @click="showCancelSubConfirm = false" class="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft class="h-4 w-4" />Back
+        </button>
+        <span class="text-muted-foreground/40">/</span>
+        <h1 class="text-base font-semibold text-foreground">Cancel Subscription</h1>
+      </div>
+      <div class="bg-card border border-border rounded-xl shadow-sm p-6">
+        <p class="text-sm text-muted-foreground mb-5">
+          Cancel subscription <strong class="text-foreground">#{{ subToCancel?.id }}</strong> for <strong class="text-foreground">{{ subToCancel?.username ?? "User #" + subToCancel?.user_id }}</strong>? No refund issued.
+          <span v-if="settingsForm.cancel_at_period_end && subToCancel?.next_renewal_at" class="block mt-2 text-amber-500">
+            Server stays active until {{ new Date(subToCancel.next_renewal_at).toLocaleDateString() }}, then enters suspend/delete lifecycle.
+          </span>
+          <span v-else-if="subToCancel?.server_uuid" class="block mt-2 text-amber-500">
+            Server will be suspended immediately.
+          </span>
+        </p>
+        <div class="flex gap-3 justify-end">
+          <button @click="showCancelSubConfirm = false" class="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-accent transition-colors">Go Back</button>
+          <button @click="executeCancelSub" :disabled="subsLoading" class="inline-flex items-center justify-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-600 disabled:opacity-60 transition-colors">
+            <Loader2 v-if="subsLoading" class="h-4 w-4 animate-spin" />Cancel Sub
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Refund subscription confirm -->
+    <div v-else-if="showRefundSubConfirm" class="container mx-auto max-w-3xl px-4 md:px-8 py-6">
+      <div class="flex items-center gap-3 mb-6">
+        <button type="button" @click="showRefundSubConfirm = false" class="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft class="h-4 w-4" />Back
+        </button>
+        <span class="text-muted-foreground/40">/</span>
+        <h1 class="text-base font-semibold text-foreground">Refund credits</h1>
+      </div>
+      <div class="bg-card border border-border rounded-xl shadow-sm p-6 space-y-4">
+        <p class="text-sm text-muted-foreground">
+          Add credits to <strong class="text-foreground">{{ subToRefund?.username ?? "User #" + subToRefund?.user_id }}</strong>
+          for subscription <strong class="text-foreground">#{{ subToRefund?.id }}</strong>.
+          Default is this plan's price ({{ subToRefund?.price_credits?.toLocaleString() ?? "-" }} cr).
+        </p>
+        <div>
+          <label class="block text-xs font-medium text-muted-foreground mb-1.5">Credits to add</label>
+          <input
+            v-model.number="refundCreditsInput"
+            type="number"
+            min="1"
+            step="1"
+            class="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </div>
+        <div class="flex gap-3 justify-end">
+          <button type="button" @click="showRefundSubConfirm = false" class="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-accent transition-colors">Go back</button>
+          <button type="button" @click="executeRefundSub" :disabled="subsLoading" class="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-60 transition-colors">
+            <Loader2 v-if="subsLoading" class="h-4 w-4 animate-spin" />
+            <CircleDollarSign v-else class="h-4 w-4" />
+            Refund
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category create / edit -->
+    <div v-else-if="showCatModal" class="container mx-auto max-w-3xl px-4 md:px-8 py-6">
+      <div class="flex items-center gap-3 mb-6">
+        <button type="button" @click="showCatModal = false" class="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft class="h-4 w-4" />Back to Categories
+        </button>
+        <span class="text-muted-foreground/40">/</span>
+        <h1 class="text-base font-semibold text-foreground">{{ editingCategory ? 'Edit Category' : 'New Category' }}</h1>
+      </div>
+      <div class="bg-card border border-border rounded-xl shadow-sm p-6 space-y-4">
+        <div class="flex gap-3">
+          <div class="w-20 flex-shrink-0">
+            <label class="block text-xs font-medium text-muted-foreground mb-1.5">Icon (emoji or image URL)</label>
+            <input v-model="catForm.icon" placeholder="🎮 or /attachments/banner.png"
+              class="flex h-9 w-full rounded-lg border border-input bg-background px-3 text-center text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+          </div>
+          <div class="flex-1">
+            <label class="block text-xs font-medium text-muted-foreground mb-1.5">Name <span class="text-red-400">*</span></label>
+            <input v-model="catForm.name" placeholder="e.g. Minecraft, Game Servers..."
+              class="flex h-9 w-full rounded-lg border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-muted-foreground mb-1.5">Description</label>
+          <input v-model="catForm.description" placeholder="Short description shown to users..."
+            class="flex h-9 w-full rounded-lg border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-muted-foreground mb-2">Color</label>
+          <div class="flex flex-wrap gap-2">
+            <button v-for="c in CATEGORY_COLORS" :key="c.value" type="button"
+              @click="catForm.color = c.value"
+              :class="['px-3 py-1 rounded-full text-xs font-medium border transition-all', colorClasses(c.value, catForm.color === c.value)]">
+              {{ c.label }}
+            </button>
+          </div>
+        </div>
+
+        <div class="flex gap-3 items-end">
+          <div class="w-28">
+            <label class="block text-xs font-medium text-muted-foreground mb-1.5">Sort Order</label>
+            <input v-model.number="catForm.sort_order" type="number" min="0"
+              class="flex h-9 w-full rounded-lg border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+          </div>
+          <div class="flex items-center justify-between flex-1 p-3 rounded-lg border border-border bg-muted/20">
+            <p class="text-sm font-medium">Active</p>
+            <button type="button" @click="catForm.is_active = !catForm.is_active" class="shrink-0">
+              <ToggleRight v-if="catForm.is_active" class="h-7 w-7 text-primary" />
+              <ToggleLeft v-else class="h-7 w-7 text-muted-foreground" />
+            </button>
+          </div>
+        </div>
+
+        <div class="flex gap-3 justify-end pt-1">
+          <button @click="showCatModal = false" class="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-accent transition-colors">Cancel</button>
+          <button @click="saveCat" :disabled="catsLoading || !catForm.name.trim()"
+            class="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60 transition-colors">
+            <Loader2 v-if="catsLoading" class="h-4 w-4 animate-spin" />
+            <Save v-else class="h-4 w-4" />
+            {{ editingCategory ? 'Save Changes' : 'Create Category' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete category confirm -->
+    <div v-else-if="showDeleteCatConfirm" class="container mx-auto max-w-3xl px-4 md:px-8 py-6">
+      <div class="flex items-center gap-3 mb-6">
+        <button type="button" @click="showDeleteCatConfirm = false" class="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft class="h-4 w-4" />Back
+        </button>
+        <span class="text-muted-foreground/40">/</span>
+        <h1 class="text-base font-semibold text-foreground">Delete Category</h1>
+      </div>
+      <div class="bg-card border border-border rounded-xl shadow-sm p-6">
+        <p class="text-sm text-muted-foreground mb-5">
+          Delete <strong class="text-foreground">{{ catToDelete?.name }}</strong>?
+          Plans in this category will become uncategorised - they won't be deleted.
+        </p>
+        <div class="flex gap-3 justify-end">
+          <button @click="showDeleteCatConfirm = false" class="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-accent transition-colors">Cancel</button>
+          <button @click="executeDeleteCat" :disabled="catsLoading" class="inline-flex items-center justify-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-600 disabled:opacity-60 transition-colors">
+            <Loader2 v-if="catsLoading" class="h-4 w-4 animate-spin" /><Trash2 v-else class="h-4 w-4" />Delete
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete coupon confirm -->
+    <div v-else-if="showDeleteCouponConfirm && couponToDelete" class="container mx-auto max-w-3xl px-4 md:px-8 py-6">
+      <div class="flex items-center gap-3 mb-6">
+        <button type="button" @click="showDeleteCouponConfirm = false" class="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft class="h-4 w-4" />Back
+        </button>
+        <span class="text-muted-foreground/40">/</span>
+        <h1 class="text-base font-semibold text-foreground">Delete Coupon</h1>
+      </div>
+      <div class="bg-card border border-border rounded-xl shadow-sm p-6">
+        <p class="text-sm text-muted-foreground mb-5">Delete coupon <strong class="text-foreground font-mono">{{ couponToDelete.code }}</strong>? Users will no longer be able to redeem it.</p>
+        <div class="flex gap-3 justify-end">
+          <button @click="showDeleteCouponConfirm = false" class="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-accent transition-colors">Cancel</button>
+          <button @click="executeDeleteCoupon" :disabled="couponsLoading" class="inline-flex items-center justify-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-600 disabled:opacity-60 transition-colors">
+            <Loader2 v-if="couponsLoading" class="h-4 w-4 animate-spin" /><Trash2 v-else class="h-4 w-4" />Delete
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div v-else-if="activeTab === 'coupons' && couponView === 'editor'" class="container mx-auto max-w-3xl px-4 md:px-8 py-6">
+      <div class="flex items-center gap-3 mb-6">
+        <button type="button" @click="cancelCouponEditor" class="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft class="h-4 w-4" />Back to Coupons
+        </button>
+        <span class="text-muted-foreground/40">/</span>
+        <h1 class="text-base font-semibold text-foreground">{{ editingCoupon ? `Edit - ${editingCoupon.code}` : "New Coupon" }}</h1>
+      </div>
+
+      <form @submit.prevent="saveCoupon" class="bg-card border border-border rounded-xl shadow-sm p-6 space-y-5">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="md:col-span-2">
+            <label class="block text-xs font-medium text-muted-foreground mb-1.5">Coupon code *</label>
+            <input v-model="couponForm.code" type="text" required placeholder="SUMMER25"
+              class="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm uppercase placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-muted-foreground mb-1.5">Discount percent</label>
+            <input v-model.number="couponForm.discount_percent" type="number" min="0" max="100" step="0.01"
+              class="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-muted-foreground mb-1.5">Fixed discount (credits)</label>
+            <input v-model.number="couponForm.discount_credits" type="number" min="0" step="1"
+              class="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-muted-foreground mb-1.5">Applies to</label>
+            <select v-model="couponForm.coupon_scope"
+              class="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+              <option value="initial">First purchase only</option>
+              <option value="renewal">Renewals only</option>
+              <option value="both">First purchase + renewals</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-muted-foreground mb-1.5">Limit to plan</label>
+            <select v-model="couponForm.plan_id"
+              class="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+              <option :value="null">Any plan</option>
+              <option v-for="plan in planOptions.plans" :key="plan.id" :value="plan.id">{{ plan.name }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-muted-foreground mb-1.5">Max uses (0 = unlimited)</label>
+            <input v-model.number="couponForm.max_uses" type="number" min="0" step="1"
+              class="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-muted-foreground mb-1.5">Expires at</label>
+            <input v-model="couponForm.expires_at" type="date"
+              class="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+          </div>
+        </div>
+        <p class="text-xs text-muted-foreground">Users enter this code when subscribing in the client billing area. At least one discount type is required.</p>
+        <div class="flex justify-end gap-2 pt-2 border-t border-border">
+          <button type="button" @click="cancelCouponEditor" class="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-accent transition-colors">Cancel</button>
+          <button type="submit" :disabled="couponsLoading" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60 transition-colors">
+            <Loader2 v-if="couponsLoading" class="h-4 w-4 animate-spin" />
+            <Save v-else class="h-4 w-4" />
+            {{ editingCoupon ? "Update Coupon" : "Create Coupon" }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div v-else-if="activeTab === 'plans' && currentView === 'editor'" class="container mx-auto max-w-4xl px-4 md:px-8 py-6">
+
+      <div class="flex items-center gap-3 mb-6">
+        <button @click="cancelEditor" class="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft class="h-4 w-4" />Back to Plans
+        </button>
+        <span class="text-muted-foreground/40">/</span>
+        <h1 class="text-base font-semibold text-foreground">{{ editorTitle }}</h1>
+      </div>
+
+      <form @submit.prevent="savePlan" class="space-y-5">
+
+
+        <div class="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+          <div class="px-5 py-3 border-b border-border bg-muted/30">
+            <h3 class="text-sm font-semibold text-foreground">Plan Details</h3>
+          </div>
+          <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium mb-1.5">Plan Name <span class="text-red-400">*</span></label>
+              <input v-model="planForm.name" required placeholder="e.g. Starter Minecraft Server"
+                class="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-1.5">Product Type</label>
+              <div class="billing-select-wrap">
+                <select v-model="planForm.product_type" class="billing-select">
+                  <option value="server">Game Server</option>
+                  <option value="vds">VDS / Virtual Machine</option>
+                </select>
+                <ChevronDown class="billing-select-icon" />
+              </div>
+            </div>
+
+
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium mb-1.5 flex items-center gap-1.5"><Tag class="h-3.5 w-3.5 text-muted-foreground" />Category</label>
+              <div class="billing-select-wrap">
+                <select v-model.number="planForm.category_id"
+                  class="billing-select">
+                  <option :value="null">- No category -</option>
+                  <option v-for="c in planOptions.categories" :key="c.id" :value="c.id">
+                    {{ c.icon ? c.icon + ' ' : '' }}{{ c.name }}
+                  </option>
+                </select>
+                <ChevronDown class="billing-select-icon" />
+              </div>
+              <p v-if="!planOptions.categories.length" class="text-xs text-muted-foreground mt-1">
+                No categories yet - <button type="button" @click="activeTab = 'categories'" class="text-primary hover:underline">create one first</button>.
+              </p>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-1.5">Price (credits) <span class="text-red-400">*</span></label>
+              <input v-model.number="planForm.price_credits" type="number" min="0" required
+                class="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-1.5">Billing Period</label>
+              <div class="billing-select-wrap">
+                <select v-model.number="planForm.billing_period_days"
+                  class="billing-select">
+                  <option v-for="p in PRESET_PERIODS" :key="p.days" :value="p.days">{{ p.label }} ({{ p.days }}d)</option>
+                  <option v-if="!PRESET_PERIODS.find((p) => p.days === planForm.billing_period_days)" :value="planForm.billing_period_days">Custom ({{ planForm.billing_period_days }}d)</option>
+                </select>
+                <ChevronDown class="billing-select-icon" />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-1.5">Tax (%)</label>
+              <input v-model.number="planForm.tax_rate_percent" type="number" min="0" step="0.01"
+                class="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-1.5">Custom Charge (%)</label>
+              <input v-model.number="planForm.extra_charge_percent" type="number" min="0" step="0.01"
+                class="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium mb-1.5">Custom Charge Name</label>
+              <input v-model="planForm.extra_charge_name" placeholder="e.g. Service fee"
+                class="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-1.5 flex items-center gap-1.5">
+                <Package class="h-3.5 w-3.5 text-muted-foreground" />Stock Limit
+              </label>
+              <input v-model.number="planForm.max_subscriptions" type="number" min="1" placeholder="Leave blank for unlimited"
+                class="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+              <p class="text-xs text-muted-foreground mt-1">Max concurrent active subscriptions. Leave blank for no limit.</p>
+            </div>
+
+            <div class="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/20">
+              <div><p class="text-sm font-medium">Plan Active</p><p class="text-xs text-muted-foreground">Inactive = hidden from users</p></div>
+              <button type="button" @click="planForm.is_active = !planForm.is_active" class="shrink-0">
+                <ToggleRight v-if="planForm.is_active" class="h-8 w-8 text-primary" />
+                <ToggleLeft v-else class="h-8 w-8 text-muted-foreground" />
+              </button>
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium mb-1.5">Short Description <span class="text-muted-foreground font-normal">(shown in plan cards)</span></label>
+              <input v-model="planForm.description" placeholder="A brief one-line summary..."
+                class="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium mb-1.5">Full Description <span class="text-muted-foreground font-normal">(shown on detail page)</span></label>
+              <textarea v-model="planForm.long_description" rows="4" placeholder="Detailed description of what's included - features, limits, notes..."
+                class="flex w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none" />
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium mb-1.5">Card Background Image URL <span class="text-muted-foreground font-normal">(optional)</span></label>
+              <input v-model="planForm.card_background_image" placeholder="https://example.com/background.jpg or /attachments/..."
+                class="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+              <p class="text-xs text-muted-foreground mt-1">You can paste a direct link, pick from Images, or upload a new file below.</p>
+            </div>
+
+            <div class="md:col-span-2 rounded-lg border border-border bg-muted/20 p-4 space-y-3">
+              <p class="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Allowed plan changes</p>
+              <p class="text-xs text-muted-foreground">Choose exactly which plans users can upgrade/downgrade to from this plan. Empty lists keep legacy behavior (all plans allowed).</p>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p class="text-xs font-medium text-muted-foreground mb-2">Allowed upgrades</p>
+                  <div class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                    <label
+                      v-for="p in planOptions.plans.filter((p) => !editingPlan || p.id !== editingPlan.id)"
+                      :key="`up-${p.id}`"
+                      class="flex items-center gap-2 text-xs px-2 py-1.5 rounded-md cursor-pointer transition-colors"
+                      :class="planForm.allowed_upgrade_plan_ids.includes(p.id) ? 'bg-primary/15 text-primary border border-primary/30' : 'bg-background border border-border hover:bg-muted/50'"
+                    >
+                      <input type="checkbox" class="sr-only" :checked="planForm.allowed_upgrade_plan_ids.includes(p.id)"
+                        @change="onAllowedUpgradePlanCheckboxChange(p.id, !planForm.allowed_upgrade_plan_ids.includes(p.id))" />
+                      <span class="w-3 h-3 rounded border shrink-0 flex items-center justify-center transition-colors"
+                        :class="planForm.allowed_upgrade_plan_ids.includes(p.id) ? 'bg-primary border-primary' : 'border-muted-foreground/40'">
+                        <svg v-if="planForm.allowed_upgrade_plan_ids.includes(p.id)" class="w-2 h-2 text-white" fill="none" viewBox="0 0 12 12"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      </span>
+                      {{ p.name }}
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-muted-foreground mb-2">Allowed downgrades</p>
+                  <div class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                    <label
+                      v-for="p in planOptions.plans.filter((p) => !editingPlan || p.id !== editingPlan.id)"
+                      :key="`down-${p.id}`"
+                      class="flex items-center gap-2 text-xs px-2 py-1.5 rounded-md cursor-pointer transition-colors"
+                      :class="planForm.allowed_downgrade_plan_ids.includes(p.id) ? 'bg-primary/15 text-primary border border-primary/30' : 'bg-background border border-border hover:bg-muted/50'"
+                    >
+                      <input type="checkbox" class="sr-only" :checked="planForm.allowed_downgrade_plan_ids.includes(p.id)"
+                        @change="onAllowedDowngradePlanCheckboxChange(p.id, !planForm.allowed_downgrade_plan_ids.includes(p.id))" />
+                      <span class="w-3 h-3 rounded border shrink-0 flex items-center justify-center transition-colors"
+                        :class="planForm.allowed_downgrade_plan_ids.includes(p.id) ? 'bg-primary border-primary' : 'border-muted-foreground/40'">
+                        <svg v-if="planForm.allowed_downgrade_plan_ids.includes(p.id)" class="w-2 h-2 text-white" fill="none" viewBox="0 0 12 12"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      </span>
+                      {{ p.name }}
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="md:col-span-2 rounded-lg border border-border bg-muted/20 p-4 space-y-3">
+              <div class="flex items-center gap-2">
+                <input
+                  v-model="imageSearch"
+                  type="text"
+                  placeholder="Search images from Admin > Images..."
+                  class="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+                <button
+                  type="button"
+                  @click="loadImages"
+                  class="shrink-0 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium hover:bg-accent transition-colors"
+                >
+                  Reload
+                </button>
+              </div>
+
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-2 max-h-56 overflow-y-auto pr-1">
+                <button
+                  v-for="img in availableImages"
+                  :key="img.id"
+                  type="button"
+                  @click="pickCardImage(img.url)"
+                  :title="img.url"
+                  :class="[
+                    'relative rounded-lg border overflow-hidden text-left transition-all',
+                    normalizeImageUrl(planForm.card_background_image) === normalizeImageUrl(img.url)
+                      ? 'border-primary ring-1 ring-primary/40'
+                      : 'border-border hover:border-primary/40'
+                  ]"
+                >
+                  <img :src="normalizeImageUrl(img.url)" :alt="img.name" class="h-20 w-full object-cover bg-black/20" />
+                  <div class="px-2 py-1 bg-card/95">
+                    <p class="text-[11px] font-medium truncate">{{ img.name }}</p>
+                  </div>
+                </button>
+                <div
+                  v-if="!imagesLoading && availableImages.length === 0"
+                  class="col-span-full text-xs text-muted-foreground rounded-lg border border-dashed border-border p-3"
+                >
+                  No images found. Upload one below or add images in Admin &gt; Images.
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-2">
+                <input
+                  v-model="imageUploadName"
+                  type="text"
+                  placeholder="Upload name (optional)"
+                  class="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/gif,image/webp"
+                  @change="onImageFileSelected"
+                  class="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-1.5 text-xs file:mr-3 file:rounded file:border-0 file:bg-primary/10 file:px-2 file:py-1 file:text-xs file:font-medium file:text-primary"
+                />
+                <button
+                  type="button"
+                  @click="uploadCardImage"
+                  :disabled="imagesLoading || !imageUploadFile"
+                  class="rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+                >
+                  Upload
+                </button>
+              </div>
+
+              <div class="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                <span class="truncate">Selected: {{ planForm.card_background_image || "none" }}</span>
+                <button type="button" @click="clearCardImage" class="text-primary hover:underline">Clear</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <div v-if="planForm.product_type === 'vds'" class="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+          <div class="px-5 py-3 border-b border-border bg-muted/30">
+            <h3 class="text-sm font-semibold text-foreground flex items-center gap-2"><HardDrive class="h-4 w-4 text-primary" />VDS Template</h3>
+            <p class="text-xs text-muted-foreground mt-0.5">Create a virtual machine automatically when a user subscribes.</p>
+          </div>
+          <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">VM Node</label>
+              <select v-model.number="vdsConfig().vm_node_id" class="billing-select">
+                <option :value="undefined">- Select VM node -</option>
+                <option v-for="n in planOptions.vm_nodes" :key="n.id" :value="n.id">{{ n.name }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">VM Template</label>
+              <select v-model.number="vdsConfig().template_id" class="billing-select">
+                <option :value="undefined">- Select template -</option>
+                <option v-for="t in planOptions.vm_templates" :key="t.id" :value="t.id">{{ t.name }} ({{ t.guest_type }})</option>
+              </select>
+            </div>
+            <div v-for="field in [
+              ['memory', 'Memory (MB)', 512], ['cpus', 'CPU sockets', 1], ['cores', 'CPU cores', 1], ['disk', 'Disk (GB)', 10]
+            ]" :key="field[0]">
+              <label class="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">{{ field[1] }}</label>
+              <input v-model.number="vdsConfig()[field[0]]" type="number" :min="field[2]" class="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Storage</label>
+              <input v-model="vdsConfig().storage" placeholder="local" class="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Network bridge</label>
+              <input v-model="vdsConfig().bridge" placeholder="vmbr0" class="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Cloud-init user</label>
+              <input v-model="vdsConfig().ci_user" placeholder="root" class="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Cloud-init password</label>
+              <input v-model="vdsConfig().ci_password" type="password" class="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" />
+            </div>
+          </div>
+        </div>
+
+        <div v-else class="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+          <div class="px-5 py-3 border-b border-border bg-muted/30 flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-semibold text-foreground flex items-center gap-2"><Server class="h-4 w-4 text-primary" />Server Template</h3>
+              <p class="text-xs text-muted-foreground mt-0.5">Automatically provision a server when a user subscribes</p>
+            </div>
+            <span v-if="!planForm.spell_id" class="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">No template</span>
+            <span v-else class="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-full">Configured</span>
+          </div>
+          <div class="p-5 space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Nest (Realm)</label>
+                <div class="billing-select-wrap">
+                  <select v-model.number="planForm.realms_id" @change="onRealmChange"
+                    class="billing-select">
+                    <option :value="null">- None -</option>
+                    <option v-for="r in planOptions.realms" :key="r.id" :value="r.id">{{ r.name }}</option>
+                  </select>
+                  <ChevronDown class="billing-select-icon" />
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Egg (Spell)</label>
+                <div class="billing-select-wrap">
+                  <select v-model.number="planForm.spell_id" @change="onSpellChange" :disabled="!planForm.realms_id"
+                    class="billing-select">
+                    <option :value="null">- Select egg -</option>
+                    <option v-for="s in filteredSpells" :key="s.id" :value="s.id">{{ s.name }}</option>
+                  </select>
+                  <ChevronDown class="billing-select-icon" />
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Nodes</label>
+                <div class="rounded-lg border border-border bg-muted/20 p-3">
+                  <div class="mb-3 flex items-center justify-between gap-2">
+                    <p class="text-xs text-muted-foreground">
+                      {{ planForm.node_ids.length }} selected
+                    </p>
+                    <button
+                      v-if="planForm.node_ids.length > 0"
+                      type="button"
+                      @click="clearSelectedNodes"
+                      class="text-xs text-primary hover:underline"
+                    >
+                      Clear all
+                    </button>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-2">
+                    <button
+                      v-for="n in planOptions.nodes"
+                      :key="n.id"
+                      type="button"
+                      @click="toggleNodeSelection(n.id)"
+                      :class="[
+                        'rounded-lg border px-3 py-2 text-left transition-all',
+                        planForm.node_ids.includes(n.id)
+                          ? 'border-primary/50 bg-primary/10 shadow-sm'
+                          : 'border-border bg-background hover:border-primary/30 hover:bg-muted/40'
+                      ]"
+                    >
+                      <div class="flex items-center justify-between gap-2">
+                        <p class="truncate text-xs font-medium text-foreground">{{ n.name }}</p>
+                        <span
+                          :class="[
+                            'h-2 w-2 rounded-full',
+                            planForm.node_ids.includes(n.id) ? 'bg-primary' : 'bg-muted-foreground/40'
+                          ]"
+                        />
+                      </div>
+                      <p class="mt-0.5 text-[10px] text-muted-foreground">Node #{{ n.id }}</p>
+                    </button>
+                  </div>
+                </div>
+                <p class="text-xs text-muted-foreground mt-1">Select one or more nodes. The first node with enough resources will be used for provisioning.</p>
+              </div>
+            </div>
+
+
+            <div class="border-t border-border pt-4 space-y-4">
+              <p class="text-xs font-semibold text-muted-foreground uppercase tracking-wide">User Choice & Access Control</p>
+              <p class="text-xs text-muted-foreground -mt-2">Allow subscribers to pick their own realm/egg, or restrict which ones are available.</p>
+
+
+              <div class="rounded-lg border border-border bg-muted/20 p-4 space-y-3">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <p class="text-sm font-medium text-foreground">Let user choose Realm (Nest)</p>
+                    <p class="text-xs text-muted-foreground mt-0.5">User picks a realm at subscribe time instead of using the forced realm above</p>
+                  </div>
+                  <button type="button" @click="planForm.user_can_choose_realm = !planForm.user_can_choose_realm"
+                    :class="planForm.user_can_choose_realm ? 'bg-primary' : 'bg-input'"
+                    class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-ring">
+                    <span :class="planForm.user_can_choose_realm ? 'translate-x-5' : 'translate-x-0'"
+                      class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg transition-transform" />
+                  </button>
+                </div>
+                <template v-if="planForm.user_can_choose_realm">
+                  <div>
+                    <p class="text-xs font-semibold text-muted-foreground mb-2">Whitelist - allowed realms <span class="font-normal">(empty = all realms)</span></p>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-40 overflow-y-auto pr-1">
+                      <label v-for="r in planOptions.realms" :key="r.id"
+                        class="flex items-center gap-2 text-xs px-2 py-1.5 rounded-md cursor-pointer transition-colors"
+                        :class="planForm.allowed_realms.includes(r.id) ? 'bg-primary/15 text-primary border border-primary/30' : 'bg-background border border-border hover:bg-muted/50'">
+                        <input
+                          type="checkbox"
+                          class="sr-only"
+                          :checked="planForm.allowed_realms.includes(r.id)"
+                          @change="onAllowedRealmCheckboxChange(r.id, !planForm.allowed_realms.includes(r.id))"
+                        />
+                        <span class="w-3 h-3 rounded border flex-shrink-0 flex items-center justify-center transition-colors"
+                          :class="planForm.allowed_realms.includes(r.id) ? 'bg-primary border-primary' : 'border-muted-foreground/40'">
+                          <svg v-if="planForm.allowed_realms.includes(r.id)" class="w-2 h-2 text-white" fill="none" viewBox="0 0 12 12"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </span>
+                        {{ r.name }}
+                      </label>
+                    </div>
+                    <p v-if="planForm.allowed_realms.length" class="text-xs text-primary mt-1.5">{{ planForm.allowed_realms.length }} realm(s) whitelisted</p>
+                    <p v-else class="text-xs text-muted-foreground mt-1.5">All realms allowed</p>
+                  </div>
+                </template>
+              </div>
+
+
+              <div class="rounded-lg border border-border bg-muted/20 p-4 space-y-3">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <p class="text-sm font-medium text-foreground">Let user choose Spell (Egg)</p>
+                    <p class="text-xs text-muted-foreground mt-0.5">User picks an egg at subscribe time instead of using the forced egg above</p>
+                  </div>
+                  <button type="button" @click="planForm.user_can_choose_spell = !planForm.user_can_choose_spell"
+                    :class="planForm.user_can_choose_spell ? 'bg-primary' : 'bg-input'"
+                    class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-ring">
+                    <span :class="planForm.user_can_choose_spell ? 'translate-x-5' : 'translate-x-0'"
+                      class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg transition-transform" />
+                  </button>
+                </div>
+                <template v-if="planForm.user_can_choose_spell">
+                  <div>
+                    <p class="text-xs font-semibold text-muted-foreground mb-2">Whitelist - allowed eggs <span class="font-normal">(empty = all eggs{{ planForm.realms_id ? ' in selected realm' : '' }})</span></p>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-40 overflow-y-auto pr-1">
+                      <label v-for="s in allowedSpellsPool" :key="s.id"
+                        class="flex items-center gap-2 text-xs px-2 py-1.5 rounded-md cursor-pointer transition-colors"
+                        :class="planForm.allowed_spells.includes(s.id) ? 'bg-primary/15 text-primary border border-primary/30' : 'bg-background border border-border hover:bg-muted/50'">
+                        <input
+                          type="checkbox"
+                          class="sr-only"
+                          :checked="planForm.allowed_spells.includes(s.id)"
+                          @change="onAllowedSpellCheckboxChange(s.id, !planForm.allowed_spells.includes(s.id))"
+                        />
+                        <span class="w-3 h-3 rounded border flex-shrink-0 flex items-center justify-center transition-colors"
+                          :class="planForm.allowed_spells.includes(s.id) ? 'bg-primary border-primary' : 'border-muted-foreground/40'">
+                          <svg v-if="planForm.allowed_spells.includes(s.id)" class="w-2 h-2 text-white" fill="none" viewBox="0 0 12 12"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </span>
+                        {{ s.name }}
+                      </label>
+                    </div>
+                    <p v-if="planForm.allowed_spells.length" class="text-xs text-primary mt-1.5">{{ planForm.allowed_spells.length }} egg(s) whitelisted</p>
+                    <p v-else class="text-xs text-muted-foreground mt-1.5">All eggs allowed</p>
+                  </div>
+                </template>
+              </div>
+            </div>
+
+
+            <template v-if="planForm.spell_id || planForm.user_can_choose_spell">
+              <div class="border-t border-border pt-4">
+                <p class="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Resources</p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <!-- RAM Card -->
+                  <div class="col-span-2 md:col-span-4 border border-border rounded-lg p-3 space-y-3 bg-muted/5">
+                    <p class="text-xs font-semibold flex items-center gap-1.5 text-blue-500">
+                      <span class="inline-block w-2 h-2 rounded-full bg-blue-500"></span>
+                      RAM (Memory)
+                    </p>
+                    <div class="flex items-center gap-4 text-[11px]">
+                      <label class="flex items-center gap-1 cursor-pointer font-medium">
+                        <input type="radio" :value="false" v-model="ensureSliderConfig('memory').enabled" class="text-primary focus:ring-primary h-3 w-3" />
+                        Fixed Mode
+                      </label>
+                      <label class="flex items-center gap-1 cursor-pointer font-medium text-primary">
+                        <input type="radio" :value="true" v-model="ensureSliderConfig('memory').enabled" class="text-primary focus:ring-primary h-3 w-3" />
+                        Slider Mode
+                      </label>
+                    </div>
+                    <div v-if="!ensureSliderConfig('memory').enabled" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Fixed RAM (MB)</label>
+                        <input v-model.number="planForm.memory" type="number" min="128" step="128"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                    </div>
+                    <div v-else class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Base (MB)</label>
+                        <input v-model.number="ensureSliderConfig('memory').base" type="number" min="128" step="128"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Maximum (MB)</label>
+                        <input v-model.number="ensureSliderConfig('memory').max" type="number" min="128" step="128"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Step (MB)</label>
+                        <input v-model.number="ensureSliderConfig('memory').step" type="number" min="1" step="1"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Cost Per Step</label>
+                        <input v-model.number="ensureSliderConfig('memory').cost_per_step" type="number" min="0" step="1"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Rounding</label>
+                        <select v-model="ensureSliderConfig('memory').rounding"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring">
+                          <option value="nearest">Nearest</option>
+                          <option value="up">Up</option>
+                          <option value="down">Down</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- CPU Card -->
+                  <div class="col-span-2 md:col-span-4 border border-border rounded-lg p-3 space-y-3 bg-muted/5">
+                    <p class="text-xs font-semibold flex items-center gap-1.5 text-green-500">
+                      <span class="inline-block w-2 h-2 rounded-full bg-green-500"></span>
+                      CPU (percentage, e.g. 100% = 1 core)
+                    </p>
+                    <div class="flex items-center gap-4 text-[11px]">
+                      <label class="flex items-center gap-1 cursor-pointer font-medium">
+                        <input type="radio" :value="false" v-model="ensureSliderConfig('cpu').enabled" class="text-primary focus:ring-primary h-3 w-3" />
+                        Fixed Mode
+                      </label>
+                      <label class="flex items-center gap-1 cursor-pointer font-medium text-primary">
+                        <input type="radio" :value="true" v-model="ensureSliderConfig('cpu').enabled" class="text-primary focus:ring-primary h-3 w-3" />
+                        Slider Mode
+                      </label>
+                    </div>
+                    <div v-if="!ensureSliderConfig('cpu').enabled" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Fixed CPU (%)</label>
+                        <input v-model.number="planForm.cpu" type="number" min="0" max="10000"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                    </div>
+                    <div v-else class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Base (%)</label>
+                        <input v-model.number="ensureSliderConfig('cpu').base" type="number" min="0" max="10000"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Maximum (%)</label>
+                        <input v-model.number="ensureSliderConfig('cpu').max" type="number" min="0" max="10000"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Step (%)</label>
+                        <input v-model.number="ensureSliderConfig('cpu').step" type="number" min="1" step="1"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Cost Per Step</label>
+                        <input v-model.number="ensureSliderConfig('cpu').cost_per_step" type="number" min="0" step="1"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Rounding</label>
+                        <select v-model="ensureSliderConfig('cpu').rounding"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring">
+                          <option value="nearest">Nearest</option>
+                          <option value="up">Up</option>
+                          <option value="down">Down</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Disk Card -->
+                  <div class="col-span-2 md:col-span-4 border border-border rounded-lg p-3 space-y-3 bg-muted/5">
+                    <p class="text-xs font-semibold flex items-center gap-1.5 text-orange-500">
+                      <span class="inline-block w-2 h-2 rounded-full bg-orange-500"></span>
+                      Disk Space (MB)
+                    </p>
+                    <div class="flex items-center gap-4 text-[11px]">
+                      <label class="flex items-center gap-1 cursor-pointer font-medium">
+                        <input type="radio" :value="false" v-model="ensureSliderConfig('disk').enabled" class="text-primary focus:ring-primary h-3 w-3" />
+                        Fixed Mode
+                      </label>
+                      <label class="flex items-center gap-1 cursor-pointer font-medium text-primary">
+                        <input type="radio" :value="true" v-model="ensureSliderConfig('disk').enabled" class="text-primary focus:ring-primary h-3 w-3" />
+                        Slider Mode
+                      </label>
+                    </div>
+                    <div v-if="!ensureSliderConfig('disk').enabled" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Fixed Disk (MB)</label>
+                        <input v-model.number="planForm.disk" type="number" min="512" step="512"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                    </div>
+                    <div v-else class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Base (MB)</label>
+                        <input v-model.number="ensureSliderConfig('disk').base" type="number" min="512" step="512"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Maximum (MB)</label>
+                        <input v-model.number="ensureSliderConfig('disk').max" type="number" min="512" step="512"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Step (MB)</label>
+                        <input v-model.number="ensureSliderConfig('disk').step" type="number" min="1" step="1"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Cost Per Step</label>
+                        <input v-model.number="ensureSliderConfig('disk').cost_per_step" type="number" min="0" step="1"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Rounding</label>
+                        <select v-model="ensureSliderConfig('disk').rounding"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring">
+                          <option value="nearest">Nearest</option>
+                          <option value="up">Up</option>
+                          <option value="down">Down</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Databases Card -->
+                  <div class="col-span-2 md:col-span-4 border border-border rounded-lg p-3 space-y-3 bg-muted/5">
+                    <p class="text-xs font-semibold flex items-center gap-1.5 text-purple-500">
+                      <span class="inline-block w-2 h-2 rounded-full bg-purple-500"></span>
+                      Databases Limit
+                    </p>
+                    <div class="flex items-center gap-4 text-[11px]">
+                      <label class="flex items-center gap-1 cursor-pointer font-medium">
+                        <input type="radio" :value="false" v-model="ensureSliderConfig('database_limit').enabled" class="text-primary focus:ring-primary h-3 w-3" />
+                        Fixed Mode
+                      </label>
+                      <label class="flex items-center gap-1 cursor-pointer font-medium text-primary">
+                        <input type="radio" :value="true" v-model="ensureSliderConfig('database_limit').enabled" class="text-primary focus:ring-primary h-3 w-3" />
+                        Slider Mode
+                      </label>
+                    </div>
+                    <div v-if="!ensureSliderConfig('database_limit').enabled" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Fixed Databases</label>
+                        <input v-model.number="planForm.database_limit" type="number" min="0"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                    </div>
+                    <div v-else class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Base</label>
+                        <input v-model.number="ensureSliderConfig('database_limit').base" type="number" min="0"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Maximum</label>
+                        <input v-model.number="ensureSliderConfig('database_limit').max" type="number" min="0"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Step</label>
+                        <input v-model.number="ensureSliderConfig('database_limit').step" type="number" min="1" step="1"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Cost Per Step</label>
+                        <input v-model.number="ensureSliderConfig('database_limit').cost_per_step" type="number" min="0" step="1"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Rounding</label>
+                        <select v-model="ensureSliderConfig('database_limit').rounding"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring">
+                          <option value="nearest">Nearest</option>
+                          <option value="up">Up</option>
+                          <option value="down">Down</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Backups Card -->
+                  <div class="col-span-2 md:col-span-4 border border-border rounded-lg p-3 space-y-3 bg-muted/5">
+                    <p class="text-xs font-semibold flex items-center gap-1.5 text-cyan-500">
+                      <span class="inline-block w-2 h-2 rounded-full bg-cyan-500"></span>
+                      Backups Limit
+                    </p>
+                    <div class="flex items-center gap-4 text-[11px]">
+                      <label class="flex items-center gap-1 cursor-pointer font-medium">
+                        <input type="radio" :value="false" v-model="ensureSliderConfig('backup_limit').enabled" class="text-primary focus:ring-primary h-3 w-3" />
+                        Fixed Mode
+                      </label>
+                      <label class="flex items-center gap-1 cursor-pointer font-medium text-primary">
+                        <input type="radio" :value="true" v-model="ensureSliderConfig('backup_limit').enabled" class="text-primary focus:ring-primary h-3 w-3" />
+                        Slider Mode
+                      </label>
+                    </div>
+                    <div v-if="!ensureSliderConfig('backup_limit').enabled" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Fixed Backups</label>
+                        <input v-model.number="planForm.backup_limit" type="number" min="0"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                    </div>
+                    <div v-else class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Base</label>
+                        <input v-model.number="ensureSliderConfig('backup_limit').base" type="number" min="0"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Maximum</label>
+                        <input v-model.number="ensureSliderConfig('backup_limit').max" type="number" min="0"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Step</label>
+                        <input v-model.number="ensureSliderConfig('backup_limit').step" type="number" min="1" step="1"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Cost Per Step</label>
+                        <input v-model.number="ensureSliderConfig('backup_limit').cost_per_step" type="number" min="0" step="1"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Rounding</label>
+                        <select v-model="ensureSliderConfig('backup_limit').rounding"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring">
+                          <option value="nearest">Nearest</option>
+                          <option value="up">Up</option>
+                          <option value="down">Down</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Allocations Card -->
+                  <div class="col-span-2 md:col-span-4 border border-border rounded-lg p-3 space-y-3 bg-muted/5">
+                    <p class="text-xs font-semibold flex items-center gap-1.5 text-pink-500">
+                      <span class="inline-block w-2 h-2 rounded-full bg-pink-500"></span>
+                      Allocations (Ports)
+                    </p>
+                    <div class="flex items-center gap-4 text-[11px]">
+                      <label class="flex items-center gap-1 cursor-pointer font-medium">
+                        <input type="radio" :value="false" v-model="ensureSliderConfig('allocation_limit').enabled" class="text-primary focus:ring-primary h-3 w-3" />
+                        Fixed Mode
+                      </label>
+                      <label class="flex items-center gap-1 cursor-pointer font-medium text-primary">
+                        <input type="radio" :value="true" v-model="ensureSliderConfig('allocation_limit').enabled" class="text-primary focus:ring-primary h-3 w-3" />
+                        Slider Mode
+                      </label>
+                    </div>
+                    <div v-if="!ensureSliderConfig('allocation_limit').enabled" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Fixed Allocations</label>
+                        <input v-model.number="planForm.allocation_limit" type="number" min="0" placeholder="Unlimited"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                    </div>
+                    <div v-else class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Base</label>
+                        <input v-model.number="ensureSliderConfig('allocation_limit').base" type="number" min="0"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Maximum</label>
+                        <input v-model.number="ensureSliderConfig('allocation_limit').max" type="number" min="0"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Step</label>
+                        <input v-model.number="ensureSliderConfig('allocation_limit').step" type="number" min="1" step="1"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Cost Per Step</label>
+                        <input v-model.number="ensureSliderConfig('allocation_limit').cost_per_step" type="number" min="0" step="1"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring" />
+                      </div>
+                      <div>
+                        <label class="block text-[11px] text-muted-foreground mb-1">Rounding</label>
+                        <select v-model="ensureSliderConfig('allocation_limit').rounding"
+                          class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring">
+                          <option value="nearest">Nearest</option>
+                          <option value="up">Up</option>
+                          <option value="down">Down</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Swap & IO (Keep Fixed) -->
+                  <div>
+                    <label class="block text-[11px] text-muted-foreground mb-1">Swap (MB)</label>
+                    <input v-model.number="planForm.swap" type="number" min="0"
+                      class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring" />
+                  </div>
+                  <div>
+                    <label class="block text-[11px] text-muted-foreground mb-1">Block IO</label>
+                    <input v-model.number="planForm.io" type="number" min="10" max="1000"
+                      class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="border-t border-border pt-4 space-y-3">
+                <p class="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Overrides <span class="font-normal normal-case text-muted-foreground/60">(leave blank to use egg defaults)</span></p>
+                <div>
+                  <label class="block text-xs text-muted-foreground mb-1">Startup Command</label>
+                  <input v-model="planForm.startup_override" placeholder="Use egg default"
+                    class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring" />
+                </div>
+                <div>
+                  <label class="block text-xs text-muted-foreground mb-1">Docker Image</label>
+                  <input v-model="planForm.image_override" placeholder="Use egg default"
+                    class="flex h-8 w-full rounded-md border border-input bg-background px-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring" />
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+
+
+        <div class="flex items-center justify-between">
+          <button type="button" @click="cancelEditor" class="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-accent transition-colors">
+            <ArrowLeft class="h-4 w-4" />Cancel
+          </button>
+          <button type="submit" :disabled="plansLoading"
+            class="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60 transition-colors shadow-sm">
+            <Loader2 v-if="plansLoading" class="h-4 w-4 animate-spin" />
+            <Save v-else class="h-4 w-4" />
+            {{ editingPlan ? "Save Changes" : "Create Plan" }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+
+    <div v-else class="container mx-auto max-w-7xl px-4 md:px-8 py-6">
+
+
+      <div class="mb-6 flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <CreditCard class="h-6 w-6 text-primary" />Billing Plans
+          </h1>
+          <p class="text-sm text-muted-foreground mt-0.5">Manage renewable server plans and subscriptions</p>
+        </div>
+        <button v-if="activeTab === 'plans'" @click="openCreate"
+          class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm">
+          <Plus class="h-4 w-4" />New Plan
+        </button>
+        <button v-if="activeTab === 'categories'" @click="openCatModal()"
+          class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm">
+          <Plus class="h-4 w-4" />New Category
+        </button>
+        <button v-if="activeTab === 'coupons'" @click="openCreateCoupon"
+          class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm">
+          <Plus class="h-4 w-4" />New Coupon
+        </button>
+      </div>
+
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
+        <div class="bg-card border border-border rounded-xl p-4 shadow-sm">
+          <div class="flex items-center justify-between mb-2">
+            <p class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Plans</p>
+            <div class="bg-primary/10 rounded-lg p-1.5"><CreditCard class="h-3.5 w-3.5 text-primary" /></div>
+          </div>
+          <p class="text-2xl font-bold">{{ stats?.total_plans ?? 0 }}</p>
+          <p class="text-xs text-muted-foreground mt-0.5">{{ stats?.active_plans ?? 0 }} active</p>
+        </div>
+        <div class="bg-card border border-border rounded-xl p-4 shadow-sm">
+          <div class="flex items-center justify-between mb-2">
+            <p class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Active</p>
+            <div class="bg-emerald-500/10 rounded-lg p-1.5"><CheckCircle2 class="h-3.5 w-3.5 text-emerald-500" /></div>
+          </div>
+          <p class="text-2xl font-bold">{{ stats?.subscriptions.active ?? 0 }}</p>
+          <p class="text-xs text-muted-foreground mt-0.5">subscriptions</p>
+        </div>
+        <div class="bg-card border border-border rounded-xl p-4 shadow-sm">
+          <div class="flex items-center justify-between mb-2">
+            <p class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Suspended</p>
+            <div class="bg-amber-500/10 rounded-lg p-1.5"><PauseCircle class="h-3.5 w-3.5 text-amber-500" /></div>
+          </div>
+          <p class="text-2xl font-bold">{{ stats?.subscriptions.suspended ?? 0 }}</p>
+          <p class="text-xs text-muted-foreground mt-0.5">no credits</p>
+        </div>
+        <div class="bg-card border border-border rounded-xl p-4 shadow-sm">
+          <div class="flex items-center justify-between mb-2">
+            <p class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Total</p>
+            <div class="bg-blue-500/10 rounded-lg p-1.5"><Users class="h-3.5 w-3.5 text-blue-500" /></div>
+          </div>
+          <p class="text-2xl font-bold">{{ totalSubscriptions }}</p>
+          <p class="text-xs text-muted-foreground mt-0.5">all time</p>
+        </div>
+        <div class="bg-card border border-border rounded-xl p-4 shadow-sm col-span-2 xl:col-span-1">
+          <div class="flex items-center justify-between mb-2">
+            <p class="text-xs font-medium text-muted-foreground uppercase tracking-wide">Staff refunds</p>
+            <div class="bg-violet-500/10 rounded-lg p-1.5"><CircleDollarSign class="h-3.5 w-3.5 text-violet-500" /></div>
+          </div>
+          <p class="text-2xl font-bold">{{ (stats?.admin_refunds?.total_credits_refunded ?? 0).toLocaleString() }}</p>
+          <p class="text-xs text-muted-foreground mt-0.5">cr to users · {{ stats?.admin_refunds?.subscriptions_with_refunds ?? 0 }} subs</p>
+        </div>
+      </div>
+
+
+      <div class="flex gap-1 mb-5 bg-muted/50 rounded-xl p-1 w-fit flex-wrap">
+        <button v-for="tab in [{ key: 'plans', label: 'Plans', icon: CreditCard }, { key: 'categories', label: 'Categories', icon: FolderOpen }, { key: 'coupons', label: 'Coupons', icon: Ticket }, { key: 'subscriptions', label: 'Subscriptions', icon: BarChart3 }, { key: 'settings', label: 'Settings', icon: Settings }]"
+          :key="tab.key" @click="activeTab = tab.key as Tab; currentView = 'list'; couponView = 'list'"
+          :class="['inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all', activeTab === tab.key ? 'bg-card text-foreground shadow-sm border border-border' : 'text-muted-foreground hover:text-foreground']">
+          <component :is="tab.icon" class="h-4 w-4" />{{ tab.label }}
+        </button>
+      </div>
+
+
+      <div v-if="activeTab === 'plans'">
+        <div class="flex items-center gap-3 mb-4 flex-wrap">
+          <input v-model="plansSearch" @input="plansPage = 1; loadPlans()" type="text" placeholder="Search plans..."
+            class="flex h-9 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full md:w-64" />
+        </div>
+
+        <div v-if="plansLoading" class="flex justify-center py-16"><Loader2 class="h-7 w-7 animate-spin text-muted-foreground" /></div>
+
+        <div v-else-if="plans.length === 0" class="text-center py-16 bg-card border border-border rounded-xl">
+          <CreditCard class="h-12 w-12 mx-auto mb-3 opacity-20" />
+          <p class="font-medium text-muted-foreground">No plans yet</p>
+          <button @click="openCreate" class="mt-3 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors">
+            <Plus class="h-4 w-4" />Create First Plan
+          </button>
+        </div>
+
+        <div v-else class="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-border bg-muted/40">
+                <th class="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Plan</th>
+                <th class="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide hidden sm:table-cell">Category</th>
+                <th class="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Price</th>
+                <th class="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Period</th>
+                <th class="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide hidden md:table-cell">Stock</th>
+                <th class="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide hidden lg:table-cell">Server</th>
+                <th class="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
+                <th class="px-4 py-3 w-24"></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-border">
+              <tr v-for="plan in plans" :key="plan.id" class="hover:bg-muted/20 transition-colors group">
+                <td class="px-4 py-3">
+                  <div class="font-medium text-foreground">{{ plan.name }}</div>
+                  <div v-if="plan.description" class="text-xs text-muted-foreground mt-0.5 line-clamp-1">{{ plan.description }}</div>
+                </td>
+                <td class="px-4 py-3 hidden sm:table-cell">
+                  <span v-if="plan.category" :class="['inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border', colorClasses(plan.category.color)]">
+                    <img v-if="isImageIcon(plan.category.icon)" :src="normalizeAssetUrl(plan.category.icon || '')" :alt="plan.category.name" class="h-3.5 w-3.5 rounded object-cover" />
+                    <span v-else-if="plan.category.icon">{{ plan.category.icon }}</span>
+                    {{ plan.category.name }}
+                  </span>
+                  <span v-else class="text-xs text-muted-foreground/40">-</span>
+                </td>
+                <td class="px-4 py-3">
+                  <span class="font-semibold">{{ plan.price_credits.toLocaleString() }}</span>
+                  <span class="text-muted-foreground text-xs ml-1">cr</span>
+                  <div v-if="(plan.tax_rate_percent ?? 0) > 0 || (plan.extra_charge_percent ?? 0) > 0" class="text-[11px] text-muted-foreground mt-0.5">
+                    Total: {{ (plan.total_credits ?? plan.price_credits).toLocaleString() }} cr
+                  </div>
+                </td>
+                <td class="px-4 py-3 text-muted-foreground text-xs">{{ getPeriodLabel(plan.billing_period_days) }}</td>
+                <td class="px-4 py-3 hidden md:table-cell">
+                  <div v-if="plan.max_subscriptions" class="flex items-center gap-1.5">
+                    <div class="h-1.5 rounded-full bg-muted flex-1 max-w-[60px] overflow-hidden">
+                      <div class="h-full bg-primary rounded-full transition-all"
+                        :style="{ width: Math.min(100, Math.round(((plan.active_subscription_count ?? 0) / plan.max_subscriptions) * 100)) + '%' }" />
+                    </div>
+                    <span class="text-xs text-muted-foreground whitespace-nowrap">{{ plan.active_subscription_count ?? 0 }} / {{ plan.max_subscriptions }}</span>
+                  </div>
+                  <div v-else class="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Infinity class="h-3 w-3" />{{ plan.active_subscription_count ?? 0 }} active
+                  </div>
+                </td>
+                <td class="px-4 py-3 hidden lg:table-cell">
+                  <div class="flex flex-col gap-0.5">
+                    <span v-if="plan.spell_id || plan.user_can_choose_spell" class="inline-flex items-center gap-1 text-xs bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded-full w-fit">
+                      <Server class="h-3 w-3" />{{ plan.user_can_choose_spell ? 'User picks egg' : 'Configured' }}
+                    </span>
+                    <span v-if="plan.user_can_choose_realm" class="inline-flex items-center gap-1 text-xs bg-violet-500/10 text-violet-400 border border-violet-500/20 px-2 py-0.5 rounded-full w-fit">
+                      User picks realm
+                    </span>
+                    <span v-if="!plan.spell_id && !plan.user_can_choose_spell && !plan.user_can_choose_realm" class="text-xs text-muted-foreground/40">-</span>
+                  </div>
+                </td>
+                <td class="px-4 py-3">
+                  <span :class="['inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border', plan.is_active ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' : 'bg-muted text-muted-foreground border-border']">
+                    {{ plan.is_active ? "Active" : "Inactive" }}
+                  </span>
+                </td>
+                <td class="px-4 py-3">
+                  <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button @click="openEdit(plan)" class="inline-flex items-center justify-center rounded-md p-1.5 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors" title="Edit">
+                      <Pencil class="h-3.5 w-3.5" />
+                    </button>
+                    <button @click="confirmDelete(plan)" class="inline-flex items-center justify-center rounded-md p-1.5 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors" title="Delete">
+                      <Trash2 class="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div v-if="plansTotalPages > 1" class="flex items-center justify-center gap-2 mt-5">
+          <button @click="plansPage--; loadPlans()" :disabled="plansPage <= 1" class="rounded-lg border border-border bg-card px-3 py-1.5 text-sm hover:bg-accent disabled:opacity-40 transition-colors">Previous</button>
+          <span class="text-sm text-muted-foreground">{{ plansPage }} / {{ plansTotalPages }}</span>
+          <button @click="plansPage++; loadPlans()" :disabled="plansPage >= plansTotalPages" class="rounded-lg border border-border bg-card px-3 py-1.5 text-sm hover:bg-accent disabled:opacity-40 transition-colors">Next</button>
+        </div>
+      </div>
+
+
+      <div v-if="activeTab === 'categories'">
+        <div class="flex items-center gap-3 mb-4 flex-wrap">
+          <input v-model="catsSearch" @input="catsPage = 1; loadCategories()" type="text" placeholder="Search categories..."
+            class="flex h-9 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full md:w-64" />
+        </div>
+
+        <div v-if="catsLoading" class="flex justify-center py-16"><Loader2 class="h-7 w-7 animate-spin text-muted-foreground" /></div>
+
+        <div v-else-if="categories.length === 0" class="text-center py-16 bg-card border border-border rounded-xl">
+          <FolderOpen class="h-12 w-12 mx-auto mb-3 opacity-20" />
+          <p class="font-medium text-muted-foreground">No categories yet</p>
+          <p class="text-sm text-muted-foreground/60 mt-1 mb-4">Create categories to organise your plans like in WHMCS</p>
+          <button @click="openCatModal()" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors">
+            <Plus class="h-4 w-4" />Create First Category
+          </button>
+        </div>
+
+        <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div v-for="cat in categories" :key="cat.id"
+            class="bg-card border border-border rounded-xl shadow-sm p-5 flex flex-col gap-3 hover:border-primary/30 transition-colors">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex items-center gap-2.5">
+                <img v-if="isImageIcon(cat.icon)" :src="normalizeAssetUrl(cat.icon || '')" :alt="cat.name" class="h-9 w-9 rounded-lg object-cover" />
+                <div v-else-if="cat.icon" class="text-2xl leading-none">{{ cat.icon }}</div>
+                <div v-else class="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <FolderOpen class="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <p class="font-semibold text-foreground">{{ cat.name }}</p>
+                  <p v-if="cat.description" class="text-xs text-muted-foreground line-clamp-1 mt-0.5">{{ cat.description }}</p>
+                </div>
+              </div>
+              <span :class="['shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border', colorClasses(cat.color)]">
+                {{ cat.color ?? 'default' }}
+              </span>
+            </div>
+
+            <div class="flex items-center justify-between text-xs text-muted-foreground border-t border-border pt-3">
+              <div class="flex items-center gap-3">
+                <span class="flex items-center gap-1">
+                  <CreditCard class="h-3 w-3" />{{ cat.plan_count ?? 0 }} plan{{ (cat.plan_count ?? 0) !== 1 ? 's' : '' }}
+                </span>
+                <span :class="['px-1.5 py-0.5 rounded text-[10px] font-medium', cat.is_active ? 'bg-emerald-500/15 text-emerald-400' : 'bg-muted text-muted-foreground']">
+                  {{ cat.is_active ? 'Active' : 'Inactive' }}
+                </span>
+              </div>
+              <div class="flex items-center gap-1">
+                <button @click="openCatModal(cat)" class="p-1.5 rounded-md hover:bg-muted transition-colors" title="Edit">
+                  <Pencil class="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
+                </button>
+                <button @click="confirmDeleteCat(cat)" class="p-1.5 rounded-md hover:bg-red-500/10 transition-colors" title="Delete">
+                  <Trash2 class="h-3.5 w-3.5 text-muted-foreground hover:text-red-400" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <div v-if="catsTotalPages > 1" class="flex items-center justify-center gap-2 mt-6">
+          <button @click="catsPage--; loadCategories()" :disabled="catsPage <= 1" class="px-3 py-1.5 rounded-lg border border-border text-sm disabled:opacity-40 hover:bg-muted transition-colors">Prev</button>
+          <span class="text-sm text-muted-foreground">{{ catsPage }} / {{ catsTotalPages }}</span>
+          <button @click="catsPage++; loadCategories()" :disabled="catsPage >= catsTotalPages" class="px-3 py-1.5 rounded-lg border border-border text-sm disabled:opacity-40 hover:bg-muted transition-colors">Next</button>
+        </div>
+      </div>
+
+
+      <div v-if="activeTab === 'subscriptions'">
+        <div class="flex items-center gap-3 mb-4 flex-wrap">
+          <input v-model="subsSearch" @input="subsPage = 1; loadSubscriptions()" type="text" placeholder="Search user, plan..."
+            class="flex h-9 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full md:w-64" />
+          <div class="billing-select-wrap w-full md:w-52">
+            <select v-model="subsStatusFilter" @change="subsPage = 1; loadSubscriptions()"
+              class="billing-select">
+            <option value="">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="active">Active</option>
+            <option value="suspended">Suspended</option>
+            <option value="cancelled">Cancelled</option>
+            <option value="expired">Expired</option>
+            </select>
+            <ChevronDown class="billing-select-icon" />
+          </div>
+          <button @click="loadSubscriptions" class="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm hover:bg-accent transition-colors">
+            <RefreshCw class="h-3.5 w-3.5" />Refresh
+          </button>
+        </div>
+
+        <div v-if="subsLoading" class="flex justify-center py-16"><Loader2 class="h-7 w-7 animate-spin text-muted-foreground" /></div>
+
+        <div v-else-if="subscriptions.length === 0" class="text-center py-16 bg-card border border-border rounded-xl">
+          <Users class="h-12 w-12 mx-auto mb-3 opacity-20" />
+          <p class="font-medium text-muted-foreground">No subscriptions found</p>
+        </div>
+
+        <div v-else class="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-border bg-muted/40">
+                <th class="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">#</th>
+                <th class="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">User</th>
+                <th class="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Plan</th>
+                <th class="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
+                <th class="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide hidden md:table-cell">Next Renewal</th>
+                <th class="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide hidden lg:table-cell">Server</th>
+                <th class="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide hidden xl:table-cell">Created</th>
+                <th class="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide min-w-[9rem]">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-border">
+              <tr v-for="sub in subscriptions" :key="sub.id" class="hover:bg-muted/20 transition-colors group">
+                <td class="px-4 py-3 text-muted-foreground text-xs font-mono">#{{ sub.id }}</td>
+                <td class="px-4 py-3">
+                  <div class="font-medium">{{ sub.username ?? "User #" + sub.user_id }}</div>
+                  <div class="text-xs text-muted-foreground">{{ sub.email ?? "" }}</div>
+                  <button
+                    v-if="sub.user_uuid"
+                    type="button"
+                    @click="openAdminPath(`/admin/users/${sub.user_uuid}/edit`)"
+                    class="mt-1.5 inline-flex items-center gap-1 rounded-md border border-border bg-muted/30 px-2 py-0.5 text-[11px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                  >
+                    <ExternalLink class="h-3 w-3 shrink-0" />
+                    Go to user
+                  </button>
+                </td>
+                <td class="px-4 py-3">
+                  <div class="font-medium">{{ sub.plan_name }}</div>
+                  <div class="text-xs text-muted-foreground">{{ sub.price_credits.toLocaleString() }} cr / {{ getPeriodLabel(sub.billing_period_days) }}</div>
+                  <div
+                    v-if="Number(sub.admin_credits_refunded_total ?? 0) > 0"
+                    class="mt-1.5 inline-flex flex-wrap items-center gap-x-1.5 gap-y-0.5 rounded-md border border-violet-500/30 bg-violet-500/10 px-2 py-1 text-[11px] font-medium text-violet-700 dark:text-violet-300"
+                    title="Credits returned to the user via admin refunds (running total)"
+                  >
+                    <CircleDollarSign class="h-3 w-3 shrink-0 opacity-80" />
+                    <span>Refunded {{ Number(sub.admin_credits_refunded_total ?? 0).toLocaleString() }} cr total</span>
+                    <span v-if="sub.admin_refunded_at" class="font-normal text-violet-600/80 dark:text-violet-400/90">
+                      · last {{ formatDate(sub.admin_refunded_at) }}
+                    </span>
+                  </div>
+                </td>
+                <td class="px-4 py-3">
+                  <span :class="['inline-flex px-2 py-0.5 rounded-full text-xs font-medium', statusBadgeClass(isPendingCancellation(sub) ? 'cancelling' : sub.status)]">
+                    {{ subscriptionStatusLabel(sub) }}
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-muted-foreground text-xs hidden md:table-cell">{{ formatDate(sub.next_renewal_at) }}</td>
+                <td class="px-4 py-3 hidden lg:table-cell">
+                  <template v-if="sub.server_uuid">
+                    <div class="font-medium text-sm">{{ sub.server_name || "Unknown server" }}</div>
+                    <div class="font-mono text-[10px] text-muted-foreground mt-0.5">{{ sub.server_uuid.substring(0, 8) }}…</div>
+                    <button
+                      v-if="sub.server_id != null"
+                      type="button"
+                      @click="openAdminPath(`/admin/servers/${sub.server_id}/edit`)"
+                      class="mt-1.5 inline-flex items-center gap-1 rounded-md border border-border bg-muted/30 px-2 py-0.5 text-[11px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    >
+                      <ExternalLink class="h-3 w-3 shrink-0" />
+                      Go to server
+                    </button>
+                  </template>
+                  <span v-else class="text-muted-foreground/40 text-xs">-</span>
+                </td>
+                <td class="px-4 py-3 text-muted-foreground text-xs hidden xl:table-cell">{{ formatDate(sub.created_at) }}</td>
+                <td class="px-4 py-3 text-right">
+                  <div class="flex flex-col items-end gap-1 sm:flex-row sm:justify-end sm:flex-wrap">
+                    <button
+                      type="button"
+                      @click="confirmRefundSub(sub)"
+                      class="inline-flex items-center gap-1 rounded-lg border border-amber-500/35 bg-amber-500/10 px-2 py-1 text-xs font-medium text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 transition-all"
+                    >
+                      <CircleDollarSign class="h-3 w-3" />Refund
+                    </button>
+                    <button
+                      v-if="sub.status !== 'cancelled' && sub.status !== 'expired' && !isPendingCancellation(sub)"
+                      type="button"
+                      @click="confirmCancelSub(sub)"
+                      class="inline-flex items-center gap-1 rounded-lg border border-red-500/30 bg-red-500/5 px-2 py-1 text-xs font-medium text-red-400 hover:bg-red-500/15 transition-all"
+                    >
+                      <XCircle class="h-3 w-3" />Cancel
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div v-if="subsTotalPages > 1" class="flex items-center justify-center gap-2 mt-5">
+          <button @click="subsPage--; loadSubscriptions()" :disabled="subsPage <= 1" class="rounded-lg border border-border bg-card px-3 py-1.5 text-sm hover:bg-accent disabled:opacity-40 transition-colors">Previous</button>
+          <span class="text-sm text-muted-foreground">{{ subsPage }} / {{ subsTotalPages }}</span>
+          <button @click="subsPage++; loadSubscriptions()" :disabled="subsPage >= subsTotalPages" class="rounded-lg border border-border bg-card px-3 py-1.5 text-sm hover:bg-accent disabled:opacity-40 transition-colors">Next</button>
+        </div>
+      </div>
+
+
+      <div v-if="activeTab === 'coupons'">
+        <div class="flex items-center gap-3 mb-4 flex-wrap">
+          <input v-model="couponsSearch" @keyup.enter="couponsPage = 1; loadCoupons()" type="text" placeholder="Search coupon codes..."
+            class="flex h-9 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full md:w-64" />
+          <button type="button" @click="couponsPage = 1; loadCoupons()" class="rounded-lg border border-border bg-card px-3 py-1.5 text-sm hover:bg-accent transition-colors">Search</button>
+        </div>
+
+        <div v-if="couponsLoading" class="flex justify-center py-16"><Loader2 class="h-7 w-7 animate-spin text-muted-foreground" /></div>
+
+        <div v-else-if="coupons.length === 0" class="text-center py-16 bg-card border border-border rounded-xl">
+          <Ticket class="h-12 w-12 mx-auto mb-3 opacity-20" />
+          <p class="font-medium text-muted-foreground">No coupon codes yet</p>
+          <button @click="openCreateCoupon" class="mt-3 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors">
+            <Plus class="h-4 w-4" />Create First Coupon
+          </button>
+        </div>
+
+        <div v-else class="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-border bg-muted/40">
+                <th class="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Code</th>
+                <th class="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Discount</th>
+                <th class="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide hidden sm:table-cell">Scope</th>
+                <th class="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide hidden md:table-cell">Plan</th>
+                <th class="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Uses</th>
+                <th class="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide hidden lg:table-cell">Status</th>
+                <th class="px-4 py-3 w-24"></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-border">
+              <tr v-for="coupon in coupons" :key="coupon.id" class="hover:bg-muted/20 transition-colors group">
+                <td class="px-4 py-3 font-mono font-semibold">{{ coupon.code }}</td>
+                <td class="px-4 py-3">{{ couponDiscountLabel(coupon) }}</td>
+                <td class="px-4 py-3 hidden sm:table-cell text-xs text-muted-foreground">{{ couponScopeLabel(coupon.coupon_scope) }}</td>
+                <td class="px-4 py-3 hidden md:table-cell text-xs">{{ coupon.plan_name ?? "Any plan" }}</td>
+                <td class="px-4 py-3 text-xs">{{ coupon.usage_count ?? coupon.uses ?? 0 }}<span v-if="coupon.max_uses > 0"> / {{ coupon.max_uses }}</span><span v-else> / ∞</span></td>
+                <td class="px-4 py-3 hidden lg:table-cell">
+                  <span :class="['inline-flex px-2 py-0.5 rounded-full text-xs font-medium border', coupon.is_valid ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' : 'bg-red-500/15 text-red-400 border-red-500/30']">
+                    {{ coupon.is_valid ? "Active" : "Inactive" }}
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-right">
+                  <div class="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button type="button" @click="openEditCoupon(coupon)" class="rounded-lg border border-border p-1.5 hover:bg-accent transition-colors"><Pencil class="h-3.5 w-3.5" /></button>
+                    <button type="button" @click="confirmDeleteCoupon(coupon)" class="rounded-lg border border-red-500/30 p-1.5 text-red-400 hover:bg-red-500/10 transition-colors"><Trash2 class="h-3.5 w-3.5" /></button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div v-if="couponsTotalPages > 1" class="flex items-center justify-center gap-2 mt-5">
+          <button @click="couponsPage--; loadCoupons()" :disabled="couponsPage <= 1" class="rounded-lg border border-border bg-card px-3 py-1.5 text-sm hover:bg-accent disabled:opacity-40 transition-colors">Previous</button>
+          <span class="text-sm text-muted-foreground">{{ couponsPage }} / {{ couponsTotalPages }}</span>
+          <button @click="couponsPage++; loadCoupons()" :disabled="couponsPage >= couponsTotalPages" class="rounded-lg border border-border bg-card px-3 py-1.5 text-sm hover:bg-accent disabled:opacity-40 transition-colors">Next</button>
+        </div>
+      </div>
+
+
+      <div v-if="activeTab === 'settings'">
+        <div class="max-w-3xl space-y-6">
+
+
+          <div class="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+            <div class="flex items-center gap-3 px-5 py-3.5 border-b border-border bg-muted/30">
+              <div class="rounded-md bg-emerald-500/10 p-1.5"><Globe class="h-4 w-4 text-emerald-500" /></div>
+              <div>
+                <h3 class="text-sm font-semibold">Public Access</h3>
+                <p class="text-xs text-muted-foreground">Let guests browse plans without logging in</p>
+              </div>
+            </div>
+            <div class="divide-y divide-border">
+              <div class="flex items-center justify-between gap-4 px-5 py-4">
+                <div>
+                  <p class="text-sm font-medium">Make plans page public</p>
+                  <p class="text-xs text-muted-foreground mt-0.5">
+                    Guests can view <code class="text-[11px] bg-muted px-1 py-0.5 rounded">/billing/plans</code> without login.
+                    Subscribing still requires an account.
+                  </p>
+                </div>
+                <button type="button" @click="settingsForm.plans_public_enabled = !settingsForm.plans_public_enabled" class="shrink-0">
+                  <ToggleRight v-if="settingsForm.plans_public_enabled" class="h-8 w-8 text-primary" />
+                  <ToggleLeft v-else class="h-8 w-8 text-muted-foreground" />
+                </button>
+              </div>
+              <div v-if="settingsForm.plans_public_enabled" class="px-5 py-4 space-y-3">
+                <div class="flex items-start gap-2 text-xs text-muted-foreground">
+                  <Link2 class="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                  <span>Share this public catalog URL with customers:</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <code class="flex-1 truncate rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-foreground">{{ publicPlansUrl }}</code>
+                  <button
+                    type="button"
+                    @click="copyPublicPlansUrl"
+                    class="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium hover:bg-accent transition-colors shrink-0"
+                  >
+                    <Copy class="h-3.5 w-3.5" />Copy
+                  </button>
+                  <a
+                    :href="publicPlansUrl"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium hover:bg-accent transition-colors shrink-0"
+                  >
+                    <ExternalLink class="h-3.5 w-3.5" />Open
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+          <div class="bg-card border border-border rounded-xl shadow-sm p-5">
+            <p class="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-4">Billing Lifecycle</p>
+            <div class="flex items-center gap-1 flex-wrap text-xs font-mono">
+              <span class="px-2.5 py-1.5 rounded-lg bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-semibold">Renewal Due</span>
+              <span class="text-muted-foreground">→</span>
+              <span class="px-2.5 py-1.5 rounded-lg bg-blue-500/15 text-blue-400 border border-blue-500/30">Grace Period ({{ settingsForm.grace_period_days }}d)</span>
+              <span class="text-muted-foreground">→</span>
+              <span class="px-2.5 py-1.5 rounded-lg bg-amber-500/15 text-amber-400 border border-amber-500/30 font-semibold">Suspended</span>
+              <span class="text-muted-foreground">→</span>
+              <span class="px-2.5 py-1.5 rounded-lg" :class="settingsForm.termination_days === 0 ? 'bg-muted/40 text-muted-foreground border border-border' : 'bg-red-500/15 text-red-400 border border-red-500/30 font-semibold'">
+                {{ settingsForm.termination_days === 0 ? 'Never Terminated' : `Terminated + Deleted (${settingsForm.termination_days}d)` }}
+              </span>
+            </div>
+            <p class="text-xs text-muted-foreground mt-3">
+              <strong>Cancellation:</strong>
+              <template v-if="settingsForm.cancel_at_period_end">
+                server stays available until the billing period ends, then enters the suspend
+                <template v-if="settingsForm.termination_days > 0"> → delete ({{ settingsForm.termination_days }}d)</template>
+                lifecycle.
+              </template>
+              <template v-else>
+                server is <strong>suspended immediately</strong>.
+                <template v-if="settingsForm.termination_days > 0"> If it stays suspended for {{ settingsForm.termination_days }} day(s), the server is <strong class="text-red-400">permanently deleted</strong>.</template>
+              </template>
+              <template v-if="settingsForm.termination_days === 0 && !settingsForm.cancel_at_period_end"> Suspended servers are <strong>never auto-deleted</strong> (manage manually).</template>
+            </p>
+          </div>
+
+
+          <div class="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+            <div class="flex items-center gap-3 px-5 py-3.5 border-b border-border bg-muted/30">
+              <div class="rounded-md bg-amber-500/10 p-1.5"><ServerOff class="h-4 w-4 text-amber-500" /></div>
+              <div>
+                <h3 class="text-sm font-semibold">Server Actions</h3>
+                <p class="text-xs text-muted-foreground">What happens to the Wings server on billing events</p>
+              </div>
+            </div>
+            <div class="divide-y divide-border">
+              <div class="flex items-center justify-between gap-4 px-5 py-4">
+                <div>
+                  <p class="text-sm font-medium">Suspend server when renewal fails</p>
+                  <p class="text-xs text-muted-foreground mt-0.5">Automatically suspend the Wings server when the account runs out of credits</p>
+                </div>
+                <button type="button" @click="settingsForm.suspend_servers = !settingsForm.suspend_servers" class="shrink-0">
+                  <ToggleRight v-if="settingsForm.suspend_servers" class="h-8 w-8 text-primary" />
+                  <ToggleLeft v-else class="h-8 w-8 text-muted-foreground" />
+                </button>
+              </div>
+              <div class="flex items-center justify-between gap-4 px-5 py-4">
+                <div>
+                  <p class="text-sm font-medium">Unsuspend server when payment succeeds</p>
+                  <p class="text-xs text-muted-foreground mt-0.5">Automatically restore the server when the subscription is successfully renewed</p>
+                </div>
+                <button type="button" @click="settingsForm.unsuspend_on_renewal = !settingsForm.unsuspend_on_renewal" class="shrink-0">
+                  <ToggleRight v-if="settingsForm.unsuspend_on_renewal" class="h-8 w-8 text-primary" />
+                  <ToggleLeft v-else class="h-8 w-8 text-muted-foreground" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+
+          <div class="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+            <div class="flex items-center gap-3 px-5 py-3.5 border-b border-border bg-muted/30">
+              <div class="rounded-md bg-blue-500/10 p-1.5"><Clock class="h-4 w-4 text-blue-400" /></div>
+              <div>
+                <h3 class="text-sm font-semibold">Time Windows</h3>
+                <p class="text-xs text-muted-foreground">Grace and termination periods</p>
+              </div>
+            </div>
+            <div class="divide-y divide-border">
+              <div class="px-5 py-4">
+                <div class="flex items-start justify-between gap-4">
+                  <div>
+                    <p class="text-sm font-medium">Grace period</p>
+                    <p class="text-xs text-muted-foreground mt-0.5">Days after a failed renewal before the subscription is suspended. Set to <strong>0</strong> to suspend immediately.</p>
+                  </div>
+                  <div class="flex items-center gap-2 shrink-0">
+                    <input v-model.number="settingsForm.grace_period_days" type="number" min="0" max="30" class="flex h-9 w-20 rounded-lg border border-input bg-background px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-ring" />
+                    <span class="text-xs text-muted-foreground w-16">{{ settingsForm.grace_period_days === 0 ? 'Immediate' : settingsForm.grace_period_days + ' day(s)' }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="px-5 py-4">
+                <div class="flex items-start justify-between gap-4">
+                  <div>
+                    <p class="text-sm font-medium">Termination period</p>
+                    <p class="text-xs text-muted-foreground mt-0.5">Days after suspension before the subscription is <strong>auto-cancelled</strong> and the server is <strong class="text-red-400">permanently deleted from Wings</strong>. Set to <strong>0</strong> to never auto-terminate.</p>
+                  </div>
+                  <div class="flex items-center gap-2 shrink-0">
+                    <input v-model.number="settingsForm.termination_days" type="number" min="0" max="365" class="flex h-9 w-20 rounded-lg border border-input bg-background px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-ring" />
+                    <span class="text-xs text-muted-foreground w-16">{{ settingsForm.termination_days === 0 ? 'Disabled' : settingsForm.termination_days + ' day(s)' }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+          <div class="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+            <div class="flex items-center gap-3 px-5 py-3.5 border-b border-border bg-muted/30">
+              <div class="rounded-md bg-cyan-500/10 p-1.5"><Users class="h-4 w-4 text-cyan-400" /></div>
+              <div>
+                <h3 class="text-sm font-semibold">Subscription Limits</h3>
+                <p class="text-xs text-muted-foreground">Cap how many plans a single user can hold</p>
+              </div>
+            </div>
+            <div class="divide-y divide-border">
+              <div class="px-5 py-4">
+                <div class="flex items-start justify-between gap-4">
+                  <div>
+                    <p class="text-sm font-medium">Max plans per user</p>
+                    <p class="text-xs text-muted-foreground mt-0.5">
+                      Maximum number of <strong>active or suspended</strong> plan subscriptions a user may have at once.
+                      Changing plans (upgrade/downgrade) does not count as a new subscription.
+                      Set to <strong>0</strong> for unlimited.
+                    </p>
+                  </div>
+                  <div class="flex items-center gap-2 shrink-0">
+                    <input v-model.number="settingsForm.max_plans_per_user" type="number" min="0" max="9999" class="flex h-9 w-20 rounded-lg border border-input bg-background px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-ring" />
+                    <span class="text-xs text-muted-foreground w-16">{{ settingsForm.max_plans_per_user === 0 ? 'Unlimited' : settingsForm.max_plans_per_user + ' max' }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+          <div class="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+            <div class="flex items-center gap-3 px-5 py-3.5 border-b border-border bg-muted/30">
+              <div class="rounded-md bg-purple-500/10 p-1.5"><ShieldAlert class="h-4 w-4 text-purple-400" /></div>
+              <div>
+                <h3 class="text-sm font-semibold">Notifications & Permissions</h3>
+                <p class="text-xs text-muted-foreground">Emails and user-facing options</p>
+              </div>
+            </div>
+            <div class="divide-y divide-border">
+              <div class="flex items-center justify-between gap-4 px-5 py-4">
+                <div class="flex items-start gap-2.5">
+                  <Mail class="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                  <div>
+                    <p class="text-sm font-medium">Suspension email</p>
+                    <p class="text-xs text-muted-foreground mt-0.5">Notify the user when their subscription and server are suspended due to insufficient credits</p>
+                  </div>
+                </div>
+                <button type="button" @click="settingsForm.send_suspension_email = !settingsForm.send_suspension_email" class="shrink-0">
+                  <ToggleRight v-if="settingsForm.send_suspension_email" class="h-8 w-8 text-primary" />
+                  <ToggleLeft v-else class="h-8 w-8 text-muted-foreground" />
+                </button>
+              </div>
+              <div class="flex items-center justify-between gap-4 px-5 py-4">
+                <div class="flex items-start gap-2.5">
+                  <Mail class="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                  <div>
+                    <p class="text-sm font-medium">Termination email</p>
+                    <p class="text-xs text-muted-foreground mt-0.5">Notify the user when their subscription is auto-terminated and the server is deleted</p>
+                  </div>
+                </div>
+                <button type="button" @click="settingsForm.send_termination_email = !settingsForm.send_termination_email" class="shrink-0">
+                  <ToggleRight v-if="settingsForm.send_termination_email" class="h-8 w-8 text-primary" />
+                  <ToggleLeft v-else class="h-8 w-8 text-muted-foreground" />
+                </button>
+              </div>
+              <div class="flex items-center justify-between gap-4 px-5 py-4">
+                <div>
+                  <p class="text-sm font-medium">Allow user cancellation</p>
+                  <p class="text-xs text-muted-foreground mt-0.5">Let users cancel their own subscriptions from the billing page.</p>
+                </div>
+                <button type="button" @click="settingsForm.allow_user_cancellation = !settingsForm.allow_user_cancellation" class="shrink-0">
+                  <ToggleRight v-if="settingsForm.allow_user_cancellation" class="h-8 w-8 text-primary" />
+                  <ToggleLeft v-else class="h-8 w-8 text-muted-foreground" />
+                </button>
+              </div>
+              <div class="flex items-center justify-between gap-4 px-5 py-4">
+                <div>
+                  <p class="text-sm font-medium">Cancel at end of billing period</p>
+                  <p class="text-xs text-muted-foreground mt-0.5">When enabled, cancelled subscriptions keep the server running until the current term ends, then follow the normal suspend/delete lifecycle. When disabled, the server is suspended immediately.</p>
+                </div>
+                <button type="button" @click="settingsForm.cancel_at_period_end = !settingsForm.cancel_at_period_end" class="shrink-0">
+                  <ToggleRight v-if="settingsForm.cancel_at_period_end" class="h-8 w-8 text-primary" />
+                  <ToggleLeft v-else class="h-8 w-8 text-muted-foreground" />
+                </button>
+              </div>
+              <div class="flex items-center justify-between gap-4 px-5 py-4">
+                <div class="flex items-start gap-2.5">
+                  <FileText class="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                  <div>
+                    <p class="text-sm font-medium">Generate invoices</p>
+                    <p class="text-xs text-muted-foreground mt-0.5">Automatically create a <strong>billingcore</strong> invoice marked as paid whenever a user purchases or renews a plan. Invoices are visible to users in their billing dashboard.</p>
+                  </div>
+                </div>
+                <button type="button" @click="settingsForm.generate_invoices = !settingsForm.generate_invoices" class="shrink-0">
+                  <ToggleRight v-if="settingsForm.generate_invoices" class="h-8 w-8 text-primary" />
+                  <ToggleLeft v-else class="h-8 w-8 text-muted-foreground" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-end">
+            <button @click="saveSettings" :disabled="settingsLoading" class="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60 transition-colors shadow-sm">
+              <Loader2 v-if="settingsLoading" class="h-4 w-4 animate-spin" /><Save v-else class="h-4 w-4" />Save Settings
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+  </div>
+</template>

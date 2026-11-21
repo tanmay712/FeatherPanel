@@ -13,7 +13,7 @@ by the Free Software Foundation, either version 3 of the License, or
 See the LICENSE file or <https://www.gnu.org/licenses/>.
 */
 
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 import { PageCard } from '@/components/featherui/PageCard';
 import { Input } from '@/components/featherui/Input';
 import { Button } from '@/components/featherui/Button';
@@ -120,7 +120,7 @@ export function AdvancedTab({
     onAddParam,
     onRemoveParam,
 }: AdvancedTabProps) {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
 
     return (
         <div className='space-y-8'>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Permissions - BillingResourcesNewServers</title>
+    <script>
+      (function () {
+        try {
+          var embedded = window.parent !== window;
+          if (embedded) {
+            document.documentElement.setAttribute("data-fp-embedded", "");
+          }
+          var th = new URLSearchParams(window.location.search).get("__theme");
+          if (th === "light") {
+            document.documentElement.classList.remove("dark");
+          } else if (th === "dark") {
+            document.documentElement.classList.add("dark");
+          } else if (!embedded) {
+            var st = document.documentElement.getAttribute("data-standalone-theme");
+            if (st === "light") document.documentElement.classList.remove("dark");
+            else if (st === "dark") document.documentElement.classList.add("dark");
+          } else {
+            document.documentElement.classList.add("dark");
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <script type="module" crossorigin src="./assets/user-permissions-D0jvYqzf.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/rolldown-runtime-DK3Fl9T5.js">
+    <link rel="modulepreload" crossorigin href="./assets/dist-DCmLLclY.js">
+    <link rel="modulepreload" crossorigin href="./assets/command-BnU7IAkZ.js">
+    <link rel="modulepreload" crossorigin href="./assets/sparkles-Cf2KgQMo.js">
+    <link rel="stylesheet" crossorigin href="./assets/dist-DIyaNWr5.css">
+  </head>
+  <body>
+    <div id="app"></div>
+  </body>
+</html>
+

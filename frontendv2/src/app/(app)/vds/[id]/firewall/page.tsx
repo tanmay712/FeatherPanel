@@ -31,7 +31,7 @@ import {
     ShieldCheck,
     Trash2,
 } from 'lucide-react';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 import { useVmInstance } from '@/contexts/VmInstanceContext';
 import { cn } from '@/lib/utils';
 import { getApiErrorMessage } from '@/lib/api-errors';
@@ -149,7 +149,7 @@ function OptionRow({ title, hint, children }: { title: string; hint: string; chi
 
 export default function VdsFirewallPage() {
     const { id } = useParams() as { id: string };
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
     const withReauth = useVdsReauth();
     const { instance, loading: instanceLoading, hasPermission } = useVmInstance();
     const [state, setState] = useState<FirewallState | null>(null);

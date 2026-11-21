@@ -22,9 +22,8 @@ use App\Cli\Utils\PluginCommandLocator;
 
 class App extends Utils\MinecraftColorCodeSupport
 {
-    // FeatherPanel CLI prefix - using bold golden yellow for "Feather", aqua for "Panel", then a stylish gold/gray divider
-    // FeatherPanel CLI Colors: refined, professional palette
-    public $prefix = '&8[&3&lFeather&b&lPanel&8] &3❱ &f';
+    // OrveX Panel CLI prefix - bold teal for "OrveX", aqua for "Panel", then a gray divider
+    public $prefix = '&8[&3&lOrveX &b&lPanel&8] &3❱ &f';
     public $color1 = '&3'; // deep blue accent (primary brand)
     public $color2 = '&b'; // aqua highlight (secondary/active)
     public $color3 = '&7'; // soft gray (subtle details and prompts)

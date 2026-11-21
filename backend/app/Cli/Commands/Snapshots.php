@@ -517,7 +517,7 @@ class Snapshots extends App implements CommandBuilder
 
         foreach ($htmlIndicators as $indicator) {
             if (stripos($contentStart, $indicator) !== false) {
-                return 'Invalid backup file: The file appears to contain HTML content instead of SQL. This usually means the file is corrupted, was downloaded incorrectly, or is not a valid FeatherPanel Backup (.fpb) file.';
+                return 'Invalid backup file: The file appears to contain HTML content instead of SQL. This usually means the file is corrupted, was downloaded incorrectly, or is not a valid OrveX Panel Backup (.fpb) file.';
             }
         }
 
@@ -564,7 +564,7 @@ class Snapshots extends App implements CommandBuilder
         }
 
         if (!$hasSqlKeyword) {
-            return 'Invalid backup file: The file does not appear to contain valid SQL statements. This usually means the file is corrupted or is not a valid FeatherPanel Backup (.fpb) file.';
+            return 'Invalid backup file: The file does not appear to contain valid SQL statements. This usually means the file is corrupted or is not a valid OrveX Panel Backup (.fpb) file.';
         }
 
         return null;

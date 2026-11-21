@@ -66,6 +66,13 @@ RUN --mount=type=cache,target=/root/.composer/cache \
 # Copy remaining application files with correct ownership
 COPY --chown=www-data:www-data . .
 
+# OrveX Panel: keep pristine copies of the bundled addons and translations
+# outside the volume mount points so init.sh can seed them into existing
+# installs (named volumes are only pre-populated when first created).
+RUN mkdir -p /opt/orvex \
+    && cp -a /var/www/html/storage/addons /opt/orvex/bundled-addons \
+    && cp -a /var/www/html/public/translations /opt/orvex/bundled-translations
+
 # Custom PHP configuration (same limits as before)
 # The CLI and cron use PHP_CLI_MEMORY_LIMIT (bounded, so a runaway cron job
 # cannot take the whole host down); web requests get PHP_MEMORY_LIMIT from the

@@ -28,7 +28,7 @@ class Cron extends App implements CommandBuilder
         new \App\App(false, true);
 
         $app = App::getInstance();
-        $app->send($app->color1 . '&l[FeatherPanel] &r' . $app->color3 . 'Cron Job Runner');
+        $app->send($app->color1 . '&l[OrveX Panel] &r' . $app->color3 . 'Cron Job Runner');
         $app->send('&7' . str_repeat('─', 50));
 
         $cronDir = APP_CRON_DIR . 'php/';

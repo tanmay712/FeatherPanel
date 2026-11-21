@@ -96,7 +96,7 @@ class OpenRouterProvider implements ProviderInterface
                     'Content-Type' => 'application/json',
                     'Authorization' => 'Bearer ' . $this->apiKey,
                     'HTTP-Referer' => 'https://featherpanel.mythical.systems',
-                    'X-Title' => 'FeatherPanel',
+                    'X-Title' => 'OrveX Panel',
                 ],
                 'json' => $payload,
             ]);

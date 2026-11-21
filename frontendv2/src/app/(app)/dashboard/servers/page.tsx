@@ -62,6 +62,7 @@ import { usePluginWidgets } from '@/hooks/usePluginWidgets';
 import { WidgetRenderer } from '@/components/server/WidgetRenderer';
 import { ServerCard } from '@/components/servers/ServerCard';
 import { EmptyState } from '@/components/servers/EmptyState';
+import { CreateFreeServerButton } from '@/components/free-servers/CreateFreeServerButton';
 import { FolderDialog } from '@/components/servers/FolderDialog';
 import { BulkSelectionRow, BulkServerActions } from '@/components/servers/BulkServerActions';
 
@@ -346,7 +347,12 @@ export default function ServersPage() {
                 title={t('servers.title')}
                 description={t('servers.description')}
                 icon={ServerIcon}
-                actions={<WidgetRenderer widgets={getWidgets('dashboard-servers', 'after-header')} />}
+                actions={
+                    <>
+                        <CreateFreeServerButton />
+                        <WidgetRenderer widgets={getWidgets('dashboard-servers', 'after-header')} />
+                    </>
+                }
             />
 
             <div className='fp-surface flex flex-col gap-3 rounded-xl border p-3'>
@@ -661,7 +667,7 @@ export default function ServersPage() {
                                 </div>
                             )}
                             {pagination.total_records === 0 ? (
-                                <EmptyState searchQuery={searchQuery} t={t} />
+                                <EmptyState searchQuery={searchQuery} t={t} action={<CreateFreeServerButton />} />
                             ) : (
                                 <>
                                     <div
@@ -764,7 +770,11 @@ export default function ServersPage() {
                                         </div>
                                     )}
                                     {pagination.total_records === 0 ? (
-                                        <EmptyState searchQuery={searchQuery} t={t} />
+                                        <EmptyState
+                                            searchQuery={searchQuery}
+                                            t={t}
+                                            action={<CreateFreeServerButton />}
+                                        />
                                     ) : (
                                         <div
                                             className={cn(
@@ -918,7 +928,11 @@ export default function ServersPage() {
                                         ))}
 
                                         {folders.length === 0 && unassignedServers.length === 0 && (
-                                            <EmptyState searchQuery={searchQuery} t={t} />
+                                            <EmptyState
+                                                searchQuery={searchQuery}
+                                                t={t}
+                                                action={<CreateFreeServerButton />}
+                                            />
                                         )}
 
                                         {unassignedServers.length > 0 && (
