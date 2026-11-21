@@ -510,6 +510,7 @@ interface ConfigInterface
     public const MODULE_GAME_ENABLED = 'module_game_enabled';
     public const MODULE_WEB_ENABLED = 'module_web_enabled';
     public const MODULE_VDS_ENABLED = 'module_vds_enabled';
+    public const MODULE_VPS_ENABLED = 'module_vps_enabled';
 
     /**
      * VDS console, graphs, snapshots and monitoring (admin settings, category "vds").

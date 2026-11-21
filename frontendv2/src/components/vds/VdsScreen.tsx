@@ -20,7 +20,7 @@ import dynamic from 'next/dynamic';
 import { Keyboard, Loader2, Lock, Maximize2, Minimize2, Monitor, Plug, PowerOff, Send, X } from 'lucide-react';
 import { Button } from '@/components/featherui/Button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 import { cn } from '@/lib/utils';
 import type { VncConsoleHandle, VncStatus } from '@/components/vds/VncConsole';
 import { VdsConsoleActions } from '@/components/vds/VdsConsoleActions';
@@ -76,7 +76,7 @@ export function VdsScreen({
     canPower,
     canSettings,
 }: VdsScreenProps) {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
     const cardRef = useRef<HTMLDivElement>(null);
     const vncRef = useRef<VncConsoleHandle>(null);
     const [vncStatus, setVncStatus] = useState<VncStatus | null>(null);

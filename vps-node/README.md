@@ -3,8 +3,8 @@
 The panel's own VPS node system: turn any Debian or Ubuntu server into a node for **OrveX Panel**, with KVM
 virtual machines and LXC containers, dedicated and shared IPv4, and no Proxmox needed.
 
-Create the node in the panel (**Admin → VDS Nodes → Create → OrveX Node**) and run the command it shows on the
-server. It looks like this, and the node connects itself:
+Create the node in the panel (**Admin → Nodes (VPS) → Create**) and run the command it shows on the server. It
+looks like this, and the node connects itself:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/tanmay712/FeatherPanel/develop/install.sh | sudo bash -s -- vps-node --panel https://panel.example.com --token orvx_… -y
@@ -23,8 +23,9 @@ The panel already manages Proxmox VE through its HTTP API. `orvex-node` implemen
 panel and its async runner use (nodes, storage, bridges, template clones, config, power, resize, status,
 RRD stats, snapshots, vzdump backups and restores, tasks, VNC console). It translates every call into
 [Incus](https://linuxcontainers.org/incus/), which runs containers and virtual machines through one API.
-Every VDS screen therefore works on OrveX nodes. In the panel they are their own node type, which connects
-itself (see below) and hides the Proxmox-only settings.
+The panel's server pages therefore work on OrveX nodes. In the panel, OrveX nodes are the **VPS** product
+(Proxmox VE nodes are the separate **VDS** product): they have their own admin and customer pages (`/vps/{id}`),
+connect themselves (see below) and hide the Proxmox-only settings.
 
 * **Guests** are Incus instances named `vps<VMID>`. The Proxmox-style config the panel writes
   (`memory`, `cores`, `net0`, `ipconfig0`, `ciuser`, `cipassword`, `sshkeys`, ...) is stored on the instance
@@ -38,7 +39,7 @@ itself (see below) and hides the Proxmox-only settings.
 ## Connecting to the panel
 
 ```
-Panel: Admin > VDS Nodes > Create > OrveX Node  ->  one-time install command (token valid 24 h)
+Panel: Admin > Nodes (VPS) > Create  ->  one-time install command (token valid 24 h)
 Server: install.sh vps-node --panel URL --token T  ->  installs everything, then `orvex-node register`
         POST {panel}/api/remote/orvex/register  ->  panel saves the node, adds templates + shared IPv4 pool,
                                                    checks it can reach https://<node>:8006, token is used up
@@ -141,8 +142,9 @@ Logs: `journalctl -u orvex-node -f`. Guests can also be inspected with plain Inc
 
 ## Not available yet
 
-The Proxmox firewall, the ISO library and rescue ISO, cluster migration and the container terminal proxy. The
-panel hides these features for OrveX nodes, and the API answers `501` for them.
+The Proxmox firewall, boot order, the ISO library and rescue ISO, cluster migration and the container terminal
+proxy. They stay with the VDS product (Proxmox VE): VPS pages do not show them, and the agent answers `501` for
+the firewall, ISO, migration and terminal calls.
 
 ## Development
 

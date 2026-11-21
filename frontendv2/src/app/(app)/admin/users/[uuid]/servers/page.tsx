@@ -48,6 +48,7 @@ import {
 } from 'lucide-react';
 import { Sensitive } from '@/components/common/Sensitive';
 import { ListPagination } from '@/components/featherui/ListPagination';
+import { vmAdminEditHref, vmInstanceHref } from '@/lib/vm-products';
 
 interface UserServersPagination {
     current_page: number;
@@ -88,6 +89,8 @@ interface UserVmInstance {
     ip_address?: string | null;
     pve_node?: string | null;
     node_name?: string | null;
+    /** 'orvex' = VPS, 'proxmox' = VDS. */
+    node_type?: 'orvex' | 'proxmox';
     suspended?: number;
 }
 
@@ -470,7 +473,7 @@ export default function UserServersPage({ params }: { params: Promise<{ uuid: st
                                                         <Button
                                                             size='sm'
                                                             variant='ghost'
-                                                            onClick={() => router.push(`/vds/${vm.id}`)}
+                                                            onClick={() => router.push(vmInstanceHref(vm))}
                                                             title={t('admin.servers.actions.view', {
                                                                 defaultValue: 'View',
                                                             })}
@@ -480,9 +483,7 @@ export default function UserServersPage({ params }: { params: Promise<{ uuid: st
                                                         <Button
                                                             size='sm'
                                                             variant='ghost'
-                                                            onClick={() =>
-                                                                router.push(`/admin/vm-instances/${vm.id}/edit`)
-                                                            }
+                                                            onClick={() => router.push(vmAdminEditHref(vm))}
                                                             title={t('admin.servers.actions.edit', {
                                                                 defaultValue: 'Edit',
                                                             })}

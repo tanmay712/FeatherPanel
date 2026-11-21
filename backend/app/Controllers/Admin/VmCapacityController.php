@@ -21,9 +21,11 @@ use App\App;
 use App\Chat\VmNode;
 use App\Chat\Database;
 use App\Chat\VmInstance;
+use App\Helpers\ModuleGate;
 use App\Helpers\ApiResponse;
 use App\Config\ConfigInterface;
 use App\Services\Vm\OrvexNodes;
+use App\Services\Vm\VmProducts;
 use App\Chat\VmInstanceActivity;
 use App\Services\Vm\VmInstanceUtil;
 use App\CloudFlare\CloudFlareRealIP;
@@ -55,8 +57,18 @@ class VmCapacityController
             $alloc[(int) $row['vm_node_id']] = $row;
         }
 
+        // VDS (Proxmox) and VPS (OrveX) nodes: an optional node_type limits the overview to one product.
+        $requestedType = $request->query->get('node_type');
+        if (VmProducts::isInvalidFilter($requestedType)) {
+            return ApiResponse::error('Node type must be either proxmox or orvex', 'INVALID_NODE_TYPE', 400);
+        }
+        $nodeTypes = ModuleGate::listableVmNodeTypes(is_string($requestedType) ? $requestedType : null);
+
         $nodes = [];
         foreach (VmNode::getAllVmNodes() as $node) {
+            if (!in_array(OrvexNodes::isOrvex($node) ? OrvexNodes::TYPE : OrvexNodes::TYPE_PROXMOX, $nodeTypes, true)) {
+                continue;
+            }
             $id = (int) $node['id'];
             $a = $alloc[$id] ?? ['instances' => 0, 'memory_mb' => 0, 'vcpus' => 0, 'disk_gb' => 0, 'suspended' => 0];
             $entry = [

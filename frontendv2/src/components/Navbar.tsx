@@ -22,6 +22,7 @@ import { useSession } from '@/contexts/SessionContext';
 import { useTranslation } from '@/contexts/TranslationContext';
 import { ServerContext } from '@/contexts/ServerContext';
 import { VmInstanceContext } from '@/contexts/VmInstanceContext';
+import { isVmInstancePath, productForNodeType, VM_PRODUCT_ROUTES } from '@/lib/vm-products';
 import { WebSpaceContext } from '@/contexts/WebSpaceContext';
 import Permissions from '@/lib/permissions';
 import { LocalStorageManagerDialog } from '@/components/layout/LocalStorageManagerDialog';
@@ -51,7 +52,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     const vmInstanceContext = useContext(VmInstanceContext);
     const webSpaceContext = useContext(WebSpaceContext);
     const isOnServerPage = pathname?.startsWith('/server/');
-    const isOnVdsPage = pathname?.startsWith('/vds/');
+    const isOnVdsPage = isVmInstancePath(pathname);
     const isOnWebSpacePage = pathname?.startsWith('/webspace/');
     const isOnAdminPage = pathname?.startsWith('/admin');
     const serverName = isOnServerPage ? serverContext?.server?.name : null;
@@ -129,7 +130,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
         isOnServerPage && serverContext?.server?.id
             ? `/admin/servers/${serverContext.server.id}/edit`
             : isOnVdsPage && vmInstanceContext?.instance?.id
-              ? `/admin/vm-instances/${vmInstanceContext.instance.id}/edit`
+              ? `${VM_PRODUCT_ROUTES[productForNodeType(vmInstanceContext.instance.node_type)].adminServers}/${vmInstanceContext.instance.id}/edit`
               : isOnWebSpacePage && webSpaceContext?.webspace?.uuid
                 ? `/admin/webspaces/${webSpaceContext.webspace.uuid}/edit`
                 : '/admin';

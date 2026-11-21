@@ -38,7 +38,7 @@ import { PageCard } from '@/components/featherui/PageCard';
 import { Button } from '@/components/featherui/Button';
 import { Input } from '@/components/featherui/Input';
 import { Label } from '@/components/ui/label';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 import { copyToClipboard } from '@/lib/utils';
 import { getApiErrorMessage } from '@/lib/api-errors';
 
@@ -84,7 +84,7 @@ function maskToken(command: string, token: string): string {
 }
 
 function CommandBox({ label, command, token }: { label: string; command: string; token: string }) {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
 
     return (
         <div className='overflow-hidden rounded-xl border border-[var(--fp-surface-border)] bg-zinc-950'>
@@ -121,7 +121,7 @@ function DetailRow({ icon: Icon, label, value }: { icon: typeof Server; label: s
 }
 
 export function OrvexConnectTab({ nodeId, onConnected }: OrvexConnectTabProps) {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
     const [state, setState] = useState<OrvexState | null>(null);
     const [loadError, setLoadError] = useState<string | null>(null);
     const [panelUrl, setPanelUrl] = useState(() => (typeof window === 'undefined' ? '' : window.location.origin));

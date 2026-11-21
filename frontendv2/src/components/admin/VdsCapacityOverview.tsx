@@ -18,7 +18,7 @@ See the LICENSE file or <https://www.gnu.org/licenses/>.
 import { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
 import { Gauge, Loader2, RefreshCw, Star } from 'lucide-react';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 import { Button } from '@/components/featherui/Button';
 import { cn } from '@/lib/utils';
 
@@ -67,23 +67,28 @@ function Bar({ value }: { value: number }) {
     );
 }
 
-/** Allocated vs. physical resources per VDS node and the node recommended for new VDS. */
-export function VdsCapacityOverview() {
-    const { t } = useTranslation();
+/**
+ * Allocated vs. physical resources per node and the node recommended for new servers.
+ * `nodeType` limits it to VDS (Proxmox) or VPS (OrveX) nodes.
+ */
+export function VdsCapacityOverview({ nodeType }: { nodeType?: 'proxmox' | 'orvex' } = {}) {
+    const { t } = useVmTranslation();
     const [data, setData] = useState<CapacityResponse | null>(null);
     const [loading, setLoading] = useState(false);
 
     const load = useCallback(async () => {
         setLoading(true);
         try {
-            const { data: res } = await axios.get('/api/admin/vm-capacity');
+            const { data: res } = await axios.get('/api/admin/vm-capacity', {
+                params: nodeType ? { node_type: nodeType } : undefined,
+            });
             if (res?.success) setData(res.data as CapacityResponse);
         } catch {
             // Capacity is informational; the node list below still works.
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [nodeType]);
 
     useEffect(() => {
         void load();

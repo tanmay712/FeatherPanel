@@ -17,7 +17,7 @@ See the LICENSE file or <https://www.gnu.org/licenses/>.
 
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 import { PageCard } from '@/components/featherui/PageCard';
 import { getApiErrorMessage } from '@/lib/api-errors';
 import { Button } from '@/components/featherui/Button';
@@ -188,7 +188,7 @@ function StatBar({
 }
 
 function NodeCard({ node }: { node: ProxmoxNode }) {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
     const isOnline = node.status === 'online';
 
     const cpuPct = node.cpu !== undefined ? node.cpu * 100 : 0;
@@ -321,7 +321,7 @@ function NodeCard({ node }: { node: ProxmoxNode }) {
 }
 
 export function InfoTab({ nodeId, nodeName }: InfoTabProps) {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
     const [loading, setLoading] = useState(false);
     const [info, setInfo] = useState<InfoData | null>(null);
     const [error, setError] = useState<string | null>(null);

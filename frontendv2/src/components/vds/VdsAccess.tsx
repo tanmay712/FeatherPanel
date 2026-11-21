@@ -19,7 +19,7 @@ import * as React from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { ArrowRightLeft, Check, Copy, Eye, EyeOff, KeyRound, Terminal, Wand2 } from 'lucide-react';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 import { Button } from '@/components/featherui/Button';
 import { Input } from '@/components/featherui/Input';
 import { PageCard } from '@/components/featherui/PageCard';
@@ -46,7 +46,7 @@ export function sshCommand(user: string, host: string, port: number): string {
 }
 
 function CopyButton({ value, label }: { value: string; label: string }) {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
     const [copied, setCopied] = React.useState(false);
     return (
         <Button
@@ -86,7 +86,7 @@ interface SshAccessCardProps {
 
 /** "Connect over SSH" card: host, port, user, ready-to-copy command and NAT port forwards. */
 export function VdsSshAccessCard({ ip, username, orvex, className, action }: SshAccessCardProps) {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
     const user = orvex?.ssh?.user || username || 'root';
     const host = orvex?.ssh?.host || ip || '';
     const port = orvex?.ssh?.port || 22;
@@ -149,7 +149,7 @@ export function VdsSshAccessCard({ ip, username, orvex, className, action }: Ssh
 
 /** Port forwards of a shared-IPv4 (NAT) server, for the network page. */
 export function VdsNatForwardsCard({ vmId }: { vmId: number }) {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
     const [orvex, setOrvex] = React.useState<VdsOrvexStatus | null>(null);
 
     React.useEffect(() => {
@@ -229,7 +229,7 @@ interface ChangePasswordDialogProps {
 
 /** Sets a new login password (root for containers, the cloud-init user for KVM). */
 export function VdsChangePasswordDialog({ vmId, username, open, onOpenChange, onChanged }: ChangePasswordDialogProps) {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
     const withReauth = useVdsReauth();
     const [password, setPassword] = React.useState('');
     const [confirm, setConfirm] = React.useState('');

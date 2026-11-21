@@ -17,7 +17,7 @@ See the LICENSE file or <https://www.gnu.org/licenses/>.
 
 import { useEffect, useState, type RefObject } from 'react';
 import { Button } from '@/components/featherui/Button';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 import { cn } from '@/lib/utils';
 import type { VncConsoleHandle } from '@/components/vds/VncConsole';
 import { EXTRA_KEY_ACTIONS, type StickyModifier } from '@/lib/vnc/extraKeys';
@@ -59,7 +59,7 @@ const COMBO_IDS = ['cad', 'cae', 'cab', 'caf1', 'caf2', 'caf3', 'caf7', 'altf4',
  * plus one-shot nav, F-keys and common OS shortcuts.
  */
 export function VdsVncExtraKeys({ vncRef, connected, className }: VdsVncExtraKeysProps) {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
     const [sticky, setSticky] = useState<Record<StickyModifier, boolean>>({
         ctrl: false,
         alt: false,

@@ -13,7 +13,7 @@ by the Free Software Foundation, either version 3 of the License, or
 See the LICENSE file or <https://www.gnu.org/licenses/>.
 */
 
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 import { PageCard } from '@/components/featherui/PageCard';
 import { Input } from '@/components/featherui/Input';
 import { Textarea } from '@/components/featherui/Textarea';
@@ -40,7 +40,7 @@ export function DetailsTab({
     setLocationModalOpen,
     fetchLocations,
 }: DetailsTabProps) {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
 
     const openLocationModal = () => {
         fetchLocations();

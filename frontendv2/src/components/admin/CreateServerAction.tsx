@@ -16,17 +16,21 @@ See the LICENSE file or <https://www.gnu.org/licenses/>.
 'use client';
 
 import { useState } from 'react';
-import { Plus, Gamepad2, Monitor, Globe } from 'lucide-react';
+import { Plus, Gamepad2, Monitor, Globe, Boxes } from 'lucide-react';
 import { Button } from '@/components/featherui/Button';
 import { ResourceCard } from '@/components/featherui/ResourceCard';
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { useTranslation } from '@/contexts/TranslationContext';
 import { useSession } from '@/contexts/SessionContext';
+import { useSettings } from '@/contexts/SettingsContext';
 import Permissions from '@/lib/permissions';
+import { getModuleForPath, getModuleStates } from '@/lib/modules';
 
 export function CreateServerAction({ compact = false }: { compact?: boolean }) {
     const { t } = useTranslation();
     const { hasPermission } = useSession();
+    const { settings } = useSettings();
+    const modules = getModuleStates(settings);
     const [open, setOpen] = useState(false);
     const options = [
         {
@@ -46,6 +50,14 @@ export function CreateServerAction({ compact = false }: { compact?: boolean }) {
             description: t('admin.dashboard.create_server.vds_description'),
         },
         {
+            id: 'vps',
+            href: '/admin/vps-servers/create',
+            icon: Boxes,
+            permission: Permissions.ADMIN_VM_INSTANCES_CREATE,
+            title: t('admin.dashboard.create_server.vps_title'),
+            description: t('admin.dashboard.create_server.vps_description'),
+        },
+        {
             id: 'web',
             href: '/admin/webspaces/create',
             icon: Globe,
@@ -53,7 +65,10 @@ export function CreateServerAction({ compact = false }: { compact?: boolean }) {
             title: t('admin.dashboard.create_server.web_title'),
             description: t('admin.dashboard.create_server.web_description'),
         },
-    ].filter((option) => hasPermission(option.permission));
+    ].filter((option) => {
+        const optionModule = getModuleForPath(option.href);
+        return hasPermission(option.permission) && (!optionModule || modules[optionModule]);
+    });
 
     if (options.length === 0) return null;
 

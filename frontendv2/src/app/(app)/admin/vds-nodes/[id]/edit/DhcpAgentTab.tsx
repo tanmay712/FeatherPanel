@@ -25,7 +25,7 @@ import { Input } from '@/components/featherui/Input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Sensitive } from '@/components/common/Sensitive';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 import { copyToClipboard } from '@/lib/utils';
 import { getApiErrorMessage } from '@/lib/api-errors';
 import type { VdsNodeForm } from './page';
@@ -70,7 +70,7 @@ interface CommandBlockProps {
 }
 
 function CommandBlock({ displayCommand, copyCommand, copyLabel, tokenHiddenHint }: CommandBlockProps) {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
     return (
         <div className='overflow-hidden rounded-xl border border-[var(--fp-surface-border)] bg-zinc-950'>
             <div className='flex flex-wrap items-center justify-between gap-2 border-b border-[var(--fp-surface-border)] bg-zinc-900 px-3 py-2'>
@@ -92,7 +92,7 @@ function CommandBlock({ displayCommand, copyCommand, copyLabel, tokenHiddenHint 
 }
 
 export function DhcpAgentTab({ nodeId, form, setForm, configRefreshKey = 0 }: DhcpAgentTabProps) {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
     const [setupData, setSetupData] = useState<SetupCommandData | null>(null);
     const [setupLoading, setSetupLoading] = useState(false);
     const [resetting, setResetting] = useState(false);

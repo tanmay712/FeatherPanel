@@ -28,8 +28,10 @@ use App\Chat\VmInstance;
 use App\Chat\VmTemplate;
 use App\Chat\VmInstanceIp;
 use App\Helpers\VmGateway;
+use App\Helpers\ModuleGate;
 use App\Helpers\ApiResponse;
 use OpenApi\Attributes as OA;
+use App\Services\Vm\VmProducts;
 use App\Chat\VmInstanceActivity;
 use App\Helpers\PermissionHelper;
 use App\Services\Vm\VmInstanceUtil;
@@ -53,6 +55,7 @@ class VmUserInstanceController
             new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1, default: 1), description: 'Page number'),
             new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100, default: 25), description: 'Records per page'),
             new OA\Parameter(name: 'search', in: 'query', required: false, schema: new OA\Schema(type: 'string'), description: 'Search by hostname or IP'),
+            new OA\Parameter(name: 'node_type', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['proxmox', 'orvex']), description: 'Only VDS (proxmox) or VPS (orvex) servers'),
         ],
         responses: [
             new OA\Response(
@@ -88,6 +91,12 @@ class VmUserInstanceController
         $limit = min(100, max(1, (int) $request->query->get('limit', 25)));
         $search = $request->query->get('search', '');
         $search = is_string($search) ? trim($search) : '';
+        $requestedType = $request->query->get('node_type');
+        if (VmProducts::isInvalidFilter($requestedType)) {
+            return ApiResponse::error('Node type must be either proxmox or orvex', 'INVALID_NODE_TYPE', 400);
+        }
+        // VDS (Proxmox nodes) and VPS (OrveX nodes) are separate modules; a switched-off one is left out.
+        $nodeTypes = ModuleGate::listableVmNodeTypes(is_string($requestedType) ? $requestedType : null);
 
         // Get instances owned by user
         $ownedInstances = $this->getVmInstancesByUserUuid($userUuid);
@@ -113,6 +122,11 @@ class VmUserInstanceController
                 $uniqueInstances[] = $instance;
             }
         }
+
+        $uniqueInstances = array_values(array_filter(
+            $uniqueInstances,
+            static fn (array $i): bool => in_array((string) ($i['node_type'] ?? 'proxmox'), $nodeTypes, true),
+        ));
 
         // Optional search filter (hostname or ip_address)
         if ($search !== '') {
@@ -2302,7 +2316,7 @@ class VmUserInstanceController
     {
         $pdo = Database::getPdoConnection();
         $stmt = $pdo->prepare('
-            SELECT i.*, n.name AS node_name, n.fqdn AS node_fqdn
+            SELECT i.*, n.name AS node_name, n.fqdn AS node_fqdn, ' . VmProducts::nodeTypeSql('n') . ' AS node_type
             FROM featherpanel_vm_instances i
             LEFT JOIN featherpanel_vm_nodes n ON n.id = i.vm_node_id
             WHERE i.user_uuid = :user_uuid

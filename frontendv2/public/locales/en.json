@@ -2122,17 +2122,19 @@
             },
             "stats": {
                 "game": "Game servers",
-                "vds": "Virtual servers",
+                "vds": "VDS servers",
                 "web": "Web hosting",
                 "support": "Support tickets",
                 "running": "{count} running",
                 "new_replies": "{count} with new replies",
-                "no_new_replies": "No new replies"
+                "no_new_replies": "No new replies",
+                "vps": "VPS servers"
             },
             "sections": {
                 "game": "Game servers",
-                "vds": "Virtual servers",
-                "web": "Web hosting"
+                "vds": "VDS servers",
+                "web": "Web hosting",
+                "vps": "VPS servers"
             },
             "no_resources_hint": "Services added to your account will show up here.",
             "meters": {
@@ -2216,13 +2218,14 @@
                 "clock": "Clock",
                 "players": "Players online",
                 "heatmap": "Resource heatmap",
-                "trends": "Resource trends"
+                "trends": "Resource trends",
+                "vps": "VPS"
             },
             "descriptions": {
                 "stats": "Counts of your servers, VDS, web spaces and tickets.",
                 "attention": "Suspensions, failed installs, expiring services, full disks and new replies.",
                 "servers": "Your game servers with status, usage and power controls.",
-                "vds": "Your virtual servers.",
+                "vds": "Your VDS servers.",
                 "webspaces": "Your websites and hosting.",
                 "usage": "CPU, memory and disk used across everything, against what you are allowed.",
                 "status": "How many servers are running, offline or installing.",
@@ -2245,7 +2248,8 @@
                 "clock": "The time and date in your time zone.",
                 "players": "Who is playing on your running game servers.",
                 "heatmap": "Every server as a tile coloured by how busy it is.",
-                "trends": "Total CPU, RAM and disk across your servers over the last 24 hours."
+                "trends": "Total CPU, RAM and disk across your servers over the last 24 hours.",
+                "vps": "Your VPS servers."
             },
             "usage": {
                 "title": "Resource usage",
@@ -4096,7 +4100,9 @@
             "boot": "Boot",
             "vdsIsos": "VDS ISO Library",
             "inactiveServers": "Inactive Servers",
-            "observability": "Observability"
+            "observability": "Observability",
+            "virtualServersVps": "Virtual Servers (VPS)",
+            "vpsNodes": "Nodes (VPS)"
         }
     },
     "adminWingsBackups": {
@@ -8112,7 +8118,7 @@
         },
         "vdsNodes": {
             "title": "Nodes (VDS)",
-            "description": "Connect and manage Proxmox nodes for VPS / VDS virtualization.",
+            "description": "Connect and manage Proxmox VE nodes for VDS servers.",
             "viewAndManage": "View and manage VDS nodes in the location: {location}.",
             "search_placeholder": "Search VDS nodes by name or FQDN...",
             "tabs": {
@@ -8194,7 +8200,7 @@
             },
             "form": {
                 "create_title": "Create VDS Node",
-                "create_description": "Add a VPS node: your own OrveX node (KVM + LXC on any Debian or Ubuntu server, set up with one command) or an existing Proxmox VE host.",
+                "create_description": "Connect an existing Proxmox VE host or cluster with an API token.",
                 "create_short": "Create VDS Node",
                 "edit_title": "Edit VDS Node",
                 "edit_description": "Update Proxmox connection details, location and network settings.",
@@ -8740,7 +8746,7 @@
             }
         },
         "vmInstances": {
-            "description": "Manage all VDS/VPS instances in your system.",
+            "description": "Manage all VDS instances in your system.",
             "create": "Create VDS Instance",
             "create_desc": "Provision a new VPS from a node, template, and resources.",
             "errors": {
@@ -10367,7 +10373,9 @@
                 "vds_title": "VDS instance",
                 "vds_description": "Create a virtual machine on your VDS infrastructure.",
                 "web_title": "Webspace",
-                "web_description": "Host a website on a web node."
+                "web_description": "Host a website on a web node.",
+                "vps_title": "VPS server",
+                "vps_description": "Create a KVM virtual machine or LXC container on one of your OrveX nodes."
             },
             "customize": "Customize",
             "stop_customizing": "Stop Customizing",
@@ -10417,7 +10425,9 @@
             "total_nodes": "Total Nodes",
             "total_spells": "Total Spells",
             "total_vm_nodes": "Total VDS Nodes",
-            "total_vm_instances": "Total VM Instances"
+            "total_vm_instances": "Total VDS Instances",
+            "total_vps_nodes": "Total VPS Nodes",
+            "total_vps_instances": "Total VPS Servers"
         },
         "activity": {
             "title": "Recent Activity",
@@ -11956,7 +11966,7 @@
                 "badges": {},
                 "tabs": {
                     "servers": "Servers",
-                    "vds": "VDS",
+                    "vds": "VDS & VPS",
                     "activities": "Activities",
                     "potential_alts": "Potential Alts",
                     "mails": "Mails",
@@ -12016,7 +12026,7 @@
                     "viewAll": "View all servers"
                 },
                 "vds": {
-                    "title": "Owned VDS",
+                    "title": "Owned VDS & VPS",
                     "viewAll": "View all VDS",
                     "hostname": "Hostname",
                     "status": "Status",
@@ -13032,6 +13042,10 @@
                 "vds_schedules_max_keep": {
                     "label": "Schedule snapshot keep",
                     "description": "Maximum automatic snapshots a snapshot schedule may keep (still limited by the VDS snapshot limit)."
+                },
+                "module_vps_enabled": {
+                    "label": "VPS (OrveX nodes)",
+                    "description": "VPS servers on your own OrveX nodes. When off, it is hidden everywhere and its API refuses requests."
                 }
             },
             "category_select": "Settings category",
@@ -19828,7 +19842,7 @@
             "game_body": "Wings nodes, game servers, spells and realms.",
             "web_title": "Web hosting",
             "web_body": "Web nodes, webspaces, domains and mail hosting.",
-            "vds_title": "Virtual servers",
+            "vds_title": "VDS (Proxmox)",
             "vds_body": "Proxmox nodes and VDS instances.",
             "tickets_title": "Support tickets",
             "tickets_body": "Ticket system for users to contact staff.",
@@ -19836,7 +19850,9 @@
             "knowledgebase_body": "Help articles and guides for your users.",
             "status_page_title": "Status page",
             "status_page_body": "Public page showing node and service health.",
-            "note": "Turning a module off hides it for everyone. Existing data is kept."
+            "note": "Turning a module off hides it for everyone. Existing data is kept.",
+            "vps_title": "VPS (OrveX nodes)",
+            "vps_body": "Your own OrveX nodes and VPS servers (KVM + LXC), set up with one command."
         },
         "security": {
             "registration_title": "Allow registration",
@@ -21182,5 +21198,74 @@
         "title": "Two-factor authentication will soon be required",
         "description": "Set up 2FA before {date} to keep access to your account.",
         "action": "Set up 2FA"
+    },
+    "vps": {
+        "text": {
+            "admin": {
+                "vdsNodes": {
+                    "description": "Add and manage your own OrveX nodes for VPS servers.",
+                    "form": {
+                        "create_description": "Add your own OrveX node: KVM virtual machines and LXC containers on any Debian or Ubuntu server, set up with one command."
+                    },
+                    "messages": {
+                        "connection_failed": "Failed to test the connection to the node"
+                    },
+                    "help": {
+                        "what": {
+                            "description": "VPS nodes are your own Debian or Ubuntu servers running the OrveX node agent. They host the KVM virtual machines and LXC containers of your users."
+                        },
+                        "utility": {
+                            "connect": "Add a node, run the install command on the server, and it connects to the panel by itself."
+                        }
+                    },
+                    "ips": {
+                        "col_pve_node": "Host",
+                        "filter_pve_all": "All hosts",
+                        "help": {
+                            "what_are_ips_text": "The IP pool lists the IP addresses on this node that can be assigned to VPS servers when they are created."
+                        },
+                        "primary_proxmox_help": "The node's own IP, do not assign it to servers"
+                    },
+                    "templates": {
+                        "empty_desc": "Templates are added automatically when the node connects. Use Sync from node to add them again.",
+                        "create_desc_select": "Select one of the node's template images; the name and VMID are filled in for you.",
+                        "field_select_vm": "Select a template image from the node",
+                        "loading_vms": "Loading template images from the node…",
+                        "no_vms": "No template images found on this node. Use Sync from node to set them up again.",
+                        "select_vm_first": "Select a template image from the node first"
+                    }
+                },
+                "vdsCapacity": {
+                    "unreachable": "Node unreachable"
+                },
+                "vmInstances": {
+                    "help": {
+                        "resources": {
+                            "description": "Each VPS has configurable CPU, memory, disk and network resources, managed by the OrveX agent on its node."
+                        }
+                    },
+                    "node_help": "OrveX node where the server will be created.",
+                    "proxmox_node": "Host",
+                    "proxmox_node_help": "Host on the node where the server is created. An OrveX node is a single host.",
+                    "select_proxmox_node": "Select a host.",
+                    "network_multi_hint": "Add or remove IPs (net0, net1, …). Select an IP from the pool for each interface."
+                }
+            },
+            "emptyStates": {
+                "vdsNodes": {
+                    "description": "VPS nodes are your own servers running the OrveX node agent. Add one to start creating VPS servers."
+                },
+                "vmInstances": {
+                    "description": "VPS servers are KVM virtual machines or LXC containers on your OrveX nodes. Create one and assign it to a user."
+                }
+            },
+            "vds": {
+                "console": {
+                    "actions": {
+                        "paste_description": "The text is typed key by key into the server (up to {max} characters). The console has no shared clipboard."
+                    }
+                }
+            }
+        }
     }
 }

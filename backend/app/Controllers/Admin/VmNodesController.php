@@ -24,10 +24,12 @@ use App\Chat\Activity;
 use App\Chat\Location;
 use App\Chat\VmInstance;
 use App\Chat\VmTemplate;
+use App\Helpers\ModuleGate;
 use App\Helpers\ApiResponse;
 use OpenApi\Attributes as OA;
 use App\Services\Vm\IsoLibrary;
 use App\Services\Vm\OrvexNodes;
+use App\Services\Vm\VmProducts;
 use App\Helpers\FeatherTailClient;
 use App\Services\Vm\VmInstanceUtil;
 use App\CloudFlare\CloudFlareRealIP;
@@ -178,6 +180,13 @@ class VmNodesController
                 required: false,
                 schema: new OA\Schema(type: 'integer')
             ),
+            new OA\Parameter(
+                name: 'node_type',
+                in: 'query',
+                description: 'Only nodes of this type: proxmox (VDS) or orvex (VPS). Nodes of a switched-off module are never listed.',
+                required: false,
+                schema: new OA\Schema(type: 'string', enum: ['proxmox', 'orvex'])
+            ),
         ],
         responses: [
             new OA\Response(
@@ -223,9 +232,15 @@ class VmNodesController
             }
         }
 
-        $vmNodes = VmNode::searchVmNodes(page: $page, limit: $limit, search: (string) $search, locationId: $locationId);
+        $requestedType = $request->query->get('node_type');
+        if (VmProducts::isInvalidFilter($requestedType)) {
+            return ApiResponse::error('Node type must be either proxmox or orvex', 'INVALID_NODE_TYPE', 400);
+        }
+        $nodeTypes = ModuleGate::listableVmNodeTypes(is_string($requestedType) ? $requestedType : null);
+
+        $vmNodes = VmNode::searchVmNodes(page: $page, limit: $limit, search: (string) $search, locationId: $locationId, nodeTypes: $nodeTypes);
         $vmNodes = array_map(static fn (array $row): array => VmNode::sanitizeForAdminResponse($row), $vmNodes);
-        $total = VmNode::getVmNodesCount(search: (string) $search, locationId: $locationId);
+        $total = VmNode::getVmNodesCount(search: (string) $search, locationId: $locationId, nodeTypes: $nodeTypes);
 
         $totalPages = (int) ceil($total / $limit);
         $from = ($page - 1) * $limit + 1;
@@ -338,6 +353,12 @@ class VmNodesController
                 $data['node_type'] = OrvexNodes::TYPE;
                 $data['registered_at'] = date('Y-m-d H:i:s');
             }
+        }
+
+        // OrveX nodes belong to the VPS module, Proxmox nodes to the VDS module.
+        $moduleRefusal = ModuleGate::refuseVmNodeType((string) ($data['node_type'] ?? $nodeType));
+        if ($moduleRefusal !== null) {
+            return $moduleRefusal;
         }
 
         $requiredFields = ['name', 'fqdn', 'location_id', 'user', 'token_id', 'secret'];

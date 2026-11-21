@@ -18,7 +18,7 @@ See the LICENSE file or <https://www.gnu.org/licenses/>.
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmProduct, useVmTranslation } from '@/hooks/useVmProduct';
 import { PageHeader } from '@/components/featherui/PageHeader';
 import { PageCard } from '@/components/featherui/PageCard';
 import { Button } from '@/components/featherui/Button';
@@ -57,13 +57,15 @@ interface Location {
     type: 'game' | 'vps' | 'web';
 }
 
-type NodeType = 'orvex' | 'proxmox';
-
+/**
+ * Create a node. VDS nodes (/admin/vds-nodes/create) are Proxmox VE nodes; VPS nodes
+ * (/admin/vps-nodes/create) are OrveX nodes: a name and a location, then one install command.
+ */
 export default function CreateVdsNodePage() {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
+    const { routes, nodeType } = useVmProduct();
     const router = useRouter();
 
-    const [nodeType, setNodeType] = useState<NodeType>('orvex');
     const isOrvex = nodeType === 'orvex';
     const [loading, setLoading] = useState(false);
     const [locations, setLocations] = useState<Location[]>([]);
@@ -235,7 +237,7 @@ export default function CreateVdsNodePage() {
                 });
                 toast.success(t('admin.vdsNodes.orvex.created'));
                 const nodeId = data?.data?.vm_node?.id;
-                router.push(nodeId ? `/admin/vds-nodes/${nodeId}/edit?tab=connect` : '/admin/vds-nodes');
+                router.push(nodeId ? `${routes.adminNodes}/${nodeId}/edit?tab=connect` : routes.adminNodes);
             } catch (error) {
                 toast.error(getApiErrorMessage(error, t, 'admin.vdsNodes.messages.create_failed'));
             } finally {
@@ -273,9 +275,9 @@ export default function CreateVdsNodePage() {
             toast.success(t('admin.vdsNodes.messages.created') || t('admin.vdsNodes.messages.fetch_failed'));
             const nodeId = data?.data?.vm_node?.id;
             if (nodeId) {
-                router.push(`/admin/vds-nodes/${nodeId}/edit`);
+                router.push(`${routes.adminNodes}/${nodeId}/edit`);
             } else {
-                router.push('/admin/vds-nodes');
+                router.push(routes.adminNodes);
             }
         } catch (error) {
             console.error('Error creating VDS node:', error);
@@ -338,60 +340,18 @@ export default function CreateVdsNodePage() {
             <WidgetRenderer widgets={getWidgets('admin-vds-nodes-create', 'after-header')} />
 
             <form onSubmit={handleSubmit} className='mt-8 space-y-8' data-fp-save-shortcut>
-                <div className='grid grid-cols-1 gap-4 md:grid-cols-2' role='radiogroup'>
-                    {(
-                        [
-                            { type: 'orvex', icon: Zap, badge: true },
-                            { type: 'proxmox', icon: Boxes, badge: false },
-                        ] as const
-                    ).map((option) => {
-                        const Icon = option.icon;
-                        const active = nodeType === option.type;
-
-                        return (
-                            <button
-                                key={option.type}
-                                type='button'
-                                role='radio'
-                                aria-checked={active}
-                                onClick={() => setNodeType(option.type)}
-                                className={cn(
-                                    'rounded-2xl border-2 p-5 text-left transition-all',
-                                    active
-                                        ? 'border-primary bg-primary/5 shadow-sm'
-                                        : 'border-border/60 hover:border-border hover:bg-muted/30',
-                                )}
-                            >
-                                <div className='flex items-start gap-4'>
-                                    <div
-                                        className={cn(
-                                            'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl',
-                                            active
-                                                ? 'bg-primary text-primary-foreground'
-                                                : 'bg-muted text-muted-foreground',
-                                        )}
-                                    >
-                                        <Icon className='h-5 w-5' />
-                                    </div>
-                                    <div className='min-w-0 space-y-1'>
-                                        <div className='flex flex-wrap items-center gap-2'>
-                                            <span className='font-semibold'>
-                                                {t(`admin.vdsNodes.type.${option.type}_title`)}
-                                            </span>
-                                            {option.badge && (
-                                                <span className='bg-primary/15 text-primary rounded-full px-2 py-0.5 text-[11px] font-semibold'>
-                                                    {t('admin.vdsNodes.type.recommended')}
-                                                </span>
-                                            )}
-                                        </div>
-                                        <p className='text-muted-foreground text-sm leading-relaxed'>
-                                            {t(`admin.vdsNodes.type.${option.type}_description`)}
-                                        </p>
-                                    </div>
-                                </div>
-                            </button>
-                        );
-                    })}
+                <div className='border-primary bg-primary/5 rounded-2xl border-2 p-5 shadow-sm'>
+                    <div className='flex items-start gap-4'>
+                        <div className='bg-primary text-primary-foreground flex h-11 w-11 shrink-0 items-center justify-center rounded-xl'>
+                            {isOrvex ? <Zap className='h-5 w-5' /> : <Boxes className='h-5 w-5' />}
+                        </div>
+                        <div className='min-w-0 space-y-1'>
+                            <span className='font-semibold'>{t(`admin.vdsNodes.type.${nodeType}_title`)}</span>
+                            <p className='text-muted-foreground text-sm leading-relaxed'>
+                                {t(`admin.vdsNodes.type.${nodeType}_description`)}
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
                 <div className='grid grid-cols-1 gap-8 lg:grid-cols-2'>

@@ -26,6 +26,8 @@ export interface VmInstance {
     pve_node: string;
     node_name?: string;
     node_fqdn?: string;
+    /** 'orvex' = VPS (OrveX node), 'proxmox' = VDS (Proxmox VE node). */
+    node_type?: 'orvex' | 'proxmox';
     status?: string;
     suspended?: number;
     // Actual DB columns returned by the API
@@ -76,12 +78,14 @@ export interface PowerActionResponse {
 }
 
 export const vmsApi = {
-    async getVms(page = 1, limit = 25, search = ''): Promise<VmListResponse> {
+    /** The user's virtual servers; `nodeType` limits them to VDS ('proxmox') or VPS ('orvex'). */
+    async getVms(page = 1, limit = 25, search = '', nodeType?: 'orvex' | 'proxmox'): Promise<VmListResponse> {
         const response = await axios.get('/api/user/vm-instances', {
             params: {
                 page,
                 limit,
                 search,
+                ...(nodeType ? { node_type: nodeType } : {}),
             },
         });
 

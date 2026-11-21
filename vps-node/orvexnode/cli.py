@@ -65,7 +65,7 @@ def cmd_info(cfg: Config, args: argparse.Namespace) -> int:
         print("  Panel            %s%s%s (node #%s, connected %s)" % (
             GREEN, state["panel_url"], RESET, state.get("node_id", "?"), state.get("registered_at", "?")))
     else:
-        print("  Panel            %snot connected%s: Admin > VDS Nodes > Create > OrveX Node in the panel shows" % (YELLOW, RESET))
+        print("  Panel            %snot connected%s: Admin > Nodes (VPS) > Create in the panel shows" % (YELLOW, RESET))
         print("                   the command to run; or: orvex-node register --panel URL --token TOKEN")
     print("")
     print("%sManual setup%s (only needed without the panel's install command)" % (DIM, RESET))
@@ -79,11 +79,11 @@ def cmd_info(cfg: Config, args: argparse.Namespace) -> int:
     for label, value in rows:
         print("  %-16s %s%s%s" % (label, BOLD, value, RESET))
     print("")
-    print("%sBridges%s (pick one when creating a VDS)" % (BOLD, RESET))
+    print("%sBridges%s (pick one when creating a VPS)" % (BOLD, RESET))
     print("  %-12s dedicated IPv4, routed via %s" % (cfg.routed_bridge, net.uplink() or "the default route"))
     print("  %-12s shared IPv4 (NAT %s, gateway %s)" % (cfg.nat_bridge, network, nat["gateway"]))
     print("")
-    print("%sShared IPv4 pool%s  Admin > VDS Nodes > IPs > Add" % (BOLD, RESET))
+    print("%sShared IPv4 pool%s  Admin > Nodes (VPS) > your node > IP Pool > Add" % (BOLD, RESET))
     print("  IP %s   CIDR %d   Gateway %s   (a range like this adds every address)" % (data["nat_range"], network.prefixlen, nat["gateway"]))
     size = int(nat["port_range_size"])
     print("  Each NAT VPS gets SSH on %s:%d+N%s" % (
@@ -91,7 +91,7 @@ def cmd_info(cfg: Config, args: argparse.Namespace) -> int:
         " and ports %d+N*%d..+%d (TCP+UDP)" % (int(nat["port_range_base"]), size, size - 1) if size else ""))
     print("  (N = last octet offset of its private IP)")
     print("")
-    print("%sTemplates%s  Admin > VDS Nodes > Templates: use the VMID as the template VMID" % (BOLD, RESET))
+    print("%sTemplates%s  Admin > Nodes (VPS) > your node > Templates: use the VMID as the template VMID" % (BOLD, RESET))
     for tpl in templates:
         state = "%scached%s" % (GREEN, RESET) if tpl["cached"] else "%sdownloads on first use%s" % (DIM, RESET)
         print("  %5d  %-4s %-28s %s" % (tpl["vmid"], "KVM" if tpl["type"] == "qemu" else "LXC", tpl["description"], state))

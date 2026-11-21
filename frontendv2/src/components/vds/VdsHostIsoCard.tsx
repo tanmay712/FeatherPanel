@@ -22,7 +22,7 @@ import { Loader2, Server } from 'lucide-react';
 import { Button } from '@/components/featherui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { VdsIsoDialog } from '@/components/vds/VdsIsoDialog';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 import { getApiErrorMessage, getApiErrorMessageFromPayload } from '@/lib/api-errors';
 import type { VdsFeatures } from '@/hooks/useVdsFeatures';
 
@@ -42,7 +42,7 @@ interface VdsHostIsoCardProps {
 
 /** Current host-library ISO mount plus open picker / unmount. */
 export function VdsHostIsoCard({ vmId, features, canSettings, onChanged }: VdsHostIsoCardProps) {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
     const [loading, setLoading] = useState(true);
     const [mountedIso, setMountedIso] = useState<MountedIso | null>(null);
     const [dialogOpen, setDialogOpen] = useState(false);

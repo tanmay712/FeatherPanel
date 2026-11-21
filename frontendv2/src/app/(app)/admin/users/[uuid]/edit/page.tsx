@@ -92,6 +92,7 @@ import { UnsavedChangesBar } from '@/components/featherui/UnsavedChangesBar';
 import { FormGroup } from '@/components/featherui/FormSection';
 import { useFormBaseline } from '@/hooks/useFormBaseline';
 import { Sensitive } from '@/components/common/Sensitive';
+import { vmAdminEditHref, vmInstanceHref } from '@/lib/vm-products';
 
 interface UserRole {
     name: string;
@@ -168,6 +169,8 @@ interface VmInstance {
     ip_address?: string | null;
     pve_node?: string | null;
     node_name?: string | null;
+    /** 'orvex' = VPS, 'proxmox' = VDS. */
+    node_type?: 'orvex' | 'proxmox';
     suspended?: number;
     created_at?: string;
 }
@@ -1592,16 +1595,14 @@ export default function UserEditPage({ params }: { params: Promise<{ uuid: strin
                                                         <Button
                                                             size='sm'
                                                             variant='ghost'
-                                                            onClick={() => router.push(`/vds/${vm.id}`)}
+                                                            onClick={() => router.push(vmInstanceHref(vm))}
                                                         >
                                                             <ExternalLink className='h-4 w-4' />
                                                         </Button>
                                                         <Button
                                                             size='sm'
                                                             variant='ghost'
-                                                            onClick={() =>
-                                                                router.push(`/admin/vm-instances/${vm.id}/edit`)
-                                                            }
+                                                            onClick={() => router.push(vmAdminEditHref(vm))}
                                                         >
                                                             <Edit className='h-4 w-4' />
                                                         </Button>

@@ -17,10 +17,10 @@ See the LICENSE file or <https://www.gnu.org/licenses/>.
 
 import { Info, ShieldAlert } from 'lucide-react';
 import { PageCard } from '@/components/featherui/PageCard';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 
 export function TutorialVM() {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
 
     return (
         <PageCard title={t('admin.vdsNodes.tutorial.vm.title')} icon={Info} className='mt-6'>

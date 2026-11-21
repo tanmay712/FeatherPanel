@@ -16,7 +16,7 @@ See the LICENSE file or <https://www.gnu.org/licenses/>.
 import axios from 'axios';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 import { PageCard } from '@/components/featherui/PageCard';
 import { getApiErrorMessage } from '@/lib/api-errors';
 import { Label } from '@/components/ui/label';
@@ -48,7 +48,7 @@ function parseCsv(value: string): string[] {
 }
 
 export function StorageConfigurationTab({ nodeId, form, setForm, errors }: StorageConfigurationTabProps) {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
 
     const [imageStorages, setImageStorages] = useState<string[]>([]);
     const [backupStorages, setBackupStorages] = useState<string[]>([]);

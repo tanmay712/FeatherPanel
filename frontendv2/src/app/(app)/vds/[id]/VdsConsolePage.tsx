@@ -19,7 +19,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import axios from 'axios';
 import { useVmInstance } from '@/contexts/VmInstanceContext';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 import { Button } from '@/components/featherui/Button';
 import { EmptyState } from '@/components/featherui/EmptyState';
 import { PageCard } from '@/components/featherui/PageCard';
@@ -78,7 +78,7 @@ function formatUptime(seconds: number): string {
 export default function VdsConsolePage() {
     const { id } = useParams() as { id: string };
     const router = useRouter();
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
     const dateOpts = useDateFormatOptions();
     const { instance, loading: instanceLoading, refreshInstance, hasPermission } = useVmInstance();
     const features = useVdsFeatures(instance?.id);

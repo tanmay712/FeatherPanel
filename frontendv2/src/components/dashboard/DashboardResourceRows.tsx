@@ -58,6 +58,7 @@ import type { Server } from '@/types/server';
 import type { VmInstance } from '@/lib/vms-api';
 import type { DashboardWebSpace } from '@/components/webspace/WebSpaceCard';
 import type { ServerLiveData } from '@/hooks/useServersWebSocket';
+import { vmInstanceHref } from '@/lib/vm-products';
 
 type PowerAction = 'start' | 'stop' | 'restart';
 
@@ -667,7 +668,7 @@ export function DashboardVmRow({ vm, compact }: { vm: VmInstance; compact?: bool
     return (
         <SimpleRow
             compact={compact}
-            href={`/vds/${vm.id}`}
+            href={vmInstanceHref(vm)}
             icon={<MonitorCog className='h-5 w-5' />}
             title={vm.hostname}
             status={<StatusLabel status={status} />}

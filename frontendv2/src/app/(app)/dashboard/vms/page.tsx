@@ -27,7 +27,7 @@ import {
     ChevronRight,
     MonitorCog,
 } from 'lucide-react';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmProduct, useVmTranslation } from '@/hooks/useVmProduct';
 import { useVmsState } from '@/hooks/useVmsState';
 import { vmsApi, VmInstance, VmPagination } from '@/lib/vms-api';
 import { VmCard } from '@/components/vms/VmCard';
@@ -39,8 +39,10 @@ interface SortOption {
     name: string;
 }
 
+/** The user's VDS servers (/dashboard/vms) or VPS servers (/dashboard/vps). */
 export default function VmsPage() {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
+    const { nodeType } = useVmProduct();
     const { selectedLayout, selectedSort, showOnlyRunning, setSelectedLayout, setSelectedSort, setShowOnlyRunning } =
         useVmsState();
 
@@ -70,7 +72,7 @@ export default function VmsPage() {
                 setLoading(true);
                 setError(null);
 
-                const response = await vmsApi.getVms(page, pagination.per_page, searchQuery);
+                const response = await vmsApi.getVms(page, pagination.per_page, searchQuery, nodeType);
 
                 if (response.data) {
                     let vmList = response.data.instances;
@@ -99,7 +101,7 @@ export default function VmsPage() {
                 setLoading(false);
             }
         },
-        [searchQuery, selectedSort, pagination.per_page, t],
+        [searchQuery, selectedSort, pagination.per_page, t, nodeType],
     );
 
     useEffect(() => {

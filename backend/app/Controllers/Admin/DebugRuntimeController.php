@@ -61,6 +61,7 @@ class DebugRuntimeController
                 'module_game_enabled',
                 'module_web_enabled',
                 'module_vds_enabled',
+                'module_vps_enabled',
                 'ticket_system_enabled',
                 'knowledgebase_enabled',
                 'status_page_enabled',

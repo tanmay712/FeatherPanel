@@ -12,7 +12,7 @@
 
 ### Run your own hosting company from one panel.
 
-Game servers, a complete billing suite and **VPS hosting with KVM + LXC on your own servers, no Proxmox required.**<br />
+Game servers, a complete billing suite, **VPS hosting with KVM + LXC on your own servers (no Proxmox required)** and **VDS on Proxmox VE**.<br />
 Dedicated and shared IPv4, live stats, password changes, SSH details, snapshots and backups for every customer.
 
 [**🚀 Install**](#-install-in-one-command) &nbsp;·&nbsp; [**🖥️ VPS hosting**](#%EF%B8%8F-vps-hosting-without-proxmox) &nbsp;·&nbsp; [**🧩 Features**](#-everything-included) &nbsp;·&nbsp; [**💳 Addons**](#-built-in-addons) &nbsp;·&nbsp; [**📖 Docs**](#-documentation)
@@ -35,7 +35,7 @@ The interactive menu installs the panel, turns servers into VPS nodes, updates e
 | --- | --- |
 | 🪐 Install the panel | `curl -fsSL https://raw.githubusercontent.com/tanmay712/FeatherPanel/develop/install.sh \| sudo bash -s -- panel` |
 | 🔒 …on my domain with HTTPS | `curl -fsSL https://raw.githubusercontent.com/tanmay712/FeatherPanel/develop/install.sh \| sudo bash -s -- panel --domain panel.example.com` |
-| ⚡ Add a VPS node | **Admin → VDS Nodes → Create → OrveX Node**, then run the command the panel shows on the server |
+| ⚡ Add a VPS node | **Admin → Nodes (VPS) → Create**, then run the command the panel shows on the server |
 | 🔄 Update | `orvex update` (panel) · `orvex node-update` (VPS node) |
 | 📋 See what is running | `orvex status` |
 | ❓ All options | `curl -fsSL https://raw.githubusercontent.com/tanmay712/FeatherPanel/develop/install.sh \| bash -s -- help` |
@@ -54,8 +54,9 @@ After the panel install, open the printed URL and register: **the first account 
 **OrveX VPS Node** is the panel's own node system. Create a node in the panel, run the one command it shows on
 any Debian or Ubuntu server, and the node **connects itself**: templates, storage and the shared-IPv4 pool are
 set up automatically. Nodes run [Incus](https://linuxcontainers.org/incus/) (KVM virtual machines **and** LXC
-containers) and speak the API the panel's VDS features use, so every customer page works on them.
-Existing Proxmox VE hosts can still be added as an optional second node type.
+containers) behind a small agent, and customers manage them under **Virtual Servers (VPS)**.
+Proxmox VE stays supported as its own product: **VPS** servers run on OrveX nodes, **VDS** servers on Proxmox VE
+nodes (see [VDS and VPS](#vds-and-vps)). Game servers on Wings are not affected.
 
 ```mermaid
 flowchart LR
@@ -63,7 +64,7 @@ flowchart LR
     A["🛠️ Admins"] --> P
     N -. "connects itself<br/>(one-time token)" .-> P
     P -- "HTTPS · node API" --> N["⚡ OrveX VPS Node<br/>orvex-node + Incus"]
-    P -. "optional" .-> X["Proxmox VE"]
+    P -. "VDS" .-> X["Proxmox VE<br/>VDS servers"]
     N --> K["🖥️ KVM virtual machines"]
     N --> L["📦 LXC containers"]
     N --> D["🌐 Dedicated IPv4<br/>routed or bridged"]
@@ -93,10 +94,16 @@ flowchart LR
 </tr>
 </table>
 
-### OrveX node vs Proxmox node
+### VDS and VPS
 
-| | Proxmox VE node | ⚡ OrveX VPS Node |
+Virtual servers come as two products, and the kind of node decides which one a server belongs to. Offer one,
+the other or both: each has its own admin pages, customer pages, dashboard widget and switch under
+**Admin → Settings → Modules**.
+
+| | VDS: Proxmox VE node | ⚡ VPS: OrveX node |
 | --- | :---: | :---: |
+| Admin menu | Nodes (VDS) · Virtual Servers (VDS) | Nodes (VPS) · Virtual Servers (VPS) |
+| Customer pages | `/dashboard/vms` · `/vds/{id}` | `/dashboard/vps` · `/vps/{id}` |
 | Installation | ISO or Proxmox on Debian | **one command** on Debian/Ubuntu |
 | Adding it to the panel | API token, templates and IP pool by hand | ✅ connects itself, templates and shared IPv4 included |
 | KVM virtual machines | ✅ | ✅ |
@@ -106,7 +113,7 @@ flowchart LR
 | Password change from the panel | KVM only (next boot or guest agent) | ✅ KVM + LXC, instantly |
 | Browser console | ✅ | ✅ KVM |
 | Stats, snapshots, backups, reinstall | ✅ | ✅ |
-| Firewall rules, ISO library, live migration | ✅ | not yet |
+| Firewall rules, boot order, ISO library, live migration | ✅ | not yet |
 
 ### Shared IPv4, explained
 
@@ -121,7 +128,7 @@ block of 20 ports (TCP and UDP) on its public IP, and the panel shows them to th
 
 ### Add a VPS node in two steps
 
-1. **In the panel**: **Admin → VDS Nodes → Create → OrveX Node**. A name and a location are all it needs.
+1. **In the panel**: **Admin → Nodes (VPS) → Create**. A name and a location are all it needs.
 2. **On the server**: run the command the panel shows, as root. It looks like this:
 
    ```bash
@@ -132,8 +139,9 @@ block of 20 ports (TCP and UDP) on its public IP, and the panel shows them to th
    The node page switches to *Connected* by itself, with the templates (Ubuntu, Debian, Rocky, Alma and Alpine,
    KVM and LXC) and the shared-IPv4 pool `10.77.0.2-10.77.0.254` already added.
 
-Then create servers under **Admin → VDS Instances → Create**. Add any extra public IPv4s of the node under
-**Node → IP Pool**, and turn on **Admin → Settings → Proxy VNC via panel** for the browser console.
+Then create servers under **Admin → Virtual Servers (VPS) → Create**; customers find them under
+**Virtual Servers (VPS)**. Add any extra public IPv4s of the node under **Node → IP Pool**, and turn on
+**Admin → Settings → Proxy VNC via panel** for the browser console.
 
 <details>
 <summary><b>Install commands are single-use</b>, and other questions</summary>
@@ -143,7 +151,8 @@ Then create servers under **Admin → VDS Instances → Create**. Add any extra 
 - **The command expired or was already used?** Open the node → *Connect* → **New command**. Commands work once and expire after 24 hours.
 - **Agent already installed** (or the server was reinstalled)? Run `orvex-node register --panel https://panel.example.com --token orvx_…` with a new command from the panel. *Re-pair node* does the same for a connected node.
 - **The panel can't reach the node?** The panel connects to TCP port `8006` on the node. Open it in the server's firewall and at your provider, then press *Test connection*.
-- **Prefer to do it by hand?** Install with `… | sudo bash -s -- vps-node` alone, then add the node as *Proxmox VE* using the values from `orvex-node info`.
+- **Want to install the node first?** Run `… | sudo bash -s -- vps-node` on its own and press Enter at the panel URL question. Later, create the node in the panel and run the `orvex-node register …` command from its *Connect* tab.
+- **The node can't reach the panel?** Add it by hand under **Admin → Nodes (VDS) → Create** with the values from `orvex-node info`. The panel recognises the `orvex@orvex` user and lists the node under **Nodes (VPS)**; add the shared-IPv4 pool and templates there yourself.
 
 </details>
 
@@ -181,8 +190,8 @@ Wings nodes, file manager, console, schedules, databases, subusers and backups. 
 </td>
 <td width="33%" valign="top">
 
-### 🖥️ VPS hosting
-KVM and LXC on **OrveX VPS Nodes** or Proxmox VE. Dedicated and shared IPv4, IP pools, templates, stats, password changes, console, snapshots, backups and reinstalls.
+### 🖥️ VPS & VDS hosting
+**VPS** on your own **OrveX nodes** (KVM + LXC, one-command setup) and **VDS** on Proxmox VE, each with its own menu and switch. Dedicated and shared IPv4, IP pools, templates, stats, password changes, console, snapshots, backups and reinstalls.
 
 </td>
 <td width="33%" valign="top">

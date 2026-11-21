@@ -472,8 +472,8 @@ EOF
     Manage:    orvex status | orvex update
 
     Add VPS hosting (KVM + LXC, no Proxmox needed): in the panel open
-      Admin > VDS Nodes > Create > OrveX Node and run the command it shows on the
-      server that should host the VPS. The node connects itself.
+      Admin > Nodes (VPS) > Create and run the command it shows on the server
+      that should host the VPS. The node connects itself.
 
 EOF
 }
@@ -724,7 +724,7 @@ install_vps_node() {
     ask PUBLIC_IP "Public IPv4 of this server (used for shared-IPv4 port forwards)" "$PUBLIC_IP"
     [ -n "$PUBLIC_IP" ] || die "Could not detect the public IPv4; pass --public-ip"
     if [ -z "$PANEL_URL" ] && [ "$ASSUME_YES" -eq 0 ] && [ "$HAVE_TTY" -eq 1 ]; then
-        info "To connect automatically, create the node in OrveX Panel first: Admin > VDS Nodes > Create > OrveX Node."
+        info "To connect automatically, create the node in OrveX Panel first: Admin > Nodes (VPS) > Create."
         ask PANEL_URL "Panel URL (press Enter to connect later)" ""
         if [ -n "$PANEL_URL" ]; then
             ask NODE_TOKEN "Install token shown by the panel (orvx_...)" ""
@@ -833,7 +833,7 @@ install_vps_node() {
     Next in OrveX Panel:
       1. Node > IP Pool: add any extra public IPv4s of this server (dedicated IPs, bridge ${C_BOLD}orvexpub0${C_RESET}).
       2. Admin > Settings: turn on "Proxy VNC via panel" for the in-browser console of KVM servers.
-      3. Admin > VDS Instances > Create: pick this node, a template, an IP and resources for a user.
+      3. Admin > Virtual Servers (VPS) > Create: pick this node, a template, an IP and resources for a user.
 
     Manage: orvex-node status | orvex-node doctor | orvex node-update
 
@@ -844,12 +844,13 @@ EOF
     orvex-node info
     cat <<EOF
   ${C_BOLD}Connect this node to OrveX Panel${C_RESET}
-    Easiest: in the panel open Admin > VDS Nodes > Create > OrveX Node and run the
+    Easiest: in the panel open Admin > Nodes (VPS) > Create and run the
     "orvex-node register ..." part of the command it shows on this server.
 
-    By hand instead: Admin > VDS Nodes > Create > Proxmox VE with the values above
-    (enable "Skip TLS verification"), then add the shared pool, templates (VMIDs above)
-    and dedicated IPv4s (bridge ${C_BOLD}orvexpub0${C_RESET}) yourself.
+    By hand instead (if this server cannot reach the panel): Admin > Nodes (VDS) >
+    Create with the values above (enable "Skip TLS verification"). The panel sees the
+    orvex@orvex user and lists the node under Nodes (VPS); add the shared pool,
+    templates (VMIDs above) and dedicated IPv4s (bridge ${C_BOLD}orvexpub0${C_RESET}) there yourself.
 
 EOF
 }
@@ -944,7 +945,7 @@ Panel options:
 
 VPS node options:
   --panel URL --token T  Connect to OrveX Panel automatically. The panel shows this command
-                         with both values: Admin > VDS Nodes > Create > OrveX Node
+                         with both values: Admin > Nodes (VPS) > Create
   --name NAME            Node name on the server (default: hostname)
   --public-ip IP         Public IPv4 for shared-IPv4 port forwards (auto-detected)
   --storage-driver D     btrfs (default), dir, lvm or zfs (Ubuntu)

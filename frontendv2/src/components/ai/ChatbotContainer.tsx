@@ -50,6 +50,7 @@ import { useSession } from '@/contexts/SessionContext';
 import { type VmInstance } from '@/contexts/VmInstanceContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { isVmInstancePath, parseVmInstancePath, vmInstanceBase } from '@/lib/vm-products';
 
 const CHATBOT_COMMANDS = [
     {
@@ -530,7 +531,12 @@ export default function ChatbotContainer({ open, onClose, mode = 'server', vdsIn
                 const vdsNavInstanceId = vdsNavMatch[1]!;
                 const vdsPageName = vdsNavMatch[2]!.toLowerCase();
                 const pageSegment = vdsPageMap[vdsPageName] ?? vdsPageName;
-                const navUrl = pageSegment ? `/vds/${vdsNavInstanceId}/${pageSegment}` : `/vds/${vdsNavInstanceId}`;
+                // Stay in the product of the current page (VDS /vds/{id} or VPS /vps/{id}).
+                const navUrl = vmInstanceBase(
+                    parseVmInstancePath(pathname)?.product ?? 'vds',
+                    vdsNavInstanceId,
+                    pageSegment ?? '',
+                );
                 router.push(navUrl);
                 showActionNotification(t('chatbot.navigatingToServerPage'), 'success');
             }
@@ -897,7 +903,7 @@ export default function ChatbotContainer({ open, onClose, mode = 'server', vdsIn
                 };
             }
 
-            if (mode === 'vds' && vdsInstance && pathname?.startsWith('/vds/')) {
+            if (mode === 'vds' && vdsInstance && isVmInstancePath(pathname)) {
                 pageContext.vdsInstance = {
                     id: vdsInstance.id,
                     hostname: vdsInstance.hostname,

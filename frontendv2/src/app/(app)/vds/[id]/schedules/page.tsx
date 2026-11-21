@@ -21,7 +21,7 @@ import { useParams } from 'next/navigation';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { Camera, CalendarClock, Loader2, Pencil, Plus, RefreshCw, RotateCw, Trash2 } from 'lucide-react';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 import { useDateFormatOptions } from '@/contexts/PreferencesContext';
 import { useVmInstance } from '@/contexts/VmInstanceContext';
 import { formatDateTimeInTz } from '@/lib/dateUtils';
@@ -74,7 +74,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
 
 export default function VdsSchedulesPage() {
     const { id } = useParams() as { id: string };
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
     const dateOpts = useDateFormatOptions();
     const { instance, loading: instanceLoading, hasPermission } = useVmInstance();
     const [schedules, setSchedules] = useState<Schedule[]>([]);

@@ -18,7 +18,7 @@ See the LICENSE file or <https://www.gnu.org/licenses/>.
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { ArrowDownToLine, ArrowUpFromLine, Gauge } from 'lucide-react';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
@@ -53,7 +53,7 @@ export const formatBytes = (n: number): string => {
 
 /** Monthly traffic usage for a VDS (sampled by the monitor cron). Hidden when accounting is off. */
 export function VdsBandwidthCard({ id }: { id: number }) {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
     const [data, setData] = useState<BandwidthResponse | null>(null);
 
     useEffect(() => {

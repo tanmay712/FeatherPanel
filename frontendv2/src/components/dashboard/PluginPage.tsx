@@ -31,6 +31,7 @@ import { useServerPermissions } from '@/hooks/useServerPermissions';
 import { isCloudflareChallengeDocument, withCacheBuster } from '@/lib/cloudflare-challenge';
 import { getPluginIframeThemeOverrideCss } from '@/lib/pluginIframeThemeCss';
 import { safeBack } from '@/lib/safe-back';
+import { parseVmInstancePath, vmInstanceBase } from '@/lib/vm-products';
 
 interface PluginPageProps {
     context: 'admin' | 'client' | 'server' | 'vds' | 'webspace';
@@ -192,7 +193,7 @@ export default function PluginPage({ context, serverUuid, vdsId, webspaceUuid }:
                 if (context === 'admin') {
                     pluginPath = pathname.replace('/admin', '');
                 } else if (context === 'vds' && vdsId) {
-                    const vdsPrefix = `/vds/${vdsId}`;
+                    const vdsPrefix = vmInstanceBase(parseVmInstancePath(pathname)?.product ?? 'vds', vdsId);
                     pluginPath = pathname.replace(vdsPrefix, '');
                 } else if (context === 'webspace' && webspaceUuid) {
                     const webspacePrefix = `/webspace/${webspaceUuid}`;

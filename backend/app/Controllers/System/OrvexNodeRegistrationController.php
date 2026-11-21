@@ -59,7 +59,7 @@ class OrvexNodeRegistrationController
             App::getInstance(true)->getLogger()->warning('OrveX node registration refused from ' . $ip . ' (node ' . ($parsed[0] ?? '?') . '): invalid or expired token');
 
             return ApiResponse::error(
-                'This install command is invalid, expired or already used. Create a new one in the panel: Admin > VDS Nodes > your node > Connect.',
+                'This install command is invalid, expired or already used. Create a new one in the panel: Admin > Nodes (VPS) > your node > Connect.',
                 'INVALID_REGISTRATION_TOKEN',
                 401
             );

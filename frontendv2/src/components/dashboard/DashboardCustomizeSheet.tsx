@@ -40,6 +40,7 @@ export const WIDGET_LABEL_KEYS: Record<DashboardWidgetId, string> = {
     attention: 'dashboard.widgets.names.attention',
     servers: 'dashboard.widgets.names.servers',
     vds: 'dashboard.widgets.names.vds',
+    vps: 'dashboard.widgets.names.vps',
     webspaces: 'dashboard.widgets.names.webspaces',
     usage: 'dashboard.widgets.names.usage',
     status: 'dashboard.widgets.names.status',
@@ -70,6 +71,7 @@ export const WIDGET_DESCRIPTION_KEYS: Record<DashboardWidgetId, string> = {
     attention: 'dashboard.widgets.descriptions.attention',
     servers: 'dashboard.widgets.descriptions.servers',
     vds: 'dashboard.widgets.descriptions.vds',
+    vps: 'dashboard.widgets.descriptions.vps',
     webspaces: 'dashboard.widgets.descriptions.webspaces',
     usage: 'dashboard.widgets.descriptions.usage',
     status: 'dashboard.widgets.descriptions.status',
@@ -104,6 +106,7 @@ const SIZE_LABEL_KEYS: Record<DashboardWidgetSize, string> = {
 const STAT_TILE_LABEL_KEYS: Record<DashboardStatTileId, string> = {
     game: 'dashboard.home.stats.game',
     vds: 'dashboard.home.stats.vds',
+    vps: 'dashboard.home.stats.vps',
     web: 'dashboard.home.stats.web',
     support: 'dashboard.home.stats.support',
 };

@@ -28,6 +28,11 @@ interface AdminDashboardData {
         servers: number;
         vm_nodes: number;
         vm_instances: number;
+        /** VDS = Proxmox VE nodes, VPS = OrveX nodes (older panels do not send these). */
+        vds_nodes?: number;
+        vds_instances?: number;
+        vps_nodes?: number;
+        vps_instances?: number;
     };
     cron: {
         recent: {

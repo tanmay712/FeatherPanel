@@ -17,7 +17,7 @@ See the LICENSE file or <https://www.gnu.org/licenses/>.
 
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 import { PageCard } from '@/components/featherui/PageCard';
 import { Button } from '@/components/featherui/Button';
 import { Input } from '@/components/featherui/Input';
@@ -74,7 +74,7 @@ interface IpPoolTabProps {
 }
 
 export function IpPoolTab({ nodeId, nodeName }: IpPoolTabProps) {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
     const [loading, setLoading] = useState(true);
     const [ips, setIps] = useState<VmIp[]>([]);
     const [searchQuery, setSearchQuery] = useState('');

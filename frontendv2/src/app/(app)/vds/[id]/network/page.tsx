@@ -19,7 +19,7 @@ import * as React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import axios from 'axios';
 import { useVmInstance } from '@/contexts/VmInstanceContext';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 import { VdsPageHeader } from '@/components/vds/VdsPageHeader';
 import { VdsPageLoading } from '@/components/vds/VdsPageLoading';
 import { Button } from '@/components/featherui/Button';
@@ -59,7 +59,7 @@ interface NetworkingResponse {
 export default function VdsNetworkingPage() {
     const { id } = useParams() as { id: string };
     const router = useRouter();
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
     const { instance, loading: instanceLoading, hasPermission, refreshInstance } = useVmInstance();
     const { fetchWidgets, getWidgets } = usePluginWidgets('vds-network');
 

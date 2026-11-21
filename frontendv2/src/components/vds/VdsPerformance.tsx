@@ -18,7 +18,7 @@ See the LICENSE file or <https://www.gnu.org/licenses/>.
 import React, { useMemo, useRef } from 'react';
 import { LineChart, Line, ResponsiveContainer, YAxis, Tooltip, type TooltipContentProps } from 'recharts';
 import { Cpu, Database, Globe, type LucideIcon } from 'lucide-react';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
 import { cn, formatFileSize } from '@/lib/utils';
 
 interface PerformanceDataPoint {
@@ -183,7 +183,7 @@ export default function VdsPerformance({
     networkRxTotal = 0,
     networkTxTotal = 0,
 }: VdsPerformanceProps) {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
 
     const networkData = useMemo(
         () =>

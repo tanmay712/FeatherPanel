@@ -17,6 +17,7 @@
 
 namespace App\Chat;
 
+use App\Services\Vm\VmProducts;
 use App\Services\Backup\BackupFifoEviction;
 
 class VmInstance
@@ -26,31 +27,24 @@ class VmInstance
     /**
      * Paginated list of VM instances joined with node, plan, and user data.
      *
+     * @param list<string>|null $nodeTypes only servers on nodes of these types ('proxmox', 'orvex'); null for all
+     *
      * @return array<int, mixed>
      */
-    public static function getAll(int $page = 1, int $limit = 25, ?string $search = null): array
+    public static function getAll(int $page = 1, int $limit = 25, ?string $search = null, ?array $nodeTypes = null): array
     {
         $pdo = Database::getPdoConnection();
         $offset = ($page - 1) * $limit;
 
-        $where = '';
         $params = [];
-
-        if (!empty($search)) {
-            $where = 'WHERE i.hostname LIKE :search
-                   OR i.ip_address LIKE :search
-                   OR i.pve_node LIKE :search
-                   OR CAST(i.vmid AS CHAR) LIKE :search
-                   OR u.username LIKE :search
-                   OR u.email LIKE :search';
-            $params['search'] = '%' . $search . '%';
-        }
+        $where = self::listWhere($search, $nodeTypes, $params);
 
         $stmt = $pdo->prepare("
             SELECT
                 i.*,
                 n.name  AS node_name,
                 n.fqdn  AS node_fqdn,
+                " . VmProducts::nodeTypeSql('n') . " AS node_type,
                 NULL    AS plan_name,
                 NULL    AS plan_memory,
                 NULL    AS plan_cpus,
@@ -97,6 +91,7 @@ class VmInstance
                 i.*,
                 n.name  AS node_name,
                 n.fqdn  AS node_fqdn,
+                ' . VmProducts::nodeTypeSql('n') . ' AS node_type,
                 NULL    AS plan_name,
                 u.username   AS user_username,
                 u.email      AS user_email,
@@ -135,26 +130,20 @@ class VmInstance
         return $stmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
     }
 
-    public static function countAll(?string $search = null): int
+    /**
+     * @param list<string>|null $nodeTypes only servers on nodes of these types ('proxmox', 'orvex'); null for all
+     */
+    public static function countAll(?string $search = null, ?array $nodeTypes = null): int
     {
         $pdo = Database::getPdoConnection();
 
-        $where = '';
         $params = [];
-
-        if (!empty($search)) {
-            $where = 'WHERE i.hostname LIKE :search
-                   OR i.ip_address LIKE :search
-                   OR i.pve_node LIKE :search
-                   OR CAST(i.vmid AS CHAR) LIKE :search
-                   OR u.username LIKE :search
-                   OR u.email LIKE :search';
-            $params['search'] = '%' . $search . '%';
-        }
+        $where = self::listWhere($search, $nodeTypes, $params);
 
         $stmt = $pdo->prepare("
             SELECT COUNT(*)
             FROM featherpanel_vm_instances i
+            LEFT JOIN featherpanel_vm_nodes n ON n.id = i.vm_node_id
             LEFT JOIN featherpanel_users u ON u.uuid = i.user_uuid
             $where
         ");
@@ -191,6 +180,7 @@ class VmInstance
                 i.*,
                 n.name  AS node_name,
                 n.fqdn  AS node_fqdn,
+                " . VmProducts::nodeTypeSql('n') . " AS node_type,
                 u.username    AS user_username,
                 u.email       AS user_email,
                 u.first_name  AS user_first_name,
@@ -245,12 +235,22 @@ class VmInstance
         return (int) $stmt->fetchColumn();
     }
 
-    /** Returns ['running' => N, 'stopped' => N, ...] */
-    public static function countByStatus(): array
+    /**
+     * Returns ['running' => N, 'stopped' => N, ...].
+     *
+     * @param list<string>|null $nodeTypes only servers on nodes of these types ('proxmox', 'orvex'); null for all
+     */
+    public static function countByStatus(?array $nodeTypes = null): array
     {
         $pdo = Database::getPdoConnection();
-        $stmt = $pdo->prepare('SELECT status, COUNT(*) AS cnt FROM featherpanel_vm_instances GROUP BY status');
-        $stmt->execute();
+        $params = [];
+        $filter = $nodeTypes !== null && !VmProducts::coversAll($nodeTypes)
+            ? VmProducts::sqlCondition('n', $nodeTypes, $params)
+            : '';
+        $stmt = $pdo->prepare('SELECT i.status, COUNT(*) AS cnt FROM featherpanel_vm_instances i
+            LEFT JOIN featherpanel_vm_nodes n ON n.id = i.vm_node_id
+            WHERE 1 = 1' . $filter . ' GROUP BY i.status');
+        $stmt->execute($params);
         $result = [];
         foreach ($stmt->fetchAll(\PDO::FETCH_ASSOC) as $row) {
             $result[$row['status']] = (int) $row['cnt'];
@@ -505,5 +505,33 @@ class VmInstance
     private function table(): string
     {
         return self::$table;
+    }
+
+    /**
+     * WHERE clause of the admin server list: optional search plus optional node types.
+     * Expects the instance as `i`, its node as `n` and its owner as `u`.
+     *
+     * @param list<string>|null $nodeTypes
+     * @param array<string, mixed> $params named parameters, extended in place
+     */
+    private static function listWhere(?string $search, ?array $nodeTypes, array &$params): string
+    {
+        $where = 'WHERE 1 = 1';
+
+        if (!empty($search)) {
+            $where .= ' AND (i.hostname LIKE :search
+                   OR i.ip_address LIKE :search
+                   OR i.pve_node LIKE :search
+                   OR CAST(i.vmid AS CHAR) LIKE :search
+                   OR u.username LIKE :search
+                   OR u.email LIKE :search)';
+            $params['search'] = '%' . $search . '%';
+        }
+
+        if ($nodeTypes !== null && !VmProducts::coversAll($nodeTypes)) {
+            $where .= VmProducts::sqlCondition('n', $nodeTypes, $params);
+        }
+
+        return $where;
     }
 }

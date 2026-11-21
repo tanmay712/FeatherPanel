@@ -18,11 +18,13 @@
 namespace App\Chat;
 
 use App\App;
+use App\Services\Vm\VmProducts;
 
 /**
  * VmNode service/model for CRUD operations on the featherpanel_vm_nodes table.
  *
- * Represents Proxmox (VDS/VPS) hypervisor nodes that FeatherPanel can talk to.
+ * Represents the virtual server nodes the panel talks to: Proxmox VE nodes (VDS) and
+ * OrveX nodes (VPS), told apart by `node_type`.
  */
 class VmNode
 {
@@ -266,6 +268,8 @@ class VmNode
     /**
      * Search VM nodes with pagination and filtering.
      *
+     * @param list<string>|null $nodeTypes only nodes of these types ('proxmox', 'orvex'); null for all
+     *
      * @return array<int, array<string, mixed>>
      */
     public static function searchVmNodes(
@@ -273,6 +277,7 @@ class VmNode
         int $limit = 10,
         string $search = '',
         ?int $locationId = null,
+        ?array $nodeTypes = null,
     ): array {
         $pdo = Database::getPdoConnection();
         $offset = ($page - 1) * $limit;
@@ -293,6 +298,10 @@ class VmNode
         }
 
         $sql .= " AND (l.type = 'vps')";
+
+        if ($nodeTypes !== null && !VmProducts::coversAll($nodeTypes)) {
+            $sql .= VmProducts::sqlCondition('n', $nodeTypes, $params);
+        }
 
         $sql .= ' ORDER BY n.name ASC';
         $sql .= ' LIMIT :limit OFFSET :offset';
@@ -315,10 +324,13 @@ class VmNode
 
     /**
      * Get total count of VM nodes with optional filtering.
+     *
+     * @param list<string>|null $nodeTypes only nodes of these types ('proxmox', 'orvex'); null for all
      */
     public static function getVmNodesCount(
         string $search = '',
         ?int $locationId = null,
+        ?array $nodeTypes = null,
     ): int {
         $pdo = Database::getPdoConnection();
         $params = [];
@@ -335,6 +347,10 @@ class VmNode
         if ($locationId !== null) {
             $sql .= ' AND n.location_id = :location_id';
             $params['location_id'] = $locationId;
+        }
+
+        if ($nodeTypes !== null && !VmProducts::coversAll($nodeTypes)) {
+            $sql .= VmProducts::sqlCondition('n', $nodeTypes, $params);
         }
 
         $stmt = $pdo->prepare($sql);

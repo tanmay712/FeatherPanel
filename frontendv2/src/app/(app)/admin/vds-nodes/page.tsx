@@ -19,7 +19,7 @@ import { TipCard, TipGrid } from '@/components/featherui/TipCard';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmProduct, useVmTranslation } from '@/hooks/useVmProduct';
 import { PageHeader } from '@/components/featherui/PageHeader';
 import { Button } from '@/components/featherui/Button';
 import { Input } from '@/components/featherui/Input';
@@ -88,6 +88,7 @@ interface Pagination {
 }
 
 const VDS_NODES_LIST_FILTERS_KEY = 'featherpanel_admin_vds_nodes_filters_v1';
+const VPS_NODES_LIST_FILTERS_KEY = 'featherpanel_admin_vps_nodes_filters_v1';
 const VDS_NODES_LIST_FILTERS_DEFAULTS = {
     searchQuery: '',
     locationId: '',
@@ -97,15 +98,17 @@ const VDS_NODES_LIST_FILTERS_DEFAULTS = {
 
 type ConnectionStatus = 'unknown' | 'online' | 'offline';
 
+/** VDS nodes (Proxmox VE, /admin/vds-nodes) or VPS nodes (OrveX, /admin/vps-nodes). */
 export default function VdsNodesPage() {
-    const { t } = useTranslation();
+    const { t, product } = useVmTranslation();
+    const { routes, nodeType } = useVmProduct();
     const privacyMask = useIpMask();
     const router = useRouter();
     const searchParams = useSearchParams();
     const urlLocationId = searchParams.get('location_id') ?? '';
 
     const { filters, patchFilters, hydrated, resetFilters, isFiltered } = usePersistedListFilters(
-        VDS_NODES_LIST_FILTERS_KEY,
+        product === 'vps' ? VPS_NODES_LIST_FILTERS_KEY : VDS_NODES_LIST_FILTERS_KEY,
         VDS_NODES_LIST_FILTERS_DEFAULTS,
     );
     const { searchQuery, page, pageSize } = filters;
@@ -209,6 +212,7 @@ export default function VdsNodesPage() {
                     limit: pageSize,
                     search: searchQueryDebounced || undefined,
                     location_id: locationIdFilter || undefined,
+                    node_type: nodeType,
                 },
             });
 
@@ -232,7 +236,7 @@ export default function VdsNodesPage() {
         } finally {
             setLoading(false);
         }
-    }, [page, pageSize, searchQueryDebounced, locationIdFilter, t, testAllConnections, hydrated]);
+    }, [page, pageSize, searchQueryDebounced, locationIdFilter, t, testAllConnections, hydrated, nodeType]);
 
     useEffect(() => {
         fetchVmNodes();
@@ -290,7 +294,7 @@ export default function VdsNodesPage() {
                         >
                             <RefreshCw className='h-4 w-4' />
                         </Button>
-                        <Button onClick={() => router.push('/admin/vds-nodes/create')}>
+                        <Button onClick={() => router.push(`${routes.adminNodes}/create`)}>
                             <Server className='mr-2 h-4 w-4' />
                             {t('admin.vdsNodes.form.create_short')}
                         </Button>
@@ -300,7 +304,7 @@ export default function VdsNodesPage() {
 
             <WidgetRenderer widgets={getWidgets('admin-vm-nodes', 'after-header')} />
 
-            <VdsCapacityOverview />
+            <VdsCapacityOverview nodeType={nodeType} />
 
             <div className='fp-surface flex flex-col items-center gap-4 rounded-xl border p-4 sm:flex-row'>
                 <div className='group relative w-full flex-1'>
@@ -333,7 +337,7 @@ export default function VdsNodesPage() {
                     title={t('emptyStates.vdsNodes.title')}
                     description={t('emptyStates.vdsNodes.description')}
                     action={
-                        <Button onClick={() => router.push('/admin/vds-nodes/create')}>
+                        <Button onClick={() => router.push(`${routes.adminNodes}/create`)}>
                             <Server className='mr-2 h-4 w-4' />
                             {t('admin.vdsNodes.form.create_short')}
                         </Button>
@@ -408,7 +412,7 @@ export default function VdsNodesPage() {
                                         <Button
                                             size='sm'
                                             variant='ghost'
-                                            onClick={() => router.push(`/admin/vds-nodes/${node.id}/edit`)}
+                                            onClick={() => router.push(`${routes.adminNodes}/${node.id}/edit`)}
                                             title={t('admin.vdsNodes.actions.edit')}
                                         >
                                             <Pencil className='h-4 w-4' />
@@ -495,12 +499,14 @@ export default function VdsNodesPage() {
                 </TipCard>
             </TipGrid>
 
-            <TipCard title={t('admin.vdsNodes.help.proxmox.title')} icon={Shield} className='mt-6'>
-                <div className='text-muted-foreground space-y-4 text-sm'>
-                    <p>{t('admin.vdsNodes.help.proxmox.p1')}</p>
-                    <p>{t('admin.vdsNodes.help.proxmox.p2')}</p>
-                </div>
-            </TipCard>
+            {product === 'vds' && (
+                <TipCard title={t('admin.vdsNodes.help.proxmox.title')} icon={Shield} className='mt-6'>
+                    <div className='text-muted-foreground space-y-4 text-sm'>
+                        <p>{t('admin.vdsNodes.help.proxmox.p1')}</p>
+                        <p>{t('admin.vdsNodes.help.proxmox.p2')}</p>
+                    </div>
+                </TipCard>
+            )}
 
             <WidgetRenderer widgets={getWidgets('admin-vm-nodes', 'bottom-of-page')} />
         </div>

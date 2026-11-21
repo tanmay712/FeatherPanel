@@ -22,6 +22,7 @@ import { Button } from '@/components/featherui/Button';
 import { useTranslation } from '@/contexts/TranslationContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useVmInstance } from '@/contexts/VmInstanceContext';
+import { isVmInstancePath } from '@/lib/vm-products';
 import { useTheme } from '@/contexts/ThemeContext';
 
 const ChatbotContainer = lazy(() => import('./ChatbotContainer'));
@@ -131,9 +132,15 @@ export default function ChatbotWidget() {
 
     const chatbotEnabled = settings?.chatbot_enabled === 'true';
     const isIDE = pathname?.includes('/files/ide');
-    const isVds = pathname?.startsWith('/vds/');
+    const isVds = isVmInstancePath(pathname);
     const isServer = pathname?.startsWith('/server/');
-    const dashboardChatbotRoutes = ['/dashboard', '/dashboard/servers', '/dashboard/vms', '/dashboard/knowledgebase'];
+    const dashboardChatbotRoutes = [
+        '/dashboard',
+        '/dashboard/servers',
+        '/dashboard/vms',
+        '/dashboard/vps',
+        '/dashboard/knowledgebase',
+    ];
     const isDashboardChatbotRoute =
         pathname === '/dashboard/knowledgebase' ||
         pathname?.startsWith('/dashboard/knowledgebase/') ||

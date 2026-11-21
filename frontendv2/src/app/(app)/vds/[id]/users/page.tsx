@@ -18,7 +18,8 @@ See the LICENSE file or <https://www.gnu.org/licenses/>.
 import * as React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import axios, { isAxiosError } from 'axios';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
+import { vmInstanceBase } from '@/lib/vm-products';
 import { useVmInstance } from '@/contexts/VmInstanceContext';
 import { VdsPageHeader } from '@/components/vds/VdsPageHeader';
 import { VdsPageLoading } from '@/components/vds/VdsPageLoading';
@@ -59,7 +60,7 @@ interface VmSubuser {
 export default function VdsSubusersPage() {
     const { id } = useParams() as { id: string };
     const router = useRouter();
-    const { t } = useTranslation();
+    const { t, product } = useVmTranslation();
     const { instance, loading: instanceLoading } = useVmInstance();
     const { fetchWidgets, getWidgets } = usePluginWidgets('vds-users');
 
@@ -93,20 +94,20 @@ export default function VdsSubusersPage() {
         } catch (error) {
             if (isAxiosError(error) && error.response?.status === 403) {
                 toast.error(getApiErrorMessage(error, t, 'vds.subusers.owner_only'));
-                router.push(`/vds/${id}`);
+                router.push(vmInstanceBase(product, id));
                 return;
             }
             toast.error(getApiErrorMessage(error, t, 'vds.subusers.fetch_failed'));
         } finally {
             setLoading(false);
         }
-    }, [id, router, t]);
+    }, [id, router, t, product]);
 
     React.useEffect(() => {
         if (!instanceLoading) {
             if (!instance?.is_owner) {
                 toast.error(t('vds.subusers.owner_only'));
-                router.push(`/vds/${id}`);
+                router.push(vmInstanceBase(product, id));
                 return;
             }
             fetchSubusers();
@@ -229,7 +230,7 @@ export default function VdsSubusersPage() {
                     <h2 className='text-2xl font-semibold'>{t('common.accessDenied')}</h2>
                     <p className='text-muted-foreground mt-2'>{t('vds.subusers.owner_only')}</p>
                 </div>
-                <Button variant='outline' onClick={() => router.push(`/vds/${id}`)}>
+                <Button variant='outline' onClick={() => router.push(vmInstanceBase(product, id))}>
                     {t('common.goBack')}
                 </Button>
             </div>

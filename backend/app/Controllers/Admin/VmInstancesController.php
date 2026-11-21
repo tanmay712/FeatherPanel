@@ -27,12 +27,14 @@ use App\Chat\Database;
 use App\Chat\VmInstance;
 use App\Chat\VmTemplate;
 use App\Chat\VmInstanceIp;
+use App\Helpers\ModuleGate;
 use App\Helpers\TimeHelper;
 use App\Helpers\ApiResponse;
 use OpenApi\Attributes as OA;
 use App\Chat\VmInstanceBackup;
 use App\Config\ConfigInterface;
 use App\Services\Vm\OrvexNodes;
+use App\Services\Vm\VmProducts;
 use App\Chat\VmInstanceActivity;
 use App\Helpers\FeatherTailClient;
 use App\Mail\templates\VmSuspended;
@@ -137,6 +139,7 @@ class VmInstancesController
             new OA\Parameter(name: 'page', in: 'query', description: 'Page number', required: false, schema: new OA\Schema(type: 'integer', default: 1)),
             new OA\Parameter(name: 'limit', in: 'query', description: 'Records per page', required: false, schema: new OA\Schema(type: 'integer', default: 25)),
             new OA\Parameter(name: 'search', in: 'query', description: 'Search term', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'node_type', in: 'query', description: 'Only servers on nodes of this type: proxmox (VDS) or orvex (VPS). Servers of a switched-off module are never listed.', required: false, schema: new OA\Schema(type: 'string', enum: ['proxmox', 'orvex'])),
         ],
         responses: [
             new OA\Response(
@@ -159,11 +162,16 @@ class VmInstancesController
         $page = max(1, (int) $request->query->get('page', 1));
         $limit = min(100, max(1, (int) $request->query->get('limit', 25)));
         $search = $request->query->get('search', null);
+        $requestedType = $request->query->get('node_type');
+        if (VmProducts::isInvalidFilter($requestedType)) {
+            return ApiResponse::error('Node type must be either proxmox or orvex', 'INVALID_NODE_TYPE', 400);
+        }
+        $nodeTypes = ModuleGate::listableVmNodeTypes(is_string($requestedType) ? $requestedType : null);
 
-        $instances = VmInstance::getAll($page, $limit, $search);
-        $total = VmInstance::countAll($search);
+        $instances = VmInstance::getAll($page, $limit, $search, $nodeTypes);
+        $total = VmInstance::countAll($search, $nodeTypes);
         $totalPages = (int) ceil($total / $limit);
-        $statusCounts = VmInstance::countByStatus();
+        $statusCounts = VmInstance::countByStatus($nodeTypes);
 
         return ApiResponse::success([
             'instances' => $instances,
@@ -221,6 +229,11 @@ class VmInstancesController
         $vmNode = VmNode::getVmNodeById($vmNodeId);
         if (!$vmNode) {
             return ApiResponse::error('VM node not found', 'VM_NODE_NOT_FOUND', 404);
+        }
+        // Servers on OrveX nodes are VPS, on Proxmox nodes VDS: each needs its module switched on.
+        $moduleRefusal = ModuleGate::refuseVmNodeType((string) ($vmNode['node_type'] ?? ''));
+        if ($moduleRefusal !== null) {
+            return $moduleRefusal;
         }
         if (OrvexNodes::isPending($vmNode)) {
             return ApiResponse::error('This OrveX node has not connected yet. Run its install command on the server first.', 'ORVEX_NODE_PENDING', 409);

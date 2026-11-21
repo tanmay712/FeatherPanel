@@ -18,7 +18,8 @@ See the LICENSE file or <https://www.gnu.org/licenses/>.
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import axios, { isAxiosError } from 'axios';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmProduct, useVmTranslation } from '@/hooks/useVmProduct';
+import { productForNodeType, VM_PRODUCT_ROUTES } from '@/lib/vm-products';
 import { PageHeader } from '@/components/featherui/PageHeader';
 import { Button } from '@/components/featherui/Button';
 import { Input } from '@/components/featherui/Input';
@@ -104,7 +105,8 @@ export interface VdsNodeForm {
 }
 
 export default function EditVdsNodePage() {
-    const { t } = useTranslation();
+    const { t } = useVmTranslation();
+    const { product, routes } = useVmProduct();
     const router = useRouter();
     const params = useParams();
     const id = params?.id as string;
@@ -208,6 +210,13 @@ export default function EditVdsNodePage() {
                     }
                 }
 
+                // OrveX nodes are managed under VPS nodes, Proxmox nodes under VDS nodes.
+                const nodeProduct = productForNodeType(node.node_type);
+                if (nodeProduct !== product) {
+                    router.replace(`${VM_PRODUCT_ROUTES[nodeProduct].adminNodes}/${id}/edit${window.location.search}`);
+                    return;
+                }
+
                 setNodeName(node.name);
                 const orvex = node.node_type === 'orvex';
                 const pending = orvex && !node.registered_at;
@@ -284,7 +293,7 @@ export default function EditVdsNodePage() {
                 }
             } catch (error) {
                 toast.error(getApiErrorMessage(error, t, 'admin.vdsNodes.errors.fetch_failed'));
-                router.push('/admin/vds-nodes');
+                router.push(routes.adminNodes);
             } finally {
                 setLoadingNode(false);
             }
@@ -423,7 +432,7 @@ export default function EditVdsNodePage() {
                 icon={Server}
                 actions={
                     <div className='flex flex-wrap items-center gap-3'>
-                        <Button variant='outline' size='sm' onClick={() => router.push('/admin/vds-nodes')}>
+                        <Button variant='outline' size='sm' onClick={() => router.push(routes.adminNodes)}>
                             <ArrowLeft className='mr-2 h-4 w-4' />
                             {t('common.back')}
                         </Button>

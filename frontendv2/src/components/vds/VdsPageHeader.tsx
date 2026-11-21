@@ -31,7 +31,8 @@ import {
     type LucideIcon,
 } from 'lucide-react';
 import { useVmInstance } from '@/contexts/VmInstanceContext';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useVmTranslation } from '@/hooks/useVmProduct';
+import { vmInstanceBase } from '@/lib/vm-products';
 import { ResourcePageHeader, type ServerPageCrumb } from '@/components/server/ServerPageHeader';
 
 /** Same icons as the VDS sidebar, so the header and the active nav item always match. */
@@ -67,7 +68,7 @@ export function VdsPageHeader({
     className,
     children,
 }: VdsPageHeaderProps) {
-    const { t } = useTranslation();
+    const { t, product } = useVmTranslation();
     const params = useParams<{ id?: string }>();
     const pathname = usePathname() ?? '';
     const { instance } = useVmInstance();
@@ -79,7 +80,7 @@ export function VdsPageHeader({
         { label: t('navigation.items.dashboard'), href: '/dashboard' },
         {
             label: instance?.hostname || (id ? `VDS #${id}` : t('common.loading')),
-            href: id ? `/vds/${id}` : undefined,
+            href: id ? vmInstanceBase(product, id) : undefined,
         },
         ...crumbs,
     ];
